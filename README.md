@@ -47,14 +47,13 @@ MoneyTrack never sends your financial data anywhere.
 
 > *(Update as the project evolves)*
 
-- **Platform**: Android / iOS
-- **Language**: Kotlin / Swift
-- **UI**: Jetpack Compose / SwiftUI
+- **Platform**: Android
+- **Language**: Kotlin
+- **UI**: Jetpack Compose
 - **Architecture**: MVVM
 - **Database**: SQLite (Encrypted)
 - **Security**:
     - Android Keystore
-    - iOS Keychain
 
 ---
 
