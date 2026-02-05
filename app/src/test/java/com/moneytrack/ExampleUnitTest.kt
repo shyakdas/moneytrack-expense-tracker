@@ -1,4 +1,4 @@
-package com.MoneyTrack
+package com.moneytrack
 
 import org.junit.Test
 

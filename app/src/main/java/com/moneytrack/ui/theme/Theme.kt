@@ -1,6 +1,5 @@
-package com.MoneyTrack.ui.theme
+package com.moneytrack.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme

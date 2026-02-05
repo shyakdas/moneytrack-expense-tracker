@@ -1,4 +1,4 @@
-package com.MoneyTrack.ui.theme
+package com.moneytrack.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
