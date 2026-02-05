@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="com.obiscr.chatgpt.settings.EasyCodeState">
+    <option name="projectFiles" value="$PROJECT_DIR$/app/src/androidTest/java/com/MoneyTrack/ExampleInstrumentedTest.kt;/Users/apple/AndroidStudioProjects/MoneyTrack/app/src/main/java/com/MoneyTrack/ui/theme/Color.kt;/Users/apple/AndroidStudioProjects/MoneyTrack/app/src/main/java/com/MoneyTrack/ui/theme/Theme.kt;/Users/apple/AndroidStudioProjects/MoneyTrack/app/src/main/java/com/MoneyTrack/ui/theme/Type.kt;/Users/apple/AndroidStudioProjects/MoneyTrack/app/src/main/java/com/MoneyTrack/MainActivity.kt;/Users/apple/AndroidStudioProjects/MoneyTrack/app/src/test/java/com/MoneyTrack/ExampleUnitTest.kt;/Users/apple/AndroidStudioProjects/MoneyTrack/app/build.gradle.kts;/Users/apple/AndroidStudioProjects/MoneyTrack/build.gradle.kts;/Users/apple/AndroidStudioProjects/MoneyTrack/README.md;/Users/apple/AndroidStudioProjects/MoneyTrack/settings.gradle.kts" />
+  </component>
+</project>
