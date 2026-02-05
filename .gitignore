@@ -13,3 +13,11 @@
 .externalNativeBuild
 .cxx
 local.properties
+# 🔐 Android signing
+*.keystore
+*.jks
+*.bks
+*.p12
+*.keystore.b64
+release.keystore
+moneytrack-release.keystore
