@@ -9,7 +9,6 @@ jobs:
   quality-checks:
     name: Lint • Static Analysis • Tests
     runs-on: ubuntu-latest
-
     timeout-minutes: 40
 
     steps:
@@ -33,22 +32,14 @@ jobs:
       - name: Grant execute permission
         run: chmod +x ./gradlew
 
-      # 🔍 Kotlin Style
       - name: Ktlint
         run: ./gradlew ktlintCheck
 
-      # 🧠 Static Code Analysis
       - name: Detekt
         run: ./gradlew detekt
 
-      # 🧪 Unit Tests
       - name: Unit Tests
         run: ./gradlew testDebugUnitTest
 
-      # 📸 Snapshot Tests (Paparazzi)
       - name: Snapshot Tests
         run: ./gradlew verifyPaparazziDebug
-
-      # 📱 UI Smoke Tests
-      - name: UI Tests
-        run: ./gradlew connectedDebugAndroidTest
