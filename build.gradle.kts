@@ -8,4 +8,7 @@ plugins {
 
     // God classes, long methods, bad Kotlin patterns
     alias(libs.plugins.detekt) apply false
+
+    // Screenshot testing
+    alias(libs.plugins.paparazzi) apply false
 }
