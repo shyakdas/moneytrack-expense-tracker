@@ -67,35 +67,56 @@ tasks.register<JacocoReport>("jacocoTestReport") {
         html.required.set(true)
     }
 
-    val fileFilter = listOf(
-        "**/R.class",
-        "**/R$*.class",
-        "**/BuildConfig.*",
-        "**/Manifest*.*",
-        "**/*Test*.*"
+    val fileFilter =
+        listOf(
+            "**/R.class",
+            "**/R$*.class",
+            "**/BuildConfig.*",
+            "**/Manifest*.*",
+            "**/*Test*.*",
+        )
+
+    val debugTree =
+        fileTree(
+            layout.buildDirectory.dir(
+                "intermediates/javac/debug",
+            ),
+        ) {
+            exclude(fileFilter)
+        }
+
+    val kotlinDebugTree =
+        fileTree(
+            layout.buildDirectory.dir(
+                "tmp/kotlin-classes/debug",
+            ),
+        ) {
+            exclude(fileFilter)
+        }
+
+    classDirectories.setFrom(
+        files(
+            debugTree,
+            kotlinDebugTree,
+        ),
     )
 
-    val debugTree = fileTree(
-        layout.buildDirectory.dir("intermediates/javac/debug")
-    ) {
-        exclude(fileFilter)
-    }
+    sourceDirectories.setFrom(
+        files(
+            "src/main/java",
+            "src/main/kotlin",
+        ),
+    )
 
-    val kotlinDebugTree = fileTree(
-        layout.buildDirectory.dir("tmp/kotlin-classes/debug")
-    ) {
-        exclude(fileFilter)
-    }
-
-    classDirectories.setFrom(files(debugTree, kotlinDebugTree))
-    sourceDirectories.setFrom(files("src/main/java", "src/main/kotlin"))
     executionData.setFrom(
-        fileTree(layout.buildDirectory) {
+        fileTree(
+            layout.buildDirectory,
+        ) {
             include(
                 "jacoco/testDebugUnitTest.exec",
-                "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec"
+                "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec",
             )
-        }
+        },
     )
 }
 
