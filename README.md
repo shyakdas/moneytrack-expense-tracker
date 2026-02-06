@@ -1,74 +1,45 @@
 # MoneyTrack – Offline Expense Tracker 💸
 
-MoneyTrack is a **secure, offline-first expense tracker** that helps users manage their income, expenses, and budgets while keeping **all financial data stored locally on the device**.
+[![PR Checks](https://github.com/shyakdas/moneytrack-expense-tracker/actions/workflows/pr-quality-checks.yml/badge.svg)](https://github.com/shyakdas/moneytrack-expense-tracker/actions)
+[![Nightly Build](https://github.com/shyakdas/moneytrack-expense-tracker/actions/workflows/nightly.yml/badge.svg)](https://github.com/shyakdas/moneytrack-expense-tracker/actions)
+[![Dependabot](https://img.shields.io/badge/dependabot-enabled-brightgreen)](https://github.com/shyakdas/moneytrack-expense-tracker/security/dependabot)
 
-No cloud. No ads. No tracking.  
-Just simple, private money management.
+MoneyTrack is a **privacy-first, offline Android expense tracker** built for people who want complete control over their financial data.
 
----
-
-## ✨ Why MoneyTrack?
-
-Most finance apps store your data on servers you don’t control.  
-MoneyTrack is built with a different philosophy:
-
-> **Your money. Your device. Fully offline.**
+No cloud. No ads. No tracking.
+Just **secure, local-first money management**.
 
 ---
 
-## 🚀 Features
+## 🧪 Testing & Quality
 
-- 📱 **Offline-first** – works without internet
-- 🔐 **Encrypted local storage** for financial data
-- 💰 Track **income & expenses**
-- 🗂️ Category-based transaction management
-- 📊 Monthly & yearly spending insights
-- 🔒 App lock (PIN / Biometrics)
-- 🌓 Light & Dark mode
-- 📤 Manual export (CSV / PDF) *(planned)*
+- Unit tests
+- Snapshot tests (Paparazzi)
+- ktlint & detekt
+- Coverage via Jacoco
+
+All checks run automatically on every Pull Request.
 
 ---
 
-## 🔐 Privacy & Security
+## ⚙️ CI Overview
 
-Privacy is a core feature, not an afterthought.
+### Pull Request CI
+- Lint & static analysis
+- Unit tests
+- Snapshot tests
+- Coverage generation
 
-- ✅ No account signup required
-- ✅ No cloud sync by default
-- ✅ No ads or trackers
-- ✅ No third-party analytics SDKs
-- ✅ All data stored **locally & encrypted**
-
-MoneyTrack never sends your financial data anywhere.
-
----
-
-## 🏗️ Tech Stack
-
-> *(Update as the project evolves)*
-
-- **Platform**: Android
-- **Language**: Kotlin
-- **UI**: Jetpack Compose
-- **Architecture**: MVVM
-- **Database**: SQLite (Encrypted)
-- **Security**:
-    - Android Keystore
+### Nightly CI
+- Full test suite
+- Snapshot validation
+- Early failure detection
 
 ---
 
-## 📂 Project Structure
+## 🛠️ Run CI Locally
 
-```text
-MoneyTrack/
-├── data/
-│   ├── model/
-│   ├── local/
-│   └── repository/
-├── ui/
-│   ├── screens/
-│   ├── components/
-│   └── viewmodel/
-├── utils/
-├── security/
-└── app/
+Run the full CI pipeline locally:
+
+```bash
+make ci
