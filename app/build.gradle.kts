@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.ktlint)
     alias(libs.plugins.detekt)
     alias(libs.plugins.paparazzi)
+    jacoco
 }
 
 android {
@@ -52,6 +53,71 @@ android {
     buildFeatures {
         compose = true
     }
+}
+
+jacoco {
+    toolVersion = "0.8.11"
+}
+
+tasks.register<JacocoReport>("jacocoTestReport") {
+    dependsOn("testDebugUnitTest")
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+
+    val fileFilter =
+        listOf(
+            "**/R.class",
+            "**/R$*.class",
+            "**/BuildConfig.*",
+            "**/Manifest*.*",
+            "**/*Test*.*",
+        )
+
+    val debugTree =
+        fileTree(
+            layout.buildDirectory.dir(
+                "intermediates/javac/debug",
+            ),
+        ) {
+            exclude(fileFilter)
+        }
+
+    val kotlinDebugTree =
+        fileTree(
+            layout.buildDirectory.dir(
+                "tmp/kotlin-classes/debug",
+            ),
+        ) {
+            exclude(fileFilter)
+        }
+
+    classDirectories.setFrom(
+        files(
+            debugTree,
+            kotlinDebugTree,
+        ),
+    )
+
+    sourceDirectories.setFrom(
+        files(
+            "src/main/java",
+            "src/main/kotlin",
+        ),
+    )
+
+    executionData.setFrom(
+        fileTree(
+            layout.buildDirectory,
+        ) {
+            include(
+                "jacoco/testDebugUnitTest.exec",
+                "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec",
+            )
+        },
+    )
 }
 
 detekt {
