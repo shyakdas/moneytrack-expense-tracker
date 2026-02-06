@@ -1,23 +1,29 @@
-*.iml
+# Gradle
 .gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
 /build
+
+# Local config
+/local.properties
+
+# IDE
+.idea/
+*.iml
+
+# OS
+.DS_Store
+
+# Android build artifacts
 /captures
 .externalNativeBuild
 .cxx
-local.properties
-# 🔐 Android signing
+
+# 🔐 Android signing (NEVER COMMIT)
 *.keystore
 *.jks
 *.bks
 *.p12
-*.keystore.b64
 release.keystore
 moneytrack-release.keystore
+
+# 🔐 Temporary CI helpers (local only)
+*.keystore.base64
