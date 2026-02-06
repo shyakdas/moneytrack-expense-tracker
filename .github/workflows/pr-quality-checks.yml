@@ -1,5 +1,3 @@
-name: PR • Code Quality & Tests
-
 on:
   pull_request:
     branches:
