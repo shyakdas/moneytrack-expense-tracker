@@ -1,0 +1,48 @@
+name: Nightly • Full CI Check
+
+on:
+  schedule:
+    # Every day at 2 AM IST (20:30 UTC)
+    - cron: "30 20 * * *"
+
+  workflow_dispatch: # allow manual trigger
+
+jobs:
+  nightly-ci:
+    name: Nightly Lint, Tests & Snapshots
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Cache Gradle
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/*.toml') }}
+
+      - run: chmod +x ./gradlew
+
+      - name: Run full CI checks
+        run: |
+          ./gradlew \
+            ktlintCheck \
+            detekt \
+            testDebugUnitTest \
+            jacocoTestReport \
+            verifyPaparazziDebug
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-coverage-report
+          path: app/build/reports/jacoco/jacocoTestReport
