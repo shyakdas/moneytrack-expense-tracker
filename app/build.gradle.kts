@@ -3,7 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ktlint)
     alias(libs.plugins.detekt)
-    alias(libs.plugins.paparazzi)
+//    alias(libs.plugins.paparazzi)
     jacoco
 }
 
@@ -146,7 +146,6 @@ dependencies {
     testImplementation(kotlin("test"))
     testImplementation(libs.mockk)
     testImplementation(libs.coroutines.test)
-    testImplementation(libs.paparazzi)
 
     // UI Tests
     androidTestImplementation(libs.androidx.junit)
@@ -159,5 +158,5 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
     // Screenshot Testing
-    testImplementation(libs.paparazzi)
+   // testImplementation(libs.paparazzi)
 }
