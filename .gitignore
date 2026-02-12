@@ -1,6 +1,6 @@
 # Gradle
 .gradle
-/build
+**/build/
 
 # Local config
 /local.properties
@@ -27,5 +27,3 @@ moneytrack-release.keystore
 
 # 🔐 Temporary CI helpers (local only)
 *.keystore.base64
-
-**/build/
