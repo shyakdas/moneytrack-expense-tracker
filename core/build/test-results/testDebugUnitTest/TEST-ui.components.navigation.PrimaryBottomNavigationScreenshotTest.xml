@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="ui.components.navigation.PrimaryBottomNavigationScreenshotTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-02-12T14:26:25.332Z" hostname="Mac.bbrouter" time="2.256">
+  <properties/>
+  <testcase name="primaryBottomNavigation_light_homeSelected" classname="ui.components.navigation.PrimaryBottomNavigationScreenshotTest" time="2.146"/>
+  <testcase name="primaryBottomNavigation_dark_homeSelected" classname="ui.components.navigation.PrimaryBottomNavigationScreenshotTest" time="0.054"/>
+  <testcase name="primaryBottomNavigation_light_transactionSelected" classname="ui.components.navigation.PrimaryBottomNavigationScreenshotTest" time="0.054"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[WARNING: A Java agent has been loaded dynamically (/Users/apple/.gradle/caches/9.1.0/transforms/7edef2cf70810184e672c0c952cc7381/transformed/byte-buddy-agent-1.18.4.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+Feb 12, 2026 7:56:26 PM app.cash.paparazzi.internal.resources.base.BasicStyleResourceItem <init>
+WARNING: Conflicting definitions of "fontFamily" in style "TextAppearance.Toast"
+Feb 12, 2026 7:56:26 PM app.cash.paparazzi.internal.resources.base.BasicStyleResourceItem <init>
+WARNING: Conflicting definitions of "textColor" in style "NotificationAction"
+Feb 12, 2026 7:56:26 PM app.cash.paparazzi.internal.resources.base.BasicStyleResourceItem <init>
+WARNING: Conflicting definitions of "fontFamily" in style "TextAppearance.DeviceDefault.Notification"
+Feb 12, 2026 7:56:26 PM app.cash.paparazzi.internal.resources.base.BasicStyleResourceItem <init>
+WARNING: Conflicting definitions of "fontFamily" in style "TextAppearance.DeviceDefault.Notification.Title"
+Feb 12, 2026 7:56:26 PM app.cash.paparazzi.internal.resources.base.BasicStyleResourceItem <init>
+WARNING: Conflicting definitions of "fontFamily" in style "TextAppearance.DeviceDefault.Notification.BigTitle"
+Feb 12, 2026 7:56:26 PM app.cash.paparazzi.internal.resources.base.BasicStyleResourceItem <init>
+WARNING: Conflicting definitions of "fontFamily" in style "TextAppearance.DeviceDefault.Notification.Reply"
+Feb 12, 2026 7:56:26 PM app.cash.paparazzi.internal.resources.base.BasicStyleResourceItem <init>
+WARNING: Conflicting definitions of "fontFamily" in style "TextAppearance.DeviceDefault.Notification.Info"
+Feb 12, 2026 7:56:26 PM app.cash.paparazzi.internal.resources.base.BasicStyleResourceItem <init>
+WARNING: Conflicting definitions of "fontFamily" in style "TextAppearance.DeviceDefault.Notification.Time"
+Feb 12, 2026 7:56:26 PM app.cash.paparazzi.internal.PaparazziLogger logAndroidFramework
+INFO: SystemFonts [2]: Loading font config from /Users/apple/.gradle/caches/9.1.0/transforms/01175fab5854e13a0ba9359afbebe2f4/transformed/layoutlib-runtime-16.1.1-mac-arm/data/fonts/fonts.xml
+Feb 12, 2026 7:56:26 PM app.cash.paparazzi.internal.PaparazziLogger logAndroidFramework
+INFO: SystemFonts [2]: Loading font config from /Users/apple/.gradle/caches/9.1.0/transforms/01175fab5854e13a0ba9359afbebe2f4/transformed/layoutlib-runtime-16.1.1-mac-arm/data/fonts/font_fallback.xml
+Feb 12, 2026 7:56:26 PM app.cash.paparazzi.internal.PaparazziLogger logAndroidFramework
+INFO: HWUI [2]: Using Fontation backend (prop=Auto)
+Feb 12, 2026 7:56:26 PM app.cash.paparazzi.internal.PaparazziLogger logAndroidFramework
+INFO: FeatureFlagsImplExport [4]: android.os.flagging.AconfigStorageReadException: ERROR_PACKAGE_NOT_FOUND: package android.xr cannot be found on the device
+Feb 12, 2026 7:56:27 PM app.cash.paparazzi.internal.PaparazziLogger logAndroidFramework
+INFO: ImageReader_JNI [3]: Unable to acquire a buffer item, very likely client tried to acquire more than maxImages buffers
+Feb 12, 2026 7:56:27 PM app.cash.paparazzi.internal.PaparazziLogger logAndroidFramework
+INFO: ImageReader_JNI [3]: Unable to acquire a buffer item, very likely client tried to acquire more than maxImages buffers
+Feb 12, 2026 7:56:27 PM app.cash.paparazzi.internal.PaparazziLogger logAndroidFramework
+INFO: ImageReader_JNI [3]: Unable to acquire a buffer item, very likely client tried to acquire more than maxImages buffers
+]]></system-err>
+</testsuite>

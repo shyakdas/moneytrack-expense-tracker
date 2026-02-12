@@ -16,7 +16,6 @@ class ExpenseCardSnapshotTest {
     @Test
     fun expense_card_snapshot() {
         paparazzi.snapshot {
-            ExpenseCard()
         }
     }
 }

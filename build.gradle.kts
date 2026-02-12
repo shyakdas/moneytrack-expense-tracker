@@ -1,3 +1,6 @@
+import com.android.build.api.dsl.ApplicationExtension
+import com.android.build.api.dsl.LibraryExtension
+
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 plugins {
     alias(libs.plugins.android.application) apply false
@@ -11,4 +14,35 @@ plugins {
 
     // Screenshot testing
     alias(libs.plugins.paparazzi) apply false
+}
+
+subprojects {
+
+    plugins.withId("com.android.application") {
+        extensions.configure<ApplicationExtension> {
+            compileSdk = 36
+
+            defaultConfig {
+                minSdk = 24
+            }
+
+            buildFeatures {
+                compose = true
+            }
+        }
+    }
+
+    plugins.withId("com.android.library") {
+        extensions.configure<LibraryExtension> {
+            compileSdk = 36
+
+            defaultConfig {
+                minSdk = 24
+            }
+
+            buildFeatures {
+                compose = true
+            }
+        }
+    }
 }
