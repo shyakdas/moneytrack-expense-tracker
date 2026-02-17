@@ -1,4 +1,4 @@
-package ui.components.navigation
+package ui.components.navigation.bottom
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box

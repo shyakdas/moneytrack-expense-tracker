@@ -1,4 +1,4 @@
-package ui.components.navigation
+package ui.components.navigation.bottom
 
 data class BottomNavItem(
     val route: String,
