@@ -31,6 +31,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.moneytrack.core.R
+import ui.components.common.SelectorChip
 import ui.theme.Violet100
 
 @Composable
@@ -52,9 +53,10 @@ internal fun ProfileSelectorNavigation(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        MonthSelectorChip(
-            month = config.selectedMonth,
-            onClick = config.onMonthClick
+        SelectorChip(
+            label = config.selectedMonth,
+            onClick = config.onMonthClick,
+            leadingIcon = ImageVector.vectorResource(id = R.drawable.arrow_down_2)
         )
 
         Spacer(modifier = Modifier.weight(1f))
@@ -66,41 +68,6 @@ internal fun ProfileSelectorNavigation(
                 tint = Violet100
             )
         }
-    }
-}
-
-@Composable
-private fun MonthSelectorChip(
-    month: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier
-            .height(40.dp)
-            .border(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.outlineVariant,
-                shape = RoundedCornerShape(40.dp)
-            )
-            .padding(horizontal = 16.dp)
-            .clickable(onClick = onClick),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = ImageVector.vectorResource(id = R.drawable.arrow_down_2),
-            contentDescription = "Select Month",
-            tint = Violet100,
-            modifier = Modifier.size(16.dp)
-        )
-
-        Spacer(modifier = Modifier.width(8.dp))
-
-        Text(
-            text = month,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface
-        )
     }
 }
 
