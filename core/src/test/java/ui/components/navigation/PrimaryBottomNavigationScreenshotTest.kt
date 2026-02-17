@@ -6,8 +6,8 @@ import org.junit.Rule
 import org.junit.Test
 import ui.theme.MoneyTrackTheme
 import com.moneytrack.core.R
-import ui.components.navigation.bottom.BottomNavItem
-import ui.components.navigation.bottom.PrimaryBottomNavigation
+import ui.components.navigation.bottomNav.BottomNavItem
+import ui.components.navigation.bottomNav.PrimaryBottomNavigation
 
 class PrimaryBottomNavigationScreenshotTest {
 

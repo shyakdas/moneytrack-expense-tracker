@@ -1,4 +1,4 @@
-package ui.components.button
+package ui.components.navigation.button
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable

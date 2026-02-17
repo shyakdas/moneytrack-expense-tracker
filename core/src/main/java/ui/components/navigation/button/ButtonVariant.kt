@@ -1,4 +1,4 @@
-package ui.components.button
+package ui.components.navigation.button
 
 enum class ButtonVariant {
     PRIMARY,

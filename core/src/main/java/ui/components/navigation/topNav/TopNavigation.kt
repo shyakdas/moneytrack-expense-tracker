@@ -1,4 +1,4 @@
-package ui.components.navigation.top
+package ui.components.navigation.topNav
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer

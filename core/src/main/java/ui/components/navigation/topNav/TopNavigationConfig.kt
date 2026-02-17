@@ -1,4 +1,4 @@
-package ui.components.navigation.top
+package ui.components.navigation.topNav
 
 import androidx.compose.ui.graphics.painter.Painter
 

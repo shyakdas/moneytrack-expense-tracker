@@ -1,4 +1,4 @@
-package ui.components.common
+package ui.components.navigation.common
 
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.foundation.background

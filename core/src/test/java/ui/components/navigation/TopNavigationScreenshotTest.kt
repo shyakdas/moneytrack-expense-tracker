@@ -11,8 +11,8 @@ import app.cash.paparazzi.DeviceConfig
 import app.cash.paparazzi.Paparazzi
 import org.junit.Rule
 import org.junit.Test
-import ui.components.navigation.top.TopNavigation
-import ui.components.navigation.top.TopNavigationConfig
+import ui.components.navigation.topNav.TopNavigation
+import ui.components.navigation.topNav.TopNavigationConfig
 import ui.theme.MoneyTrackTheme
 
 class TopNavigationScreenshotTest {
