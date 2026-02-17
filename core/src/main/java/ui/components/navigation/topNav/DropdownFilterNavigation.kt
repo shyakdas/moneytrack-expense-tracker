@@ -1,4 +1,4 @@
-package ui.components.navigation
+package ui.components.navigation.topNav
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,7 +19,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.moneytrack.core.R
-import ui.components.common.SelectorChip
+import ui.components.navigation.common.SelectorChip
 import ui.theme.Violet100
 
 @Composable
