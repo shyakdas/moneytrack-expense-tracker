@@ -24,6 +24,9 @@ internal fun BaseButton(
     leadingIcon: ImageVector? = null,
     enabled: Boolean = true
 ) {
+
+    val isFullWidth = size == ButtonSize.LARGE
+
     val backgroundColor: Color
     val contentColor: Color
     val borderStroke: BorderStroke?
@@ -53,7 +56,10 @@ internal fun BaseButton(
 
     Surface(
         modifier = modifier
-            .fillMaxWidth()
+            .then(
+                if (isFullWidth) Modifier.fillMaxWidth()
+                else Modifier.wrapContentWidth()
+            )
             .height(size.height)
             .clickable(enabled = enabled, onClick = onClick),
         shape = RoundedCornerShape(16.dp),
@@ -63,7 +69,6 @@ internal fun BaseButton(
     ) {
         Row(
             modifier = Modifier
-                .fillMaxSize()
                 .padding(horizontal = size.horizontalPadding),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center

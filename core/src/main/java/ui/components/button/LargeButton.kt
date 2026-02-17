@@ -45,7 +45,6 @@ private fun LargeButtonAllVariantsPreview() {
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
 
-            // Primary
             LargeButton(
                 text = "Primary",
                 onClick = {},
@@ -59,7 +58,6 @@ private fun LargeButtonAllVariantsPreview() {
                 leadingIcon = ImageVector.vectorResource(id = R.drawable.add)
             )
 
-            // Secondary
             LargeButton(
                 text = "Secondary",
                 onClick = {},
@@ -73,7 +71,6 @@ private fun LargeButtonAllVariantsPreview() {
                 leadingIcon = ImageVector.vectorResource(id = R.drawable.add)
             )
 
-            // Tertiary
             LargeButton(
                 text = "Sign Up with Google",
                 onClick = {},
