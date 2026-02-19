@@ -26,7 +26,6 @@ import ui.components.card.transaction.TransactionType
 import ui.theme.MoneyTrackTheme
 
 class CardsScreenshotTest {
-
     @get:Rule
     val paparazzi = Paparazzi(
         deviceConfig = DeviceConfig.PIXEL_5
