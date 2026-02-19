@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import org.junit.Rule
 import org.junit.Test
 import com.moneytrack.core.R
+import ui.components.form.input.InputField
 import ui.theme.MoneyTrackTheme
 
 class InputFieldScreenshotTest {
