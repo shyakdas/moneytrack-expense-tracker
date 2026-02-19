@@ -1,6 +1,7 @@
 package ui.components.form.control
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.offset
@@ -13,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import ui.theme.Violet100
 
@@ -36,7 +38,6 @@ fun PrimarySlider(
                 )
             )
 
-            // Percentage bubble
             Box(
                 modifier = Modifier
                     .offset(x = (value / 100f * 260).dp) // visually tuned
@@ -49,6 +50,37 @@ fun PrimarySlider(
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
+        }
+    }
+}
+
+@Preview(
+    name = "Primary Slider",
+    showBackground = true,
+    backgroundColor = 0xFFFFFFFF
+)
+@Composable
+private fun PrimarySliderPreview() {
+    MaterialTheme {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp)
+        ) {
+
+            PrimarySlider(
+                value = 0f,
+                onValueChange = {}
+            )
+
+            PrimarySlider(
+                value = 50f,
+                onValueChange = {}
+            )
+
+            PrimarySlider(
+                value = 90f,
+                onValueChange = {}
+            )
         }
     }
 }
