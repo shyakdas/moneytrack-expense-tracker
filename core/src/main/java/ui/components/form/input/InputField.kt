@@ -1,4 +1,4 @@
-package ui.components.form
+package ui.components.form.input
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
