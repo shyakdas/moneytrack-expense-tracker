@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import ui.components.navigation.button.ButtonVariant
 import ui.components.navigation.button.LargeButton
@@ -140,3 +141,64 @@ private fun FilterContent(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview(
+    name = "BottomSheet – Attachment Picker",
+    showBackground = true,
+    backgroundColor = 0xFFFFFFFF
+)
+@Composable
+private fun AttachmentPickerBottomSheetPreview() {
+    MaterialTheme {
+        AppBottomSheet(
+            sheetContent = BottomSheetContent.AttachmentPicker(
+                onCamera = {},
+                onImage = {},
+                onDocument = {}
+            ),
+            onDismiss = {}
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview(
+    name = "BottomSheet – Confirmation",
+    showBackground = true,
+    backgroundColor = 0xFFFFFFFF
+)
+@Composable
+private fun ConfirmationBottomSheetPreview() {
+    MaterialTheme {
+        AppBottomSheet(
+            sheetContent = BottomSheetContent.Confirmation(
+                title = "Delete Transaction?",
+                description = "This action cannot be undone.",
+                confirmText = "Delete",
+                cancelText = "Cancel",
+                onConfirm = {},
+                onCancel = {}
+            ),
+            onDismiss = {}
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview(
+    name = "BottomSheet – Filter",
+    showBackground = true,
+    backgroundColor = 0xFFFFFFFF
+)
+@Composable
+private fun FilterBottomSheetPreview() {
+    MaterialTheme {
+        AppBottomSheet(
+            sheetContent = BottomSheetContent.Filter(
+                onApply = {},
+                onReset = {}
+            ),
+            onDismiss = {}
+        )
+    }
+}
