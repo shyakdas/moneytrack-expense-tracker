@@ -26,7 +26,6 @@ import ui.components.card.transaction.TransactionType
 import ui.theme.MoneyTrackTheme
 
 class CardsScreenshotTest {
-
     @get:Rule
     val paparazzi = Paparazzi(
         deviceConfig = DeviceConfig.PIXEL_5
@@ -54,8 +53,7 @@ class CardsScreenshotTest {
 @Composable
 private fun CardsContent() {
     Column(
-        modifier = Modifier
-            .padding(16.dp),
+        modifier = Modifier.padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
 
@@ -68,6 +66,15 @@ private fun CardsContent() {
             type = TransactionType.EXPENSE
         )
 
+        TransactionCard(
+            icon = ImageVector.vectorResource(id = R.drawable.shopping_bag),
+            title = "Salary",
+            subtitle = "Monthly Salary",
+            amount = "+ Rp 3.129.000",
+            time = "04:30 PM",
+            type = TransactionType.INCOME
+        )
+
         CategoryCard(
             icon = Icons.Default.ShoppingBag,
             title = "Utilities",
@@ -76,12 +83,20 @@ private fun CardsContent() {
             type = CategoryAmountType.EXPENSE
         )
 
+        CategoryCard(
+            icon = Icons.Default.ShoppingBag,
+            title = "Salary",
+            amount = "+ $600",
+            progress = 0.7f,
+            type = CategoryAmountType.INCOME
+        )
+
         BudgetCard(
             category = "Medical",
             remainingAmount = "$200",
             spentText = "$600 of $1000",
             progress = 0.6f,
-            status = BudgetStatus.EXCEEDED
+            status = BudgetStatus.NORMAL
         )
 
         BudgetCard(
@@ -101,14 +116,36 @@ private fun CardsContent() {
 
         ListItemCard(
             title = "Title",
+            description = "Description",
+            variant = ListItemVariant.DEFAULT
+        )
+
+        ListItemCard(
+            title = "Title",
             description = null,
-            variant = ListItemVariant.SELECT,
+            selected = false,
+            variant = ListItemVariant.SELECT
+        )
+
+        ListItemCard(
+            title = "Title",
+            description = null,
+            selected = true,
+            variant = ListItemVariant.SELECT
         )
 
         ListItemCard(
             title = "Title",
             description = "Description",
-            variant = ListItemVariant.SWITCH,
+            switchChecked = false,
+            variant = ListItemVariant.SWITCH
+        )
+
+        ListItemCard(
+            title = "Title",
+            description = "Description",
+            switchChecked = true,
+            variant = ListItemVariant.SWITCH
         )
     }
 }
