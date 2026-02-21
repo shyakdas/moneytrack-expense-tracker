@@ -1,12 +1,12 @@
 package ui.components.form.input
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -15,9 +15,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.moneytrack.core.R
-import ui.theme.NeutralC6
+import ui.theme.AppTheme
+import ui.theme.Dimens
 
 @Composable
 fun InputField(
@@ -29,18 +29,18 @@ fun InputField(
     trailingIcon: ImageVector? = null,
     onTrailingIconClick: (() -> Unit)? = null,
     enabled: Boolean = true,
-    textStyle: TextStyle = MaterialTheme.typography.bodyLarge
+    textStyle: TextStyle = AppTheme.typography.bodyLarge
 ) {
     Row(
         modifier = modifier
-            .height(52.dp)
+            .height(Dimens.inputHeight)
             .fillMaxWidth()
             .border(
-                width = 0.5.dp,
-                color = MaterialTheme.colorScheme.outlineVariant,
-                shape = RoundedCornerShape(16.dp)
+                width = Dimens.spacing1,
+                color = AppTheme.colors.outline,
+                shape = RoundedCornerShape(Dimens.radius16)
             )
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = Dimens.spacing16),
         verticalAlignment = Alignment.CenterVertically
     ) {
 
@@ -48,10 +48,10 @@ fun InputField(
             Icon(
                 imageVector = leadingIcon,
                 contentDescription = null,
-                tint = NeutralC6,
-                modifier = Modifier.size(20.dp)
+                tint = AppTheme.colors.onSurfaceVariant,
+                modifier = Modifier.size(Dimens.icon20)
             )
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(Dimens.spacing12))
         }
 
         Box(
@@ -62,7 +62,7 @@ fun InputField(
                 Text(
                     text = placeholder,
                     style = textStyle,
-                    color = NeutralC6
+                    color = AppTheme.colors.onSurfaceVariant
                 )
             }
 
@@ -72,20 +72,20 @@ fun InputField(
                 enabled = enabled,
                 singleLine = true,
                 textStyle = textStyle.copy(
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = AppTheme.colors.onSurface
                 ),
                 modifier = Modifier.fillMaxWidth()
             )
         }
 
         if (trailingIcon != null) {
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(Dimens.spacing12))
             Icon(
                 imageVector = trailingIcon,
                 contentDescription = null,
-                tint = NeutralC6,
+                tint = AppTheme.colors.onSurfaceVariant,
                 modifier = Modifier
-                    .size(20.dp)
+                    .size(Dimens.icon20)
                     .then(
                         if (onTrailingIconClick != null)
                             Modifier.clickable { onTrailingIconClick() }
@@ -96,54 +96,64 @@ fun InputField(
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
+@Preview(name = "Input Field – Light & Dark")
 @Composable
 private fun InputFieldPreview() {
-    MaterialTheme {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
+    Column {
 
-            // Basic
-            InputField(
-                value = "",
-                onValueChange = {},
-                placeholder = "Input..."
-            )
+        ui.theme.MoneyTrackTheme(darkTheme = false) {
+            InputPreviewContent()
+        }
 
-            // Trailing icon (password)
-            InputField(
-                value = "",
-                onValueChange = {},
-                placeholder = "Input...",
-                trailingIcon = ImageVector.vectorResource(id = R.drawable.show),
-            )
+        Spacer(modifier = Modifier.height(Dimens.spacing16))
 
-            // Leading icon
-            InputField(
-                value = "",
-                onValueChange = {},
-                placeholder = "Input",
-                leadingIcon = ImageVector.vectorResource(id = R.drawable.show),
-            )
-
-            // Leading + trailing icon
-            InputField(
-                value = "",
-                onValueChange = {},
-                placeholder = "Input...",
-                leadingIcon = ImageVector.vectorResource(id = R.drawable.show),
-                trailingIcon = ImageVector.vectorResource(id = R.drawable.show),
-            )
-
-            // Attachment style
-            InputField(
-                value = "Add attachment",
-                onValueChange = {},
-                leadingIcon = ImageVector.vectorResource(id = R.drawable.attachment),
-            )
+        ui.theme.MoneyTrackTheme(darkTheme = true) {
+            InputPreviewContent()
         }
     }
 }
 
+@Composable
+private fun InputPreviewContent() {
+    Column(
+        modifier = Modifier
+            .background(AppTheme.colors.background)
+            .padding(Dimens.spacing16),
+        verticalArrangement = Arrangement.spacedBy(Dimens.spacing16)
+    ) {
+
+        InputField(
+            value = "",
+            onValueChange = {},
+            placeholder = "Input..."
+        )
+
+        InputField(
+            value = "",
+            onValueChange = {},
+            placeholder = "Input...",
+            trailingIcon = ImageVector.vectorResource(id = R.drawable.show)
+        )
+
+        InputField(
+            value = "",
+            onValueChange = {},
+            placeholder = "Input",
+            leadingIcon = ImageVector.vectorResource(id = R.drawable.show)
+        )
+
+        InputField(
+            value = "",
+            onValueChange = {},
+            placeholder = "Input...",
+            leadingIcon = ImageVector.vectorResource(id = R.drawable.show),
+            trailingIcon = ImageVector.vectorResource(id = R.drawable.show)
+        )
+
+        InputField(
+            value = "Add attachment",
+            onValueChange = {},
+            leadingIcon = ImageVector.vectorResource(id = R.drawable.attachment)
+        )
+    }
+}

@@ -79,4 +79,5 @@ object Dimens {
     val filterHeight = 64.dp
     val bottomNavHeight = 72.dp
     val fabSize = 64.dp
+
 }
