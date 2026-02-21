@@ -25,6 +25,8 @@ object Dimens {
     val spacing36 = 36.dp
     val spacing48 = 48.dp
 
+    val spacing6 = 6.dp
+
     // --------------------
     // Component Heights
     // --------------------
@@ -71,4 +73,9 @@ object Dimens {
     val elevation2 = 2.dp
     val elevation4 = 4.dp
     val elevation8 = 8.dp
+
+    // Bottom Navigation
+    val bottomNavContainerHeight = 90.dp
+    val bottomNavHeight = 72.dp
+    val fabSize = 64.dp
 }
