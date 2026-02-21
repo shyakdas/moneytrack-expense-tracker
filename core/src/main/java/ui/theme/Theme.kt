@@ -41,7 +41,7 @@ private val LightColorScheme = lightColorScheme(
 // --------------------
 private val DarkColorScheme = darkColorScheme(
 
-    primary = Violet100,      // brand stays same
+    primary = Violet100,
     onPrimary = Light100,
 
     secondary = Blue100,
@@ -69,7 +69,7 @@ private val DarkColorScheme = darkColorScheme(
 @Composable
 fun MoneyTrackTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = false, // 🔥 disabled for brand consistency
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
 
