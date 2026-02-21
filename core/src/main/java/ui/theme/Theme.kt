@@ -81,6 +81,7 @@ fun MoneyTrackTheme(
             surface = Dark75,
             onSurface = Light100,
             surfaceVariant = Dark50,
+            onSurfaceVariant = Light60,
             outline = Dark25,
             error = Red100
         )
@@ -93,6 +94,7 @@ fun MoneyTrackTheme(
             surface = Light80,
             onSurface = Dark100,
             surfaceVariant = Light60,
+            onSurfaceVariant = Dark75,
             outline = Light40,
             error = Red100
         )

@@ -14,6 +14,7 @@ data class AppColors(
     val onSurface: Color,
 
     val surfaceVariant: Color,
+    val onSurfaceVariant: Color,
     val outline: Color,
 
     val error: Color
