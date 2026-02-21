@@ -2,11 +2,7 @@ package ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
@@ -14,54 +10,69 @@ import androidx.compose.ui.platform.LocalContext
 // Light Theme
 // --------------------
 private val LightColorScheme = lightColorScheme(
-    primary = Violet60,
-    onPrimary = Light20,
 
-    secondary = Blue60,
-    onSecondary = Light20,
+    primary = Violet100,
+    onPrimary = Light100,
 
-    tertiary = Green60,
-    onTertiary = Light20,
+    secondary = Blue100,
+    onSecondary = Light100,
 
-    background = Light40,
+    tertiary = Green100,
+    onTertiary = Light100,
+
+    background = Light100,
     onBackground = Dark100,
 
-    surface = Light20,
+    surface = Light80,
     onSurface = Dark100,
 
-    error = Red60,
-    onError = Light20
+    surfaceVariant = Light60,
+    onSurfaceVariant = Dark75,
+
+    outline = Light40,
+    outlineVariant = Light40,
+
+    error = Red100,
+    onError = Light100
 )
 
 // --------------------
 // Dark Theme
 // --------------------
 private val DarkColorScheme = darkColorScheme(
-    primary = Violet40,
-    onPrimary = Dark100,
 
-    secondary = Blue40,
-    onSecondary = Dark100,
+    primary = Violet100,      // brand stays same
+    onPrimary = Light100,
 
-    tertiary = Green40,
-    onTertiary = Dark100,
+    secondary = Blue100,
+    onSecondary = Light100,
+
+    tertiary = Green100,
+    onTertiary = Light100,
 
     background = Dark100,
-    onBackground = Light20,
+    onBackground = Light100,
 
     surface = Dark75,
-    onSurface = Light20,
+    onSurface = Light100,
 
-    error = Red40,
-    onError = Dark100
+    surfaceVariant = Dark50,
+    onSurfaceVariant = Light60,
+
+    outline = Dark50,
+    outlineVariant = Dark25,
+
+    error = Red100,
+    onError = Light100
 )
 
 @Composable
 fun MoneyTrackTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false, // 🔥 disabled for brand consistency
     content: @Composable () -> Unit
 ) {
+
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
