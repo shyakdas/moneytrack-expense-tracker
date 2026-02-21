@@ -19,7 +19,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.moneytrack.core.R
 import ui.theme.AppTheme
 import ui.theme.Dimens
@@ -37,13 +36,13 @@ fun IconActionButton(
 ) {
     Box(
         modifier = modifier
-            .size(40.dp)
+            .size(Dimens.buttonSmallHeight)
             .clip(shape.shape)
             .then(
                 when (variant) {
                     IconButtonVariant.OUTLINED ->
                         Modifier.border(
-                            width = 1.dp,
+                            width = Dimens.spacing1,
                             color = AppTheme.colors.outline,
                             shape = shape.shape
                         )
@@ -61,7 +60,7 @@ fun IconActionButton(
         androidx.compose.material3.Icon(
             imageVector = icon,
             contentDescription = contentDescription,
-            modifier = Modifier.size(18.dp),
+            modifier = Modifier.size(Dimens.spacing18),
             tint = iconTint
         )
     }
