@@ -23,6 +23,7 @@ coroutinesTest = "1.10.2"
 paparazzi = "2.0.0-alpha04"
 cameraCore = "1.5.3"
 material = "1.13.0"
+foundationLayout = "1.10.3"
 
 [libraries]
 androidx-compose-animation = { module = "androidx.compose.animation:animation" }
@@ -48,6 +49,7 @@ coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-
 paparazzi = { group = "app.cash.paparazzi", name = "paparazzi", version.ref = "paparazzi" }
 androidx-camera-core = { group = "androidx.camera", name = "camera-core", version.ref = "cameraCore" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+androidx-compose-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout", version.ref = "foundationLayout" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

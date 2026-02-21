@@ -4,13 +4,14 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -18,10 +19,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import ui.theme.NeutralC6
-import ui.theme.Violet100
-import ui.theme.Violet20
+import ui.theme.AppTheme
+import ui.theme.Dimens
+import ui.theme.MoneyTrackTheme
 
 @Composable
 fun ToggleButton(
@@ -31,12 +31,12 @@ fun ToggleButton(
 ) {
     Row(
         modifier = modifier
-            .height(48.dp)
+            .height(Dimens.spacing48)
             .background(
-                color = MaterialTheme.colorScheme.surfaceVariant,
-                shape = RoundedCornerShape(28.dp)
+                color = AppTheme.colors.surfaceVariant,
+                shape = RoundedCornerShape(Dimens.spacing28)
             )
-            .padding(4.dp),
+            .padding(Dimens.spacing4),
         verticalAlignment = Alignment.CenterVertically
     ) {
 
@@ -61,46 +61,70 @@ private fun RowScope.ToggleButtonItem(
     onClick: () -> Unit
 ) {
     val backgroundColor by animateColorAsState(
-        targetValue = if (isSelected) Violet100 else Violet20,
+        targetValue = if (isSelected)
+            AppTheme.colors.primary
+        else
+            Color.Transparent,
         label = "ToggleItemBackground"
     )
 
     val textColor by animateColorAsState(
-        targetValue = if (isSelected) Color.White else NeutralC6,
+        targetValue = if (isSelected)
+            AppTheme.colors.onPrimary
+        else
+            AppTheme.colors.onSurfaceVariant,
         label = "ToggleItemText"
     )
 
     Box(
         modifier = Modifier
-            .weight(0.5f)
+            .weight(1f)
             .fillMaxHeight()
             .background(
                 color = backgroundColor,
-                shape = RoundedCornerShape(24.dp)
+                shape = RoundedCornerShape(Dimens.spacing24)
             )
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
-            style = MaterialTheme.typography.titleMedium,
+            style = AppTheme.typography.bodyMedium,
             color = textColor
         )
     }
 }
 
-
-@Preview(
-    name = "Toggle Button",
-    showBackground = true,
-    backgroundColor = 0xFFFFFFFF
-)
+@Preview(name = "Toggle Button – Light & Dark")
 @Composable
 private fun ToggleButtonPreview() {
-    MaterialTheme {
-        ToggleButton(
-            selected = ToggleOption.EXPENSE,
-            onSelectedChange = {}
-        )
+    Column {
+        MoneyTrackTheme(darkTheme = false) {
+            Box(
+                modifier = Modifier
+                    .padding(Dimens.spacing16)
+                    .background(AppTheme.colors.background)
+            ) {
+                ToggleButton(
+                    selected = ToggleOption.EXPENSE,
+                    onSelectedChange = {}
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(Dimens.spacing16))
+
+        MoneyTrackTheme(darkTheme = true) {
+            Box(
+                modifier = Modifier
+                    .padding(Dimens.spacing16)
+                    .background(AppTheme.colors.background)
+            ) {
+                ToggleButton(
+                    selected = ToggleOption.INCOME,
+                    onSelectedChange = {}
+                )
+            }
+        }
     }
 }

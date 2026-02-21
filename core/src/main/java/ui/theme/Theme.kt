@@ -1,81 +1,114 @@
 package ui.theme
 
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 
 // --------------------
-// Light Theme
+// Material Light Scheme (INTERNAL)
 // --------------------
-private val LightColorScheme = lightColorScheme(
-    primary = Violet60,
-    onPrimary = Light20,
+internal val LightColorScheme = lightColorScheme(
+    primary = Violet100,
+    onPrimary = Light100,
 
-    secondary = Blue60,
-    onSecondary = Light20,
+    secondary = Blue100,
+    onSecondary = Light100,
 
-    tertiary = Green60,
-    onTertiary = Light20,
+    tertiary = Green100,
+    onTertiary = Light100,
 
-    background = Light40,
+    background = Light100,
     onBackground = Dark100,
 
-    surface = Light20,
+    surface = Light80,
     onSurface = Dark100,
 
-    error = Red60,
-    onError = Light20
+    surfaceVariant = Light60,
+    onSurfaceVariant = Dark75,
+
+    outline = Light40,
+    outlineVariant = Light40,
+
+    error = Red100,
+    onError = Light100
 )
 
 // --------------------
-// Dark Theme
+// Material Dark Scheme (INTERNAL)
 // --------------------
-private val DarkColorScheme = darkColorScheme(
-    primary = Violet40,
-    onPrimary = Dark100,
+internal val DarkColorScheme = darkColorScheme(
+    primary = Violet100,
+    onPrimary = Light100,
 
-    secondary = Blue40,
-    onSecondary = Dark100,
+    secondary = Blue100,
+    onSecondary = Light100,
 
-    tertiary = Green40,
-    onTertiary = Dark100,
+    tertiary = Green100,
+    onTertiary = Light100,
 
     background = Dark100,
-    onBackground = Light20,
+    onBackground = Light100,
 
     surface = Dark75,
-    onSurface = Light20,
+    onSurface = Light100,
 
-    error = Red40,
-    onError = Dark100
+    surfaceVariant = Dark50,
+    onSurfaceVariant = Light60,
+
+    outline = Dark50,
+    outlineVariant = Dark25,
+
+    error = Red100,
+    onError = Light100
 )
+
 
 @Composable
 fun MoneyTrackTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context)
-            else dynamicLightColorScheme(context)
-        }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+    val appColors = if (darkTheme) {
+        AppColors(
+            primary = Violet100,
+            onPrimary = Light100,
+            background = Dark100,
+            onBackground = Light100,
+            surface = Dark75,
+            onSurface = Light100,
+            surfaceVariant = Dark50,
+            onSurfaceVariant = Light60,
+            outline = Dark25,
+            error = Red100
+        )
+    } else {
+        AppColors(
+            primary = Violet100,
+            onPrimary = Light100,
+            background = Light100,
+            onBackground = Dark100,
+            surface = Light80,
+            onSurface = Dark100,
+            surfaceVariant = Light60,
+            onSurfaceVariant = Dark75,
+            outline = Light40,
+            error = Red100
+        )
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    val materialScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+
+    CompositionLocalProvider(
+        LocalAppColors provides appColors
+    ) {
+        MaterialTheme(
+            colorScheme = materialScheme,
+            typography = Typography,
+            content = content
+        )
+    }
 }
