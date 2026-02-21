@@ -80,4 +80,13 @@ object Dimens {
     val bottomNavHeight = 72.dp
     val fabSize = 64.dp
 
+    val checkboxSize = 24.dp
+    val spacing1_5 = 1.5.dp
+
+    val radioOuterSize = 24.dp
+    val radioInnerSize = 12.dp
+    val sliderBubbleOffset = 20.dp
+    val switchThumbSize = 20.dp
+    val switchRadius = 12.dp
+
 }

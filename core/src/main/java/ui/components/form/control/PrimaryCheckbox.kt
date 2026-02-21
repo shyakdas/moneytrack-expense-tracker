@@ -5,21 +5,23 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import ui.theme.Violet100
+import ui.theme.AppTheme
+import ui.theme.Dimens
+import ui.theme.MoneyTrackTheme
 
 @Composable
 fun PrimaryCheckbox(
@@ -29,15 +31,18 @@ fun PrimaryCheckbox(
 ) {
     Box(
         modifier = modifier
-            .size(24.dp)
+            .size(Dimens.checkboxSize)
             .border(
-                width = 1.5.dp,
-                color = Violet100 ,
-                shape = RoundedCornerShape(6.dp)
+                width = Dimens.spacing1_5,
+                color = AppTheme.colors.primary,
+                shape = RoundedCornerShape(Dimens.radius6)
             )
             .background(
-                color = if (checked) Violet100 else Color.Transparent,
-                shape = RoundedCornerShape(6.dp)
+                color = if (checked)
+                    AppTheme.colors.primary
+                else
+                    AppTheme.colors.background,
+                shape = RoundedCornerShape(Dimens.radius6)
             )
             .clickable { onCheckedChange(!checked) },
         contentAlignment = Alignment.Center
@@ -46,35 +51,47 @@ fun PrimaryCheckbox(
             Icon(
                 imageVector = Icons.Default.Check,
                 contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(16.dp)
+                tint = AppTheme.colors.onPrimary,
+                modifier = Modifier.size(Dimens.icon16)
             )
         }
     }
 }
 
-@Preview(
-    name = "Primary Checkbox",
-    showBackground = true,
-    backgroundColor = 0xFFFFFFFF
-)
+@Preview(name = "Primary Checkbox – Light & Dark")
 @Composable
 private fun PrimaryCheckboxPreview() {
-    MaterialTheme {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            PrimaryCheckbox(
-                checked = false,
-                onCheckedChange = {}
-            )
+    Column {
 
-            PrimaryCheckbox(
-                checked = true,
-                onCheckedChange = {}
-            )
+        MoneyTrackTheme(darkTheme = false) {
+            CheckboxPreviewContent()
         }
+
+        Spacer(modifier = Modifier.height(Dimens.spacing16))
+
+        MoneyTrackTheme(darkTheme = true) {
+            CheckboxPreviewContent()
+        }
+    }
+}
+
+@Composable
+private fun CheckboxPreviewContent() {
+    Row(
+        modifier = Modifier
+            .background(AppTheme.colors.background)
+            .padding(Dimens.spacing16),
+        horizontalArrangement = Arrangement.spacedBy(Dimens.spacing16),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        PrimaryCheckbox(
+            checked = false,
+            onCheckedChange = {}
+        )
+
+        PrimaryCheckbox(
+            checked = true,
+            onCheckedChange = {}
+        )
     }
 }
