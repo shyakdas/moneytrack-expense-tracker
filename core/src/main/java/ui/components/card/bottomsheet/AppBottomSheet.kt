@@ -2,20 +2,31 @@ package ui.components.card.bottomsheet
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import ui.components.navigation.button.ButtonVariant
 import ui.components.navigation.button.LargeButton
 import ui.components.navigation.common.ChipGroup
-import ui.theme.Violet100
+import ui.theme.AppTheme
+import ui.theme.Dimens
+import ui.theme.MoneyTrackTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -25,7 +36,7 @@ fun AppBottomSheet(
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = MaterialTheme.colorScheme.surface,
+        containerColor = AppTheme.colors.surface,
         dragHandle = { BottomSheetDefaults.DragHandle() }
     ) {
         when (sheetContent) {
@@ -41,55 +52,94 @@ fun AppBottomSheet(
     }
 }
 
+
 @Composable
 private fun AttachmentPickerContent(
     data: BottomSheetContent.AttachmentPicker
 ) {
     Row(
         modifier = Modifier
-            .padding(24.dp)
+            .padding(Dimens.spacing24)
             .fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
+        horizontalArrangement = Arrangement.spacedBy(Dimens.spacing16)
     ) {
+        AttachmentItem(
+            label = "Camera",
+            iconRes = com.moneytrack.core.R.drawable.camera,
+            onClick = data.onCamera,
+            modifier = Modifier.weight(1f)
+        )
 
-        AttachmentItem("Camera", com.moneytrack.core.R.drawable.camera, data.onCamera, Modifier.weight(1f))
-        AttachmentItem("Image", com.moneytrack.core.R.drawable.gallery, data.onImage, Modifier.weight(1f))
-        AttachmentItem("Document", com.moneytrack.core.R.drawable.document, data.onDocument, Modifier.weight(1f))
+        AttachmentItem(
+            label = "Image",
+            iconRes = com.moneytrack.core.R.drawable.gallery,
+            onClick = data.onImage,
+            modifier = Modifier.weight(1f)
+        )
+
+        AttachmentItem(
+            label = "Document",
+            iconRes = com.moneytrack.core.R.drawable.document,
+            onClick = data.onDocument,
+            modifier = Modifier.weight(1f)
+        )
     }
 }
 
 @Composable
-private fun AttachmentItem(label: String, iconRes: Int, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun AttachmentItem(
+    label: String,
+    iconRes: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .clip(RoundedCornerShape(Dimens.radius16))
+            .background(AppTheme.colors.surfaceVariant)
             .clickable(onClick = onClick)
-            .padding(vertical = 20.dp), horizontalAlignment = Alignment.CenterHorizontally
+            .padding(vertical = Dimens.spacing20),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Icon(
             painter = painterResource(iconRes),
             contentDescription = label,
-            tint = Violet100
+            tint = AppTheme.colors.primary
         )
-        Spacer (Modifier.height(8.dp))
-        Text (label, color = Violet100)
+
+        Spacer(modifier = Modifier.height(Dimens.spacing8))
+
+        Text(
+            text = label,
+            style = AppTheme.typography.bodyMedium,
+            color = AppTheme.colors.primary
+        )
     }
 }
+
 
 @Composable
 private fun ConfirmationContent(
     data: BottomSheetContent.Confirmation
 ) {
     Column(
-        modifier = Modifier.padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        modifier = Modifier.padding(Dimens.spacing24),
+        verticalArrangement = Arrangement.spacedBy(Dimens.spacing16)
     ) {
 
-        Text(data.title, style = MaterialTheme.typography.titleLarge)
-        Text(data.description, style = MaterialTheme.typography.bodyMedium)
+        Text(
+            text = data.title,
+            style = AppTheme.typography.titleLarge,
+            color = AppTheme.colors.onSurface
+        )
 
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(
+            text = data.description,
+            style = AppTheme.typography.bodyMedium,
+            color = AppTheme.colors.onSurfaceVariant
+        )
+
+        Row(horizontalArrangement = Arrangement.spacedBy(Dimens.spacing12)) {
             LargeButton(
                 text = data.cancelText,
                 onClick = data.onCancel,
@@ -107,25 +157,37 @@ private fun ConfirmationContent(
     }
 }
 
+
 @Composable
 private fun FilterContent(
     data: BottomSheetContent.Filter
 ) {
     Column(
-        modifier = Modifier.padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
+        modifier = Modifier.padding(Dimens.spacing24),
+        verticalArrangement = Arrangement.spacedBy(Dimens.spacing20)
     ) {
 
-        Text("Filter Transaction", style = MaterialTheme.typography.titleLarge)
+        Text(
+            text = "Filter Transaction",
+            style = AppTheme.typography.titleLarge,
+            color = AppTheme.colors.onSurface
+        )
 
-        Text("Filter By", style = MaterialTheme.typography.titleMedium)
+        Text(
+            text = "Filter By",
+            style = AppTheme.typography.titleMedium
+        )
+
         ChipGroup(
             options = listOf("Income", "Expense", "Transfer"),
             selectedOption = "Expense",
             onOptionSelected = {}
         )
 
-        Text("Sort By", style = MaterialTheme.typography.titleMedium)
+        Text(
+            text = "Sort By",
+            style = AppTheme.typography.titleMedium
+        )
 
         ChipGroup(
             options = listOf("Highest", "Lowest", "Newest", "Oldest"),
@@ -142,63 +204,30 @@ private fun FilterContent(
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Preview(
-    name = "BottomSheet – Attachment Picker",
-    showBackground = true,
-    backgroundColor = 0xFFFFFFFF
-)
+@Preview(name = "BottomSheet – Attachment Picker (Light & Dark)")
 @Composable
-private fun AttachmentPickerBottomSheetPreview() {
-    MaterialTheme {
-        AppBottomSheet(
-            sheetContent = BottomSheetContent.AttachmentPicker(
-                onCamera = {},
-                onImage = {},
-                onDocument = {}
-            ),
-            onDismiss = {}
-        )
-    }
-}
+private fun BottomSheetAttachmentPreview() {
+    Column {
+        MoneyTrackTheme(darkTheme = false) {
+            AppBottomSheet(
+                sheetContent = BottomSheetContent.AttachmentPicker(
+                    onCamera = {},
+                    onImage = {},
+                    onDocument = {}
+                ),
+                onDismiss = {}
+            )
+        }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview(
-    name = "BottomSheet – Confirmation",
-    showBackground = true,
-    backgroundColor = 0xFFFFFFFF
-)
-@Composable
-private fun ConfirmationBottomSheetPreview() {
-    MaterialTheme {
-        AppBottomSheet(
-            sheetContent = BottomSheetContent.Confirmation(
-                title = "Delete Transaction?",
-                description = "This action cannot be undone.",
-                confirmText = "Delete",
-                cancelText = "Cancel",
-                onConfirm = {},
-                onCancel = {}
-            ),
-            onDismiss = {}
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview(
-    name = "BottomSheet – Filter",
-    showBackground = true,
-    backgroundColor = 0xFFFFFFFF
-)
-@Composable
-private fun FilterBottomSheetPreview() {
-    MaterialTheme {
-        AppBottomSheet(
-            sheetContent = BottomSheetContent.Filter(
-                onApply = {},
-                onReset = {}
-            ),
-            onDismiss = {}
-        )
+        MoneyTrackTheme(darkTheme = true) {
+            AppBottomSheet(
+                sheetContent = BottomSheetContent.AttachmentPicker(
+                    onCamera = {},
+                    onImage = {},
+                    onDocument = {}
+                ),
+                onDismiss = {}
+            )
+        }
     }
 }

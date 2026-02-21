@@ -89,4 +89,15 @@ object Dimens {
     val switchThumbSize = 20.dp
     val switchRadius = 12.dp
 
+    val iconContainerSize = 48.dp
+
+    val chartLineHeight = 180.dp
+    val chartDonutHeight = 220.dp
+    val radius50 = 50.dp
+    val spacing10 = 10.dp
+    val progressHeight = 16.dp
+
+    val progressSmallHeight = 14.dp
+    val warningIconSize = 36.dp
+
 }

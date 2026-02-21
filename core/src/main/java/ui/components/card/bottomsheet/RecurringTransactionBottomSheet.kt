@@ -1,8 +1,10 @@
 package ui.components.card.bottomsheet
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -24,6 +26,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import ui.components.navigation.button.ButtonVariant
 import ui.components.navigation.button.LargeButton
+import ui.theme.AppTheme
+import ui.theme.Dimens
+import ui.theme.MoneyTrackTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,18 +41,25 @@ fun RecurringTransactionBottomSheet(
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = MaterialTheme.colorScheme.surface,
+        containerColor = AppTheme.colors.surface,
         dragHandle = { BottomSheetDefaults.DragHandle() }
     ) {
         Column(
             modifier = Modifier
-                .padding(24.dp)
+                .padding(Dimens.spacing24)
                 .fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            verticalArrangement = Arrangement.spacedBy(Dimens.spacing20)
         ) {
 
-            FrequencyDropdown("Frequency", onFrequencyClick)
-            FrequencyDropdown("End After", onEndClick)
+            FrequencyDropdown(
+                label = "Frequency",
+                onClick = onFrequencyClick
+            )
+
+            FrequencyDropdown(
+                label = "End After",
+                onClick = onEndClick
+            )
 
             LargeButton(
                 text = "Next",
@@ -58,6 +70,7 @@ fun RecurringTransactionBottomSheet(
     }
 }
 
+
 @Composable
 private fun FrequencyDropdown(
     label: String,
@@ -66,37 +79,59 @@ private fun FrequencyDropdown(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(52.dp)
+            .height(Dimens.inputHeight)
             .border(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.outlineVariant,
-                shape = RoundedCornerShape(12.dp)
+                width = Dimens.spacing1,
+                color = AppTheme.colors.outline,
+                shape = RoundedCornerShape(Dimens.radius12)
             )
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = Dimens.spacing16),
         verticalAlignment = Alignment.CenterVertically
     ) {
 
         Text(
             text = label,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            style = AppTheme.typography.bodyLarge,
+            color = AppTheme.colors.onSurfaceVariant
         )
 
-        Spacer(Modifier.weight(1f))
+        Spacer(modifier = Modifier.weight(1f))
 
         Icon(
             painter = painterResource(com.moneytrack.core.R.drawable.arrow_down_2),
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
+            tint = AppTheme.colors.onSurfaceVariant
         )
     }
 }
 
-@Preview(showBackground = true)
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview(name = "Recurring Bottom Sheet – Light & Dark")
 @Composable
 private fun RecurringBottomSheetPreview() {
-    MaterialTheme {
+    Column {
+        MoneyTrackTheme(darkTheme = false) {
+            PreviewContent()
+        }
+
+        Spacer(modifier = Modifier.height(Dimens.spacing16))
+
+        MoneyTrackTheme(darkTheme = true) {
+            PreviewContent()
+        }
+    }
+}
+
+@Composable
+private fun PreviewContent() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(AppTheme.colors.background)
+            .padding(Dimens.spacing16)
+    ) {
         RecurringTransactionBottomSheet(
             state = RecurringState(),
             onFrequencyClick = {},
