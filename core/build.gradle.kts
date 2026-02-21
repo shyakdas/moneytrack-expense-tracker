@@ -14,6 +14,7 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.camera.core)
     implementation(libs.material)
+    implementation(libs.androidx.compose.foundation.layout)
     testImplementation(libs.paparazzi)
     implementation(libs.androidx.compose.animation)
     implementation(libs.androidx.compose.ui.tooling.preview)
