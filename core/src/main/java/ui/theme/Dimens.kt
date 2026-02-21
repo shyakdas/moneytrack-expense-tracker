@@ -24,6 +24,7 @@ object Dimens {
     // --------------------
     // Component Heights
     // --------------------
+    val buttonLLargeHeight = 64.dp
     val buttonLargeHeight = 56.dp
     val buttonSmallHeight = 40.dp
     val inputHeight = 56.dp
