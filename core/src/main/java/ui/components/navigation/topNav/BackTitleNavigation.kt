@@ -1,5 +1,6 @@
 package ui.components.navigation.topNav
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -8,7 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -17,63 +18,89 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.moneytrack.core.R
+import ui.theme.AppTheme
+import ui.theme.Dimens
+import ui.theme.MoneyTrackTheme
 
 @Composable
 internal fun BackTitleNavigation(
     config: TopNavigationConfig.BackWithTitle
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp)
-            .padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
+    Surface(
+        color = AppTheme.colors.surface
     ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(Dimens.buttonLargeHeight)
+                .padding(horizontal = Dimens.spacing16),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
 
-        IconButton(onClick = config.onBackClick) {
-            Icon(
-                imageVector = ImageVector.vectorResource(id = R.drawable.arrow_left),
-                contentDescription = "Back"
-            )
-        }
-
-        Text(
-            text = config.title,
-            modifier = Modifier.weight(1f),
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.titleMedium
-        )
-
-        if (config.showMore) {
-            IconButton(onClick = { config.onMoreClick?.invoke() }) {
+            IconButton(onClick = config.onBackClick) {
                 Icon(
-                    imageVector = ImageVector.vectorResource(id = R.drawable.more_horizontal),
-                    contentDescription = "Back"
+                    imageVector = ImageVector.vectorResource(R.drawable.arrow_left),
+                    contentDescription = "Back",
+                    tint = AppTheme.colors.onSurface
                 )
             }
-        } else {
-            Spacer(modifier = Modifier.width(48.dp))
+
+            Text(
+                text = config.title,
+                modifier = Modifier.weight(1f),
+                textAlign = TextAlign.Center,
+                style = AppTheme.typography.headlineSmall,
+                color = AppTheme.colors.onSurface
+            )
+
+            if (config.showMore) {
+                IconButton(onClick = { config.onMoreClick?.invoke() }) {
+                    Icon(
+                        imageVector = ImageVector.vectorResource(R.drawable.more_horizontal),
+                        contentDescription = "More",
+                        tint = AppTheme.colors.onSurface
+                    )
+                }
+            } else {
+                Spacer(modifier = Modifier.width(Dimens.spacing48))
+            }
         }
     }
 }
 
-@Preview(
-    name = "Back Title Navigation",
-    showBackground = true,
-    backgroundColor = 0xFFFFFFFF
-)
+@Preview(name = "Back Title Navigation – Light & Dark")
 @Composable
 private fun BackTitleNavigationPreview() {
-    MaterialTheme {
-        BackTitleNavigation(
-            config = TopNavigationConfig.BackWithTitle(
-                title = "Notification",
-                showMore = true,
-                onBackClick = {},
-                onMoreClick = {}
-            )
-        )
+    Column {
+
+        MoneyTrackTheme(darkTheme = false) {
+            Surface(color = AppTheme.colors.background) {
+                BackTitleNavigation(
+                    config = TopNavigationConfig.BackWithTitle(
+                        title = "Notification",
+                        showMore = true,
+                        onBackClick = {},
+                        onMoreClick = {}
+                    )
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(Dimens.spacing16))
+
+        MoneyTrackTheme(darkTheme = true) {
+            Surface(color = AppTheme.colors.background) {
+                BackTitleNavigation(
+                    config = TopNavigationConfig.BackWithTitle(
+                        title = "Notification",
+                        showMore = true,
+                        onBackClick = {},
+                        onMoreClick = {}
+                    )
+                )
+            }
+        }
     }
 }
+

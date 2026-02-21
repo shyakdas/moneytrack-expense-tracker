@@ -1,16 +1,16 @@
 package ui.theme
 
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 
 // --------------------
-// Light Theme
+// Material Light Scheme (INTERNAL)
 // --------------------
-private val LightColorScheme = lightColorScheme(
-
+internal val LightColorScheme = lightColorScheme(
     primary = Violet100,
     onPrimary = Light100,
 
@@ -37,10 +37,9 @@ private val LightColorScheme = lightColorScheme(
 )
 
 // --------------------
-// Dark Theme
+// Material Dark Scheme (INTERNAL)
 // --------------------
-private val DarkColorScheme = darkColorScheme(
-
+internal val DarkColorScheme = darkColorScheme(
     primary = Violet100,
     onPrimary = Light100,
 
@@ -66,27 +65,48 @@ private val DarkColorScheme = darkColorScheme(
     onError = Light100
 )
 
+
 @Composable
 fun MoneyTrackTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context)
-            else dynamicLightColorScheme(context)
-        }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+    val appColors = if (darkTheme) {
+        AppColors(
+            primary = Violet100,
+            onPrimary = Light100,
+            background = Dark100,
+            onBackground = Light100,
+            surface = Dark75,
+            onSurface = Light100,
+            surfaceVariant = Dark50,
+            outline = Dark25,
+            error = Red100
+        )
+    } else {
+        AppColors(
+            primary = Violet100,
+            onPrimary = Light100,
+            background = Light100,
+            onBackground = Dark100,
+            surface = Light80,
+            onSurface = Dark100,
+            surfaceVariant = Light60,
+            outline = Light40,
+            error = Red100
+        )
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    val materialScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+
+    CompositionLocalProvider(
+        LocalAppColors provides appColors
+    ) {
+        MaterialTheme(
+            colorScheme = materialScheme,
+            typography = Typography,
+            content = content
+        )
+    }
 }
