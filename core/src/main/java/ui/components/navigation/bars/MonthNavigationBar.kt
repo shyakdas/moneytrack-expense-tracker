@@ -1,11 +1,12 @@
 package ui.components.navigation.bars
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -13,11 +14,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.moneytrack.core.R
 import ui.components.navigation.button.IconActionButton
 import ui.components.navigation.button.IconButtonShape
 import ui.components.navigation.button.IconButtonVariant
+import ui.theme.AppTheme
+import ui.theme.Dimens
+import ui.theme.MoneyTrackTheme
 
 @Composable
 fun MonthNavigationBar(
@@ -29,12 +32,12 @@ fun MonthNavigationBar(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(48.dp)
-            .padding(horizontal = 16.dp),
+            .height(Dimens.buttonLargeHeight)
+            .background(AppTheme.colors.background)
+            .padding(horizontal = Dimens.spacing16),
         verticalAlignment = Alignment.CenterVertically
     ) {
 
-        // Left arrow
         IconActionButton(
             icon = ImageVector.vectorResource(R.drawable.arrow_left_2),
             contentDescription = "Previous month",
@@ -43,19 +46,16 @@ fun MonthNavigationBar(
             shape = IconButtonShape.CIRCLE
         )
 
-        // Push title to center
         Spacer(modifier = Modifier.weight(1f))
 
-        // Month text (centered)
         Text(
             text = month,
-            style = MaterialTheme.typography.titleLarge
+            style = AppTheme.typography.headlineSmall,
+            color = AppTheme.colors.onBackground
         )
 
-        // Push right arrow to end
         Spacer(modifier = Modifier.weight(1f))
 
-        // Right arrow
         IconActionButton(
             icon = ImageVector.vectorResource(R.drawable.arrow_right_2),
             contentDescription = "Next month",
@@ -66,18 +66,27 @@ fun MonthNavigationBar(
     }
 }
 
-@Preview(
-    name = "Month Navigation Bar",
-    showBackground = true,
-    backgroundColor = 0xFFFFFFFF
-)
+@Preview(name = "Month Navigation Bar – Light & Dark")
 @Composable
 private fun MonthNavigationBarPreview() {
-    MaterialTheme {
-        MonthNavigationBar(
-            month = "May",
-            onPrevious = {},
-            onNext = {}
-        )
+    Column {
+
+        MoneyTrackTheme(darkTheme = false) {
+            MonthNavigationBar(
+                month = "May",
+                onPrevious = {},
+                onNext = {}
+            )
+        }
+
+        Spacer(modifier = Modifier.height(Dimens.spacing16))
+
+        MoneyTrackTheme(darkTheme = true) {
+            MonthNavigationBar(
+                month = "May",
+                onPrevious = {},
+                onNext = {}
+            )
+        }
     }
 }

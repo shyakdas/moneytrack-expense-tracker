@@ -71,18 +71,21 @@ private fun RecurringDetailCardPreview() {
                     SelectorChip(
                         label = "Yearly",
                         onClick = {},
+                        selected = false,
                         modifier = Modifier.weight(1f)
                     )
 
                     SelectorChip(
                         label = "April",
                         onClick = {},
+                        selected = false,
                         modifier = Modifier.weight(1f)
                     )
 
                     SelectorChip(
                         label = "29",
                         onClick = {},
+                        selected = false,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -94,12 +97,14 @@ private fun RecurringDetailCardPreview() {
                     SelectorChip(
                         label = "Date",
                         onClick = {},
+                        selected = false,
                         modifier = Modifier.weight(1f)
                     )
 
                     SelectorChip(
                         label = "27 Aug 2021",
                         onClick = {},
+                        selected = false,
                         modifier = Modifier.weight(1f)
                     )
                 }

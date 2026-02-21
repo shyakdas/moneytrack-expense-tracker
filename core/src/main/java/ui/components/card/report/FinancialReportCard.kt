@@ -81,6 +81,7 @@ private fun ReportHeader(
         SelectorChip(
             label = "Month",
             onClick = onMonthClick,
+            selected = false,
             leadingIcon = ImageVector.vectorResource(R.drawable.arrow_down_2)
         )
 

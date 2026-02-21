@@ -41,6 +41,7 @@ internal fun DropdownFilterNavigation(
             SelectorChip(
                 label = config.label,
                 onClick = config.onDropdownClick,
+                selected = false,
                 leadingIcon = ImageVector.vectorResource(id = R.drawable.arrow_down_2)
             )
 

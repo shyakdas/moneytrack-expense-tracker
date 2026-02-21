@@ -58,6 +58,7 @@ internal fun ProfileSelectorNavigation(
             SelectorChip(
                 label = config.selectedMonth,
                 onClick = config.onMonthClick,
+                selected = false,
                 leadingIcon = ImageVector.vectorResource(id = R.drawable.arrow_down_2)
             )
 
