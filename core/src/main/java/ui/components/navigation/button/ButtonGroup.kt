@@ -1,13 +1,18 @@
 package ui.components.navigation.button
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
+import ui.theme.AppTheme
+import ui.theme.Dimens
+import ui.theme.MoneyTrackTheme
 
 @Composable
 fun ButtonGroup(
@@ -16,34 +21,60 @@ fun ButtonGroup(
 ) {
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(Dimens.spacing12)
     ) {
         content()
     }
 }
 
-@Preview(
-    name = "Button Group",
-    showBackground = true,
-    backgroundColor = 0xFFFFFFFF
-)
+@Preview(name = "Button Group – Light & Dark")
 @Composable
 private fun ButtonGroupPreview() {
-    MaterialTheme {
-        ButtonGroup(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            SmallButton(
-                text = "Secondary",
-                onClick = {},
-                variant = ButtonVariant.SECONDARY
-            )
+    Column {
+        MoneyTrackTheme(darkTheme = false) {
+            Row(
+                modifier = Modifier
+                    .background(AppTheme.colors.background)
+                    .padding(Dimens.spacing16)
+            ) {
+                ButtonGroup {
+                    SmallButton(
+                        text = "Secondary",
+                        onClick = {},
+                        variant = ButtonVariant.SECONDARY
+                    )
 
-            SmallButton(
-                text = "Primary",
-                onClick = {},
-                variant = ButtonVariant.PRIMARY
-            )
+                    SmallButton(
+                        text = "Primary",
+                        onClick = {},
+                        variant = ButtonVariant.PRIMARY
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(Dimens.spacing16))
+
+        MoneyTrackTheme(darkTheme = true) {
+            Row(
+                modifier = Modifier
+                    .background(AppTheme.colors.background)
+                    .padding(Dimens.spacing16)
+            ) {
+                ButtonGroup {
+                    SmallButton(
+                        text = "Secondary",
+                        onClick = {},
+                        variant = ButtonVariant.SECONDARY
+                    )
+
+                    SmallButton(
+                        text = "Primary",
+                        onClick = {},
+                        variant = ButtonVariant.PRIMARY
+                    )
+                }
+            }
         }
     }
 }
