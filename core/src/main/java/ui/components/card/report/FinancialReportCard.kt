@@ -10,8 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -19,14 +17,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import com.moneytrack.core.R
 import ui.components.navigation.button.ButtonGroup
 import ui.components.navigation.button.IconActionButton
 import ui.components.navigation.button.IconButtonShape
 import ui.components.navigation.button.IconButtonVariant
 import ui.components.navigation.common.SelectorChip
-import ui.theme.Violet100
+import ui.theme.AppTheme
+import ui.theme.Dimens
 
 @Composable
 fun FinancialReportCard(
@@ -36,30 +33,28 @@ fun FinancialReportCard(
     onMonthClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
+    androidx.compose.material3.Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surface
+        shape = RoundedCornerShape(Dimens.radius20),
+        color = AppTheme.colors.surface
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            modifier = Modifier.padding(Dimens.spacing16),
+            verticalArrangement = Arrangement.spacedBy(Dimens.spacing16)
         ) {
 
-            // Header
             ReportHeader(
                 selectedChart = selectedChart,
                 onChartChange = onChartChange,
                 onMonthClick = onMonthClick
             )
 
-            // Amount
             Text(
                 text = amount,
-                style = MaterialTheme.typography.displaySmall
+                style = AppTheme.typography.displaySmall,
+                color = AppTheme.colors.onSurface
             )
 
-            // Chart
             when (selectedChart) {
                 ReportChartType.LINE -> LineChartPlaceholder()
                 ReportChartType.DONUT -> DonutChartPlaceholder(amount)
@@ -67,6 +62,7 @@ fun FinancialReportCard(
         }
     }
 }
+
 
 @Composable
 private fun ReportHeader(
@@ -80,54 +76,62 @@ private fun ReportHeader(
 
         SelectorChip(
             label = "Month",
+            selected = false,
             onClick = onMonthClick,
-            leadingIcon = ImageVector.vectorResource(R.drawable.arrow_down_2)
+            leadingIcon = ImageVector.vectorResource(
+                id = com.moneytrack.core.R.drawable.arrow_down_2
+            )
         )
 
         Spacer(modifier = Modifier.weight(1f))
 
         ButtonGroup {
-
             IconActionButton(
-                icon = ImageVector.vectorResource(R.drawable.line_chart_2),
+                icon = ImageVector.vectorResource(
+                    id = com.moneytrack.core.R.drawable.line_chart_2
+                ),
                 contentDescription = "Line chart",
                 onClick = { onChartChange(ReportChartType.LINE) },
                 variant = if (selectedChart == ReportChartType.LINE)
                     IconButtonVariant.FILLED
                 else IconButtonVariant.OUTLINED,
                 shape = IconButtonShape.ROUNDED_RECT,
-                iconTint = Violet100
+                iconTint = AppTheme.colors.primary
             )
 
             IconActionButton(
-                icon = ImageVector.vectorResource(R.drawable.pie_chart),
+                icon = ImageVector.vectorResource(
+                    id = com.moneytrack.core.R.drawable.pie_chart
+                ),
                 contentDescription = "Donut chart",
                 onClick = { onChartChange(ReportChartType.DONUT) },
                 variant = if (selectedChart == ReportChartType.DONUT)
                     IconButtonVariant.FILLED
                 else IconButtonVariant.OUTLINED,
                 shape = IconButtonShape.ROUNDED_RECT,
-                iconTint = Violet100
+                iconTint = AppTheme.colors.primary
             )
         }
     }
 }
+
 
 @Composable
 private fun LineChartPlaceholder() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(180.dp)
+            .height(Dimens.chartLineHeight)
             .background(
-                color = MaterialTheme.colorScheme.surfaceVariant,
-                shape = RoundedCornerShape(16.dp)
+                color = AppTheme.colors.surfaceVariant,
+                shape = RoundedCornerShape(Dimens.radius16)
             ),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = "Line Chart",
-            style = MaterialTheme.typography.bodyMedium
+            style = AppTheme.typography.bodyMedium,
+            color = AppTheme.colors.onSurfaceVariant
         )
     }
 }
@@ -139,45 +143,54 @@ private fun DonutChartPlaceholder(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(220.dp)
+            .height(Dimens.chartDonutHeight)
             .background(
-                color = MaterialTheme.colorScheme.surfaceVariant,
-                shape = RoundedCornerShape(16.dp)
+                color = AppTheme.colors.surfaceVariant,
+                shape = RoundedCornerShape(Dimens.radius16)
             ),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = amount,
-            style = MaterialTheme.typography.displaySmall
+            style = AppTheme.typography.displaySmall,
+            color = AppTheme.colors.onSurface
         )
     }
 }
 
-@Preview(
-    name = "Financial Report – Line",
-    showBackground = true,
-    backgroundColor = 0xFFFFFFFF
-)
+
+@Preview(name = "Financial Report – Light & Dark")
 @Composable
-private fun FinancialReportLinePreview() {
-    MaterialTheme {
+private fun FinancialReportPreview() {
+    Column {
+
+        ui.theme.MoneyTrackTheme(darkTheme = false) {
+            FinancialReportPreviewContent()
+        }
+
+        Spacer(modifier = Modifier.height(Dimens.spacing16))
+
+        ui.theme.MoneyTrackTheme(darkTheme = true) {
+            FinancialReportPreviewContent()
+        }
+    }
+}
+
+@Composable
+private fun FinancialReportPreviewContent() {
+    Column(
+        modifier = Modifier
+            .background(AppTheme.colors.background)
+            .padding(Dimens.spacing16),
+        verticalArrangement = Arrangement.spacedBy(Dimens.spacing16)
+    ) {
         FinancialReportCard(
             amount = "$ 2000",
             selectedChart = ReportChartType.LINE,
             onChartChange = {},
             onMonthClick = {}
         )
-    }
-}
 
-@Preview(
-    name = "Financial Report – Donut",
-    showBackground = true,
-    backgroundColor = 0xFFFFFFFF
-)
-@Composable
-private fun FinancialReportDonutPreview() {
-    MaterialTheme {
         FinancialReportCard(
             amount = "$ 2000",
             selectedChart = ReportChartType.DONUT,

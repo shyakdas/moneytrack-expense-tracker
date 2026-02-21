@@ -1,21 +1,30 @@
 package ui.components.card.transaction
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.moneytrack.core.R
+import ui.theme.AppTheme
+import ui.theme.Dimens
+import ui.theme.MoneyTrackTheme
 
 @Composable
 fun TransactionCard(
@@ -28,109 +37,119 @@ fun TransactionCard(
     modifier: Modifier = Modifier
 ) {
     val amountColor = when (type) {
-        TransactionType.EXPENSE -> Color(0xFFFF4D4F)
-        TransactionType.INCOME -> Color(0xFF00A86B)
+        TransactionType.EXPENSE -> AppTheme.colors.error
+        TransactionType.INCOME -> AppTheme.colors.primary
     }
 
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surface
+        shape = RoundedCornerShape(Dimens.radius20),
+        color = AppTheme.colors.surface
     ) {
         Row(
-            modifier = Modifier
-                .padding(16.dp),
+            modifier = Modifier.padding(Dimens.spacing16),
             verticalAlignment = Alignment.CenterVertically
         ) {
 
             Box(
                 modifier = Modifier
-                    .size(48.dp)
+                    .size(Dimens.iconContainerSize)
                     .background(
-                        color = Color(0xFFFFEFD2),
-                        shape = RoundedCornerShape(16.dp)
+                        color = AppTheme.colors.surfaceVariant,
+                        shape = RoundedCornerShape(Dimens.radius16)
                     ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = Color(0xFFFFA000),
-                    modifier = Modifier.size(24.dp)
+                    tint = AppTheme.colors.primary,
+                    modifier = Modifier.size(Dimens.icon24)
                 )
             }
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(Dimens.spacing16))
 
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(Dimens.spacing4)
             ) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.titleMedium
+                    style = AppTheme.typography.titleMedium,
+                    color = AppTheme.colors.onSurface
                 )
 
                 Text(
                     text = subtitle,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = AppTheme.typography.bodyMedium,
+                    color = AppTheme.colors.onSurfaceVariant,
                     maxLines = 1
                 )
             }
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(Dimens.spacing12))
 
             Column(
                 horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(Dimens.spacing4)
             ) {
                 Text(
                     text = amount,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = AppTheme.typography.titleMedium,
                     color = amountColor
                 )
 
                 Text(
                     text = time,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    style = AppTheme.typography.bodySmall,
+                    color = AppTheme.colors.onSurfaceVariant
                 )
             }
         }
     }
 }
 
-@Preview(
-    name = "Transaction Card – Expense & Income",
-    showBackground = true,
-    backgroundColor = 0xFFFFFFFF
-)
+@Preview(name = "Transaction Card – Light & Dark")
 @Composable
 private fun TransactionCardPreview() {
-    MaterialTheme {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-
-            TransactionCard(
-                icon = ImageVector.vectorResource(id = R.drawable.shopping_bag),
-                title = "Shopping",
-                subtitle = "Buy an Avocado...",
-                amount = "- Rp 229.000",
-                time = "03:30 PM",
-                type = TransactionType.EXPENSE
-            )
-
-            TransactionCard(
-                icon = ImageVector.vectorResource(id = R.drawable.shopping_bag),
-                title = "Salary",
-                subtitle = "Buy an Avocado...",
-                amount = "+ Rp 3.129.000",
-                time = "04:30 PM",
-                type = TransactionType.INCOME
-            )
+    Column {
+        MoneyTrackTheme(darkTheme = false) {
+            TransactionPreviewContent()
         }
+
+        Spacer(modifier = Modifier.height(Dimens.spacing16))
+
+        MoneyTrackTheme(darkTheme = true) {
+            TransactionPreviewContent()
+        }
+    }
+}
+
+@Composable
+private fun TransactionPreviewContent() {
+    Column(
+        modifier = Modifier
+            .background(AppTheme.colors.background)
+            .padding(Dimens.spacing16),
+        verticalArrangement = Arrangement.spacedBy(Dimens.spacing12)
+    ) {
+        TransactionCard(
+            icon = ImageVector.vectorResource(id = R.drawable.shopping_bag),
+            title = "Shopping",
+            subtitle = "Buy an Avocado...",
+            amount = "- Rp 229.000",
+            time = "03:30 PM",
+            type = TransactionType.EXPENSE
+        )
+
+        TransactionCard(
+            icon = ImageVector.vectorResource(id = R.drawable.shopping_bag),
+            title = "Salary",
+            subtitle = "Monthly salary",
+            amount = "+ Rp 3.129.000",
+            time = "04:30 PM",
+            type = TransactionType.INCOME
+        )
     }
 }

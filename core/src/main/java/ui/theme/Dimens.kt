@@ -25,6 +25,8 @@ object Dimens {
     val spacing36 = 36.dp
     val spacing48 = 48.dp
 
+    val spacing6 = 6.dp
+
     // --------------------
     // Component Heights
     // --------------------
@@ -71,4 +73,31 @@ object Dimens {
     val elevation2 = 2.dp
     val elevation4 = 4.dp
     val elevation8 = 8.dp
+
+    // Bottom Navigation
+    val bottomNavContainerHeight = 90.dp
+    val filterHeight = 64.dp
+    val bottomNavHeight = 72.dp
+    val fabSize = 64.dp
+
+    val checkboxSize = 24.dp
+    val spacing1_5 = 1.5.dp
+
+    val radioOuterSize = 24.dp
+    val radioInnerSize = 12.dp
+    val sliderBubbleOffset = 20.dp
+    val switchThumbSize = 20.dp
+    val switchRadius = 12.dp
+
+    val iconContainerSize = 48.dp
+
+    val chartLineHeight = 180.dp
+    val chartDonutHeight = 220.dp
+    val radius50 = 50.dp
+    val spacing10 = 10.dp
+    val progressHeight = 16.dp
+
+    val progressSmallHeight = 14.dp
+    val warningIconSize = 36.dp
+
 }

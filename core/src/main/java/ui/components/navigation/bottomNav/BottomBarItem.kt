@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -17,10 +16,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.moneytrack.core.R
-import ui.theme.NeutralC6
-import ui.theme.Violet100
+import ui.theme.AppTheme
+import ui.theme.Dimens
+import ui.theme.MoneyTrackTheme
 
 @Composable
 internal fun BottomBarItem(
@@ -30,7 +29,9 @@ internal fun BottomBarItem(
 ) {
 
     val color by animateColorAsState(
-        targetValue = if (isSelected) Violet100 else NeutralC6,
+        targetValue =
+            if (isSelected) AppTheme.colors.primary
+            else AppTheme.colors.onSurfaceVariant,
         label = "BottomNavColorAnimation"
     )
 
@@ -46,51 +47,79 @@ internal fun BottomBarItem(
                 imageVector = ImageVector.vectorResource(id = item.icon),
                 contentDescription = item.label,
                 tint = color,
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(Dimens.icon32)
             )
         }
 
         Text(
             text = item.label,
-            style = MaterialTheme.typography.labelLarge,
+            style = AppTheme.typography.labelLarge,
             color = color
         )
     }
 }
 
 
-@Preview(
-    name = "BottomBarItem – States",
-    showBackground = true,
-    backgroundColor = 0xFFFFFFFF
-)
+@Preview(name = "BottomBarItem – Light & Dark")
 @Composable
 private fun BottomBarItemPreview() {
-    MaterialTheme {
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            BottomBarItem(
-                item = BottomNavItem(
-                    route = "home",
-                    icon = R.drawable.home,
-                    label = "Home"
-                ),
-                isSelected = true,
-                onClick = {}
-            )
+    Column {
+        MoneyTrackTheme(darkTheme = false) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                BottomBarItem(
+                    item = BottomNavItem(
+                        route = "home",
+                        icon = R.drawable.home,
+                        label = "Home"
+                    ),
+                    isSelected = true,
+                    onClick = {}
+                )
 
-            Spacer(modifier = Modifier.size(24.dp))
+                Spacer(modifier = Modifier.size(Dimens.spacing24))
 
-            BottomBarItem(
-                item = BottomNavItem(
-                    route = "profile",
-                    icon = R.drawable.user,
-                    label = "Profile"
-                ),
-                isSelected = false,
-                onClick = {}
-            )
+                BottomBarItem(
+                    item = BottomNavItem(
+                        route = "profile",
+                        icon = R.drawable.user,
+                        label = "Profile"
+                    ),
+                    isSelected = false,
+                    onClick = {}
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.size(Dimens.spacing16))
+
+        MoneyTrackTheme(darkTheme = true) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                BottomBarItem(
+                    item = BottomNavItem(
+                        route = "home",
+                        icon = R.drawable.home,
+                        label = "Home"
+                    ),
+                    isSelected = true,
+                    onClick = {}
+                )
+
+                Spacer(modifier = Modifier.size(Dimens.spacing24))
+
+                BottomBarItem(
+                    item = BottomNavItem(
+                        route = "profile",
+                        icon = R.drawable.user,
+                        label = "Profile"
+                    ),
+                    isSelected = false,
+                    onClick = {}
+                )
+            }
         }
     }
 }

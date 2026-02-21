@@ -1,21 +1,28 @@
 package ui.components.card.category
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.moneytrack.core.R
-import ui.theme.Light100
+import ui.theme.AppTheme
+import ui.theme.Dimens
 
 @Composable
 fun CategoryCard(
@@ -27,39 +34,39 @@ fun CategoryCard(
     modifier: Modifier = Modifier
 ) {
     val amountColor = when (type) {
-        CategoryAmountType.EXPENSE -> Color(0xFFFF4D4F)
-        CategoryAmountType.INCOME -> Color(0xFF00A86B)
+        CategoryAmountType.EXPENSE -> AppTheme.colors.error
+        CategoryAmountType.INCOME -> AppTheme.colors.primary
     }
 
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surface
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(
+                color = AppTheme.colors.surface,
+                shape = RoundedCornerShape(Dimens.radius20)
+            )
+            .padding(Dimens.spacing16),
+        verticalArrangement = Arrangement.spacedBy(Dimens.spacing16)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            CategoryPill(
+                icon = icon,
+                title = title
+            )
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                CategoryPill(
-                    icon = icon,
-                    title = title
-                )
+            Spacer(modifier = Modifier.weight(1f))
 
-                Spacer(modifier = Modifier.weight(1f))
-
-                Text(
-                    text = amount,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = amountColor
-                )
-            }
-
-            CategoryProgressBar(progress = progress)
+            Text(
+                text = amount,
+                style = AppTheme.typography.titleLarge,
+                color = amountColor
+            )
         }
+
+        CategoryProgressBar(progress = progress)
     }
 }
 
@@ -71,24 +78,31 @@ private fun CategoryPill(
     Row(
         modifier = Modifier
             .background(
-                color = Light100,
-                shape = RoundedCornerShape(50.dp)
+                color = AppTheme.colors.surfaceVariant,
+                shape = RoundedCornerShape(Dimens.radius50)
             )
-            .padding(horizontal = 16.dp, vertical = 10.dp),
+            .padding(
+                horizontal = Dimens.spacing16,
+                vertical = Dimens.spacing10
+            ),
         verticalAlignment = Alignment.CenterVertically
     ) {
 
         Box(
             modifier = Modifier
-                .size(12.dp)
-                .background(Color(0xFFFFA000), RoundedCornerShape(50.dp))
+                .size(Dimens.spacing12)
+                .background(
+                    color = AppTheme.colors.primary,
+                    shape = RoundedCornerShape(Dimens.radius50)
+                )
         )
 
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.width(Dimens.spacing8))
 
         Text(
             text = title,
-            style = MaterialTheme.typography.bodyLarge
+            style = AppTheme.typography.bodyLarge,
+            color = AppTheme.colors.onSurface
         )
     }
 }
@@ -101,10 +115,10 @@ private fun CategoryProgressBar(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(16.dp)
+            .height(Dimens.progressHeight)
             .background(
-                color = MaterialTheme.colorScheme.surfaceVariant,
-                shape = RoundedCornerShape(50.dp)
+                color = AppTheme.colors.surfaceVariant,
+                shape = RoundedCornerShape(Dimens.radius50)
             )
     ) {
         Box(
@@ -112,41 +126,54 @@ private fun CategoryProgressBar(
                 .fillMaxWidth(progress.coerceIn(0f, 1f))
                 .fillMaxHeight()
                 .background(
-                    color = Color(0xFFFFA000),
-                    shape = RoundedCornerShape(50.dp)
+                    color = AppTheme.colors.primary,
+                    shape = RoundedCornerShape(Dimens.radius50)
                 )
         )
     }
 }
 
-@Preview(
-    name = "Category Card – Expense & Income",
-    showBackground = true,
-    backgroundColor = 0xFFFFFFFF
-)
+
+@Preview(name = "Category Card – Light & Dark")
 @Composable
 private fun CategoryCardPreview() {
-    MaterialTheme {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
+    Column {
 
-            CategoryCard(
-                icon = ImageVector.vectorResource(id = R.drawable.shopping_bag),
-                title = "Utilities",
-                amount = "- $600",
-                progress = 0.7f,
-                type = CategoryAmountType.EXPENSE
-            )
-
-            CategoryCard(
-                icon = ImageVector.vectorResource(id = R.drawable.shopping_bag),
-                title = "Utilities",
-                amount = "+ $600",
-                progress = 0.7f,
-                type = CategoryAmountType.INCOME
-            )
+        ui.theme.MoneyTrackTheme(darkTheme = false) {
+            CategoryPreviewContent()
         }
+
+        Spacer(modifier = Modifier.height(Dimens.spacing16))
+
+        ui.theme.MoneyTrackTheme(darkTheme = true) {
+            CategoryPreviewContent()
+        }
+    }
+}
+
+@Composable
+private fun CategoryPreviewContent() {
+    Column(
+        modifier = Modifier
+            .background(AppTheme.colors.background)
+            .padding(Dimens.spacing16),
+        verticalArrangement = Arrangement.spacedBy(Dimens.spacing16)
+    ) {
+
+        CategoryCard(
+            icon = ImageVector.vectorResource(id = R.drawable.shopping_bag),
+            title = "Utilities",
+            amount = "- $600",
+            progress = 0.7f,
+            type = CategoryAmountType.EXPENSE
+        )
+
+        CategoryCard(
+            icon = ImageVector.vectorResource(id = R.drawable.shopping_bag),
+            title = "Utilities",
+            amount = "+ $600",
+            progress = 0.7f,
+            type = CategoryAmountType.INCOME
+        )
     }
 }
