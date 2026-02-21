@@ -10,9 +10,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.unit.dp
-import ui.theme.Violet100
-import ui.theme.Violet20
+import ui.theme.AppTheme
+import ui.theme.Dimens
 
 @Composable
 internal fun BaseButton(
@@ -32,24 +31,25 @@ internal fun BaseButton(
     val borderStroke: BorderStroke?
 
     when (variant) {
+
         ButtonVariant.PRIMARY -> {
-            backgroundColor = Violet100
-            contentColor = Color.White
+            backgroundColor = AppTheme.colors.primary
+            contentColor = AppTheme.colors.onPrimary
             borderStroke = null
         }
 
         ButtonVariant.SECONDARY -> {
-            backgroundColor = Violet20
-            contentColor = Violet100
+            backgroundColor = AppTheme.colors.primary.copy(alpha = 0.12f)
+            contentColor = AppTheme.colors.primary
             borderStroke = null
         }
 
         ButtonVariant.TERTIARY -> {
             backgroundColor = Color.Transparent
-            contentColor = MaterialTheme.colorScheme.onSurface
+            contentColor = AppTheme.colors.onSurface
             borderStroke = BorderStroke(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.outlineVariant
+                width = Dimens.spacing1,
+                color = AppTheme.colors.outline
             )
         }
     }
@@ -62,14 +62,13 @@ internal fun BaseButton(
             )
             .height(size.height)
             .clickable(enabled = enabled, onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(Dimens.spacing16),
         color = backgroundColor,
         contentColor = contentColor,
         border = borderStroke
     ) {
         Row(
-            modifier = Modifier
-                .padding(horizontal = size.horizontalPadding),
+            modifier = Modifier.padding(horizontal = size.horizontalPadding),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
@@ -78,14 +77,16 @@ internal fun BaseButton(
                 Icon(
                     imageVector = leadingIcon,
                     contentDescription = null,
-                    modifier = Modifier.size(size.iconSize)
+                    modifier = Modifier.size(size.iconSize),
+                    tint = contentColor
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(Dimens.spacing8))
             }
 
             Text(
                 text = text,
-                style = MaterialTheme.typography.titleMedium
+                style = AppTheme.typography.titleMedium,
+                color = contentColor
             )
         }
     }
