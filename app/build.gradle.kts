@@ -155,4 +155,7 @@ dependencies {
     // Debug
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    // Splash
+    implementation(libs.androidx.core.splashscreen)
 }
