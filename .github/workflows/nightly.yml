@@ -42,7 +42,7 @@ jobs:
             verifyPaparazziDebug
 
       - name: Upload coverage report
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: nightly-coverage-report
           path: app/build/reports/jacoco/jacocoTestReport
