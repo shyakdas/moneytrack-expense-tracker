@@ -51,10 +51,24 @@ class AppEntryViewModelTest {
 
     @Test
     @OptIn(ExperimentalCoroutinesApi::class)
-    fun init_setsHomeDestination_whenPinSetupAlreadyHandled() = runTest {
+    fun init_setsPinAuthDestination_whenPinSetupAlreadyHandled() = runTest {
         val viewModel = createViewModel(
             onboardingCompleted = true,
             pinSetupStatus = PinSetupStatus.PIN_ENABLED,
+        )
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertFalse(state.isLoading)
+        assertEquals(AppDestination.PinAuth.route, state.startDestination)
+    }
+
+    @Test
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun init_setsHomeDestination_whenPinSetupSkipped() = runTest {
+        val viewModel = createViewModel(
+            onboardingCompleted = true,
+            pinSetupStatus = PinSetupStatus.SKIPPED,
         )
         advanceUntilIdle()
 
@@ -80,6 +94,7 @@ class AppEntryViewModelTest {
                     override fun observePinSetupStatus(): Flow<PinSetupStatus> = flowOf(pinSetupStatus)
                     override suspend fun setPinSetupStatus(status: PinSetupStatus) = Unit
                     override suspend fun savePinHash(pinHash: String) = Unit
+                    override suspend fun getPinHash(): String? = null
                 },
             )
         return AppEntryViewModel(
