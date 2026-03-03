@@ -1,11 +1,11 @@
 <resources>
     <string name="app_name">MoneyTrack</string>
-    <string name="onboarding_title_control">Gain total control of your money</string>
-    <string name="onboarding_desc_control">Become your own money manager and make every cent count</string>
-    <string name="onboarding_title_track">Know where your money goes</string>
-    <string name="onboarding_desc_track">Track your transactions easily, with categories and financial report</string>
-    <string name="onboarding_title_plan">Planning ahead</string>
-    <string name="onboarding_desc_plan">Setup your budget for each category so you stay in control</string>
+    <string name="onboarding_title_control">Money clarity, every day</string>
+    <string name="onboarding_desc_control">See where your money goes in seconds and stay in control without spreadsheets.</string>
+    <string name="onboarding_title_track">Track less, understand more</string>
+    <string name="onboarding_desc_track">Auto-organize spending into smart categories and spot patterns before they become problems.</string>
+    <string name="onboarding_title_plan">Plan ahead with confidence</string>
+    <string name="onboarding_desc_plan">Set simple monthly budgets, get timely alerts, and hit your savings goals faster.</string>
     <string name="onboarding_prev">Previous page</string>
     <string name="onboarding_next">Next page</string>
     <string name="onboarding_finish">Finish onboarding</string>

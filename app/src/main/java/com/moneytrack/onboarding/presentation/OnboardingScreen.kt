@@ -58,8 +58,12 @@ private const val PAGER_ANIMATION_DURATION_MS = 260
 fun OnboardingScreen(
     pages: List<OnboardingPage>,
     onFinished: () -> Unit,
+    initialPage: Int = 0,
 ) {
-    val pagerState = rememberPagerState(pageCount = { pages.size })
+    val pagerState = rememberPagerState(
+        initialPage = initialPage,
+        pageCount = { pages.size },
+    )
     val coroutineScope = rememberCoroutineScope()
     val currentPage = pagerState.currentPage
     val isFirstPage = currentPage == 0

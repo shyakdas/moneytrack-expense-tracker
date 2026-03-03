@@ -3,6 +3,7 @@ import org.gradle.kotlin.dsl.implementation
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.paparazzi)
     alias(libs.plugins.ksp)
     alias(libs.plugins.ktlint)
     alias(libs.plugins.detekt)
@@ -96,6 +97,26 @@ tasks.register<JacocoReport>("jacocoTestReport") {
             "**/BuildConfig.*",
             "**/Manifest*.*",
             "**/*Test*.*",
+            "**/Hilt_*.*",
+            "**/*_Factory*.*",
+            "**/*_Provide*Factory*.*",
+            "**/*_MembersInjector*.*",
+            "**/*_GeneratedInjector*.*",
+            "**/*HiltModules*.*",
+            "**/hilt_aggregated_deps/**",
+            "**/dagger/hilt/**",
+        )
+
+    val coverageIncludes =
+        listOf(
+            "com/moneytrack/feature/**",
+            "com/moneytrack/navigation/AppDestination*",
+            "com/moneytrack/startup/AppEntryUiState*",
+            "com/moneytrack/startup/AppEntryViewModel*",
+            "com/moneytrack/onboarding/domain/**",
+            "com/moneytrack/onboarding/data/repository/**",
+            "com/moneytrack/onboarding/presentation/OnboardingAction*",
+            "com/moneytrack/onboarding/presentation/OnboardingViewModel*",
         )
 
     val debugTree =
@@ -104,15 +125,17 @@ tasks.register<JacocoReport>("jacocoTestReport") {
                 "intermediates/javac/devDebug",
             ),
         ) {
+            include(coverageIncludes)
             exclude(fileFilter)
         }
 
     val kotlinDebugTree =
         fileTree(
             layout.buildDirectory.dir(
-                "tmp/kotlin-classes/devDebug",
+                "intermediates/built_in_kotlinc/devDebug/compileDevDebugKotlin/classes",
             ),
         ) {
+            include(coverageIncludes)
             exclude(fileFilter)
         }
 
@@ -171,6 +194,7 @@ dependencies {
     testImplementation(kotlin("test"))
     testImplementation(libs.mockk)
     testImplementation(libs.coroutines.test)
+    testImplementation(libs.paparazzi)
 
     // UI Tests
     androidTestImplementation(libs.androidx.junit)
