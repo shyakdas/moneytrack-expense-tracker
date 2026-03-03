@@ -4,4 +4,5 @@ enum class PinSetupStage {
     INTRO,
     CREATE_PIN,
     CONFIRM_PIN,
+    SUCCESS,
 }

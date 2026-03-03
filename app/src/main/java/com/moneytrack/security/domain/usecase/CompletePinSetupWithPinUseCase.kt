@@ -12,12 +12,3 @@ class CompletePinSetupWithPinUseCase @Inject constructor(
         repository.setPinSetupStatus(PinSetupStatus.PIN_ENABLED)
     }
 }
-
-private fun String.sha256(): String {
-    val bytes = java.security.MessageDigest
-        .getInstance("SHA-256")
-        .digest(toByteArray())
-    return bytes.joinToString(separator = "") { byte ->
-        "%02x".format(byte)
-    }
-}

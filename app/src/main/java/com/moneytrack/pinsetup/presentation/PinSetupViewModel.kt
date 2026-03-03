@@ -3,6 +3,7 @@ package com.moneytrack.pinsetup.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,6 +17,8 @@ import com.moneytrack.security.domain.usecase.SkipPinSetupUseCase
 import javax.inject.Inject
 
 private const val PIN_LENGTH = 4
+private const val MAX_CONFIRM_ATTEMPTS = 3
+private const val SUCCESS_DELAY_MS = 1200L
 
 @HiltViewModel
 class PinSetupViewModel @Inject constructor(
@@ -38,6 +41,8 @@ class PinSetupViewModel @Inject constructor(
             PinSetupAction.DeleteDigit -> deleteDigit()
             is PinSetupAction.EnterDigit -> enterDigit(action.digit)
             PinSetupAction.SubmitPin -> submitPin()
+            PinSetupAction.ForgotPin -> requestRecoveryVerification()
+            is PinSetupAction.RecoveryVerificationResult -> handleRecoveryVerification(action.success)
         }
     }
 
@@ -48,6 +53,9 @@ class PinSetupViewModel @Inject constructor(
                 enteredPin = "",
                 firstPin = "",
                 showPinMismatch = false,
+                failedAttempts = 0,
+                isLockedOut = false,
+                showRecoveryError = false,
             )
         }
     }
@@ -55,7 +63,7 @@ class PinSetupViewModel @Inject constructor(
     private fun completeWithBiometric() {
         viewModelScope.launch {
             completePinSetupWithBiometricUseCase()
-            _events.send(PinSetupEvent.Completed)
+            showSuccessThenComplete()
         }
     }
 
@@ -68,28 +76,40 @@ class PinSetupViewModel @Inject constructor(
 
     private fun enterDigit(digit: Int) {
         val state = _uiState.value
-        if (state.stage == PinSetupStage.INTRO || state.enteredPin.length >= PIN_LENGTH) return
+        if (
+            state.stage == PinSetupStage.INTRO ||
+            state.enteredPin.length >= PIN_LENGTH ||
+            state.isLockedOut
+        ) {
+            return
+        }
 
         _uiState.update {
             it.copy(
                 enteredPin = it.enteredPin + digit.toString(),
                 showPinMismatch = false,
+                showRecoveryError = false,
             )
         }
     }
 
     private fun deleteDigit() {
         _uiState.update { state ->
-            if (state.enteredPin.isEmpty()) state else state.copy(
+            if (state.enteredPin.isEmpty() || state.isLockedOut) {
+                state
+            } else {
+                state.copy(
                 enteredPin = state.enteredPin.dropLast(1),
                 showPinMismatch = false,
-            )
+                showRecoveryError = false,
+                )
+            }
         }
     }
 
     private fun submitPin() {
         val state = _uiState.value
-        if (state.enteredPin.length != PIN_LENGTH) return
+        if (state.enteredPin.length != PIN_LENGTH || state.isLockedOut) return
 
         when (state.stage) {
             PinSetupStage.INTRO -> Unit
@@ -100,6 +120,7 @@ class PinSetupViewModel @Inject constructor(
                         firstPin = state.enteredPin,
                         enteredPin = "",
                         showPinMismatch = false,
+                        showRecoveryError = false,
                     )
                 }
             }
@@ -108,19 +129,58 @@ class PinSetupViewModel @Inject constructor(
                 if (state.enteredPin == state.firstPin) {
                     viewModelScope.launch {
                         completePinSetupWithPinUseCase(state.enteredPin)
-                        _events.send(PinSetupEvent.Completed)
+                        showSuccessThenComplete()
                     }
                 } else {
+                    val failedAttempts = state.failedAttempts + 1
+                    val isLockedOut = failedAttempts >= MAX_CONFIRM_ATTEMPTS
                     _uiState.update {
                         it.copy(
-                            stage = PinSetupStage.CREATE_PIN,
-                            firstPin = "",
+                            stage = if (isLockedOut) PinSetupStage.CONFIRM_PIN else PinSetupStage.CREATE_PIN,
+                            firstPin = if (isLockedOut) state.firstPin else "",
                             enteredPin = "",
                             showPinMismatch = true,
+                            failedAttempts = failedAttempts,
+                            isLockedOut = isLockedOut,
+                            showRecoveryError = false,
                         )
                     }
                 }
             }
+            PinSetupStage.SUCCESS -> Unit
         }
+    }
+
+    private fun requestRecoveryVerification() {
+        val state = _uiState.value
+        if (!state.isLockedOut) return
+        viewModelScope.launch {
+            _events.send(PinSetupEvent.RequestRecoveryAuth)
+        }
+    }
+
+    private fun handleRecoveryVerification(success: Boolean) {
+        if (success) {
+            startPinEntry()
+            return
+        }
+        _uiState.update {
+            it.copy(showRecoveryError = true)
+        }
+    }
+
+    private suspend fun showSuccessThenComplete() {
+        _uiState.update { state ->
+            state.copy(
+                stage = PinSetupStage.SUCCESS,
+                enteredPin = "",
+                showPinMismatch = false,
+                failedAttempts = 0,
+                isLockedOut = false,
+                showRecoveryError = false,
+            )
+        }
+        delay(SUCCESS_DELAY_MS)
+        _events.send(PinSetupEvent.Completed)
     }
 }

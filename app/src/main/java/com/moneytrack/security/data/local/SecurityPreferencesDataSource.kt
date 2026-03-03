@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import com.moneytrack.data.local.appDataStore
 import com.moneytrack.security.domain.model.PinSetupStatus
@@ -36,6 +37,11 @@ class SecurityPreferencesDataSource @Inject constructor(
         context.appDataStore.edit { preferences ->
             preferences[PIN_HASH_KEY] = pinHash
         }
+    }
+
+    suspend fun getPinHash(): String? {
+        val preferences: Preferences = context.appDataStore.data.first()
+        return preferences[PIN_HASH_KEY]
     }
 }
 

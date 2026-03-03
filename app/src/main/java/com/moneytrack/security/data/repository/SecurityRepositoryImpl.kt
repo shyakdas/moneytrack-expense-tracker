@@ -20,4 +20,6 @@ class SecurityRepositoryImpl @Inject constructor(
     override suspend fun savePinHash(pinHash: String) {
         dataSource.savePinHash(pinHash)
     }
+
+    override suspend fun getPinHash(): String? = dataSource.getPinHash()
 }

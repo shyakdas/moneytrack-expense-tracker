@@ -5,4 +5,7 @@ data class PinSetupUiState(
     val enteredPin: String = "",
     val firstPin: String = "",
     val showPinMismatch: Boolean = false,
+    val failedAttempts: Int = 0,
+    val isLockedOut: Boolean = false,
+    val showRecoveryError: Boolean = false,
 )

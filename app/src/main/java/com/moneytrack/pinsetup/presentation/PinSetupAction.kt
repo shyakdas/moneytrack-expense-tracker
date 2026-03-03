@@ -7,4 +7,6 @@ sealed interface PinSetupAction {
     data class EnterDigit(val digit: Int) : PinSetupAction
     data object DeleteDigit : PinSetupAction
     data object SubmitPin : PinSetupAction
+    data object ForgotPin : PinSetupAction
+    data class RecoveryVerificationResult(val success: Boolean) : PinSetupAction
 }

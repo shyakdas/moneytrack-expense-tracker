@@ -1,4 +1,4 @@
-package com.moneytrack.pinsetup.presentation
+package com.moneytrack.pinauth.presentation
 
 import android.content.Context
 import android.content.ContextWrapper
@@ -9,16 +9,16 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.moneytrack.R
 import kotlin.coroutines.resume
 import kotlinx.coroutines.suspendCancellableCoroutine
 
 @Composable
-fun PinSetupRoute(
-    onCompleted: () -> Unit,
-    viewModel: PinSetupViewModel = hiltViewModel(),
+fun PinAuthRoute(
+    onAuthenticated: () -> Unit,
+    viewModel: PinAuthViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
     val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
@@ -26,30 +26,30 @@ fun PinSetupRoute(
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
             when (event) {
-                PinSetupEvent.Completed -> onCompleted()
-                PinSetupEvent.RequestRecoveryAuth -> {
-                    val isVerified = runRecoveryVerification(context)
-                    viewModel.onAction(PinSetupAction.RecoveryVerificationResult(isVerified))
+                PinAuthEvent.Authenticated -> onAuthenticated()
+                PinAuthEvent.RequestBiometricPrompt -> {
+                    val isVerified = authenticateWithBiometric(context)
+                    viewModel.onAction(PinAuthAction.BiometricAuthResult(isVerified))
                 }
             }
         }
     }
 
-    PinSetupScreen(
+    PinAuthScreen(
         uiState = uiState,
         onAction = viewModel::onAction,
     )
 }
 
-private suspend fun runRecoveryVerification(context: Context): Boolean {
+private suspend fun authenticateWithBiometric(context: Context): Boolean {
     val activity = context.findFragmentActivity()
     val authenticators =
         BiometricManager.Authenticators.BIOMETRIC_STRONG or
             BiometricManager.Authenticators.DEVICE_CREDENTIAL
     return if (activity != null && canAuthenticate(activity, authenticators)) {
         val promptInfo = BiometricPrompt.PromptInfo.Builder()
-            .setTitle(activity.getString(R.string.pin_recovery_auth_title))
-            .setSubtitle(activity.getString(R.string.pin_recovery_auth_subtitle))
+            .setTitle(activity.getString(R.string.pin_auth_prompt_title))
+            .setSubtitle(activity.getString(R.string.pin_auth_prompt_subtitle))
             .setAllowedAuthenticators(authenticators)
             .build()
         suspendCancellableCoroutine { continuation ->
@@ -66,7 +66,7 @@ private suspend fun runRecoveryVerification(context: Context): Boolean {
                     }
 
                     override fun onAuthenticationFailed() {
-                        // Keep prompt open; final outcome is sent by success or error callback.
+                        // Keep prompt open. Success/error returns final state.
                     }
                 },
             )

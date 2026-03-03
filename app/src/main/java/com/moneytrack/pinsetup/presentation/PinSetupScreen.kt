@@ -41,6 +41,7 @@ import ui.theme.Dimens
 import ui.theme.MoneyTrackTheme
 
 private const val PIN_LENGTH = 4
+private const val MAX_CONFIRM_ATTEMPTS = 3
 private const val ANIMATION_DURATION_MS = 1200
 private const val IDLE_SCALE = 1f
 private const val MAX_SCALE = 1.08f
@@ -58,6 +59,39 @@ fun PinSetupScreen(
                 uiState = uiState,
                 onAction = onAction,
             )
+        PinSetupStage.SUCCESS -> PinSetupSuccessScreen()
+    }
+}
+
+@Composable
+private fun PinSetupSuccessScreen() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(AppTheme.colors.background)
+            .padding(horizontal = Dimens.spacing24),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(Dimens.spacing72)
+                .background(AppTheme.colors.primary, shape = CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = "✓",
+                style = AppTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                color = AppTheme.colors.onPrimary,
+            )
+        }
+        Spacer(modifier = Modifier.height(Dimens.spacing24))
+        Text(
+            text = stringResource(R.string.pin_setup_success_title),
+            style = AppTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+            color = AppTheme.colors.onBackground,
+            textAlign = TextAlign.Center,
+        )
     }
 }
 
@@ -180,9 +214,42 @@ private fun PinEntryScreen(
         if (uiState.showPinMismatch) {
             Spacer(modifier = Modifier.height(Dimens.spacing8))
             Text(
-                text = stringResource(R.string.pin_mismatch_error),
+                text = if (uiState.isLockedOut) {
+                    stringResource(R.string.pin_locked_out_error)
+                } else {
+                    stringResource(
+                        R.string.pin_mismatch_error_with_attempts,
+                        MAX_CONFIRM_ATTEMPTS - uiState.failedAttempts,
+                    )
+                },
                 style = AppTheme.typography.bodySmall,
                 color = AppTheme.colors.error,
+            )
+        }
+
+        if (uiState.isLockedOut) {
+            Spacer(modifier = Modifier.height(Dimens.spacing8))
+            Text(
+                text = stringResource(R.string.pin_recovery_helper),
+                style = AppTheme.typography.bodySmall,
+                color = AppTheme.colors.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+
+            Spacer(modifier = Modifier.height(Dimens.spacing16))
+            PinSecondaryActionButton(
+                text = stringResource(R.string.pin_forgot_pin),
+                onClick = { onAction(PinSetupAction.ForgotPin) },
+            )
+        }
+
+        if (uiState.showRecoveryError) {
+            Spacer(modifier = Modifier.height(Dimens.spacing8))
+            Text(
+                text = stringResource(R.string.pin_recovery_error),
+                style = AppTheme.typography.bodySmall,
+                color = AppTheme.colors.error,
+                textAlign = TextAlign.Center,
             )
         }
 
@@ -199,7 +266,10 @@ private fun PinEntryScreen(
                 .padding(vertical = Dimens.spacing24),
             contentAlignment = Alignment.Center,
         ) {
-            PinKeypad(onAction = onAction)
+            PinKeypad(
+                onAction = onAction,
+                enabled = !uiState.isLockedOut,
+            )
         }
         Spacer(modifier = Modifier.height(Dimens.spacing24))
     }
@@ -227,14 +297,17 @@ private fun PinDots(enteredCount: Int) {
 }
 
 @Composable
-private fun PinKeypad(onAction: (PinSetupAction) -> Unit) {
+private fun PinKeypad(
+    onAction: (PinSetupAction) -> Unit,
+    enabled: Boolean,
+) {
     Column(
         verticalArrangement = Arrangement.spacedBy(Dimens.spacing16),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        PinDigitRow(digits = listOf(1, 2, 3), onAction = onAction)
-        PinDigitRow(digits = listOf(4, 5, 6), onAction = onAction)
-        PinDigitRow(digits = listOf(7, 8, 9), onAction = onAction)
+        PinDigitRow(digits = listOf(1, 2, 3), onAction = onAction, enabled = enabled)
+        PinDigitRow(digits = listOf(4, 5, 6), onAction = onAction, enabled = enabled)
+        PinDigitRow(digits = listOf(7, 8, 9), onAction = onAction, enabled = enabled)
         Row(
             horizontalArrangement = Arrangement.spacedBy(Dimens.spacing32),
             verticalAlignment = Alignment.CenterVertically,
@@ -242,15 +315,18 @@ private fun PinKeypad(onAction: (PinSetupAction) -> Unit) {
             KeypadActionText(
                 label = stringResource(R.string.pin_delete),
                 onClick = { onAction(PinSetupAction.DeleteDigit) },
+                enabled = enabled,
             )
             PinDigit(
                 value = 0,
                 onClick = { onAction(PinSetupAction.EnterDigit(0)) },
+                enabled = enabled,
             )
             KeypadIconButton(
                 iconRes = com.moneytrack.designsystem.R.drawable.arrow_right_2,
                 contentDescription = stringResource(R.string.pin_submit),
                 onClick = { onAction(PinSetupAction.SubmitPin) },
+                enabled = enabled,
             )
         }
     }
@@ -260,6 +336,7 @@ private fun PinKeypad(onAction: (PinSetupAction) -> Unit) {
 private fun PinDigitRow(
     digits: List<Int>,
     onAction: (PinSetupAction) -> Unit,
+    enabled: Boolean,
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(Dimens.spacing32),
@@ -269,6 +346,7 @@ private fun PinDigitRow(
             PinDigit(
                 value = digit,
                 onClick = { onAction(PinSetupAction.EnterDigit(digit)) },
+                enabled = enabled,
             )
         }
     }
@@ -278,17 +356,18 @@ private fun PinDigitRow(
 private fun PinDigit(
     value: Int,
     onClick: () -> Unit,
+    enabled: Boolean,
 ) {
     Box(
         modifier = Modifier
             .size(Dimens.spacing72)
-            .clickable(onClick = onClick),
+            .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = value.toString(),
             style = AppTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Medium),
-            color = AppTheme.colors.onBackground,
+            color = if (enabled) AppTheme.colors.onBackground else AppTheme.colors.onSurfaceVariant,
         )
     }
 }
@@ -298,17 +377,18 @@ private fun KeypadIconButton(
     iconRes: Int,
     contentDescription: String,
     onClick: () -> Unit,
+    enabled: Boolean,
 ) {
     Box(
         modifier = Modifier
             .size(Dimens.spacing72)
-            .clickable(onClick = onClick),
+            .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
             painter = painterResource(id = iconRes),
             contentDescription = contentDescription,
-            tint = AppTheme.colors.primary,
+            tint = if (enabled) AppTheme.colors.primary else AppTheme.colors.onSurfaceVariant,
         )
     }
 }
@@ -317,17 +397,18 @@ private fun KeypadIconButton(
 private fun KeypadActionText(
     label: String,
     onClick: () -> Unit,
+    enabled: Boolean,
 ) {
     Box(
         modifier = Modifier
             .size(Dimens.spacing72)
-            .clickable(onClick = onClick),
+            .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = label,
             style = AppTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
-            color = AppTheme.colors.primary,
+            color = if (enabled) AppTheme.colors.primary else AppTheme.colors.onSurfaceVariant,
         )
     }
 }
@@ -418,6 +499,22 @@ private fun PinSetupConfirmPinPreview() {
                 stage = PinSetupStage.CONFIRM_PIN,
                 enteredPin = "123",
                 firstPin = "1234",
+                showPinMismatch = false,
+            ),
+            onAction = {},
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
+@Composable
+private fun PinSetupSuccessPreview() {
+    MoneyTrackTheme(darkTheme = false) {
+        PinSetupScreen(
+            uiState = PinSetupUiState(
+                stage = PinSetupStage.SUCCESS,
+                enteredPin = "",
+                firstPin = "",
                 showPinMismatch = false,
             ),
             onAction = {},

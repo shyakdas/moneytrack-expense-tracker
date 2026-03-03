@@ -34,7 +34,8 @@ class AppEntryViewModel @Inject constructor(
                     startDestination = when {
                         !onboardingCompleted -> AppDestination.Onboarding.route
                         pinSetupStatus == PinSetupStatus.NOT_STARTED -> AppDestination.PinSetup.route
-                        else -> AppDestination.Home.route
+                        pinSetupStatus == PinSetupStatus.SKIPPED -> AppDestination.Home.route
+                        else -> AppDestination.PinAuth.route
                     },
                 )
             }
