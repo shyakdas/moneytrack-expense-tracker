@@ -3,6 +3,7 @@ package com.moneytrack.data.di
 import android.content.Context
 import androidx.room.Room
 import com.moneytrack.data.local.db.MoneyTrackDatabase
+import com.moneytrack.data.local.db.dao.BudgetDao
 import com.moneytrack.data.local.db.dao.TransactionDao
 import dagger.Module
 import dagger.Provides
@@ -33,4 +34,9 @@ object DatabaseModule {
     fun provideTransactionDao(
         database: MoneyTrackDatabase,
     ): TransactionDao = database.transactionDao()
+
+    @Provides
+    fun provideBudgetDao(
+        database: MoneyTrackDatabase,
+    ): BudgetDao = database.budgetDao()
 }

@@ -4,6 +4,8 @@ package com.moneytrack.home.presentation
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,7 +22,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -44,15 +48,21 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.moneytrack.designsystem.R
+import com.moneytrack.R as AppR
 import ui.components.card.transaction.TransactionCard
 import ui.components.card.transaction.TransactionType
 import ui.components.navigation.bottomNav.BottomNavItem
 import ui.components.navigation.bottomNav.PrimaryBottomNavigation
+import ui.components.navigation.button.LargeButton
 import ui.components.navigation.common.SeeAllPill
 import ui.components.navigation.tabs.TimeRangeTab
 import ui.components.navigation.topNav.TopNavigation
 import ui.components.navigation.topNav.TopNavigationConfig
+import ui.components.form.input.InputField
 import ui.theme.AppTheme
 import ui.theme.Dimens
 import ui.theme.MoneyTrackTheme
@@ -61,28 +71,52 @@ private const val ROUTE_HOME = "home"
 private const val ROUTE_TRANSACTION = "transaction"
 private const val ROUTE_BUDGET = "budget"
 private const val ROUTE_PROFILE = "profile"
-
-private val incomeGreen = Color(0xFF12A86B)
+private const val MAX_BUDGET_INPUT_LENGTH = 8
 
 @Composable
 fun HomeRoute() {
+    val viewModel: HomeViewModel = hiltViewModel()
+    val budget = viewModel.budget.collectAsStateWithLifecycle().value
     var selectedBottomRoute by remember { mutableStateOf(ROUTE_HOME) }
     var selectedRange by remember { mutableStateOf("Today") }
+    var showBudgetSheet by remember { mutableStateOf(false) }
 
-    HomeScreen(
+    val uiState = HomeUiState(
+        accountBalance = 0.0,
+        budget = budget?.amount,
+        expenses = 0.0,
+        transactions = emptyList(),
         selectedBottomRoute = selectedBottomRoute,
         selectedRange = selectedRange,
+    )
+
+    HomeScreen(
+        uiState = uiState,
         onBottomRouteSelected = { route -> selectedBottomRoute = route },
         onTimeRangeSelected = { range -> selectedRange = range },
+        onSetBudgetClick = { showBudgetSheet = true },
     )
+
+    if (showBudgetSheet) {
+        BudgetSetupBottomSheet(
+            onDismiss = { showBudgetSheet = false },
+            onSaveBudget = { budgetValue, description ->
+                viewModel.saveBudget(
+                    amount = budgetValue,
+                    description = description,
+                )
+                showBudgetSheet = false
+            },
+        )
+    }
 }
 
 @Composable
 fun HomeScreen(
-    selectedBottomRoute: String,
-    selectedRange: String,
+    uiState: HomeUiState,
     onBottomRouteSelected: (String) -> Unit,
     onTimeRangeSelected: (String) -> Unit,
+    onSetBudgetClick: () -> Unit,
 ) {
     val bottomItems = remember {
         listOf(
@@ -92,42 +126,13 @@ fun HomeScreen(
             BottomNavItem(ROUTE_PROFILE, R.drawable.user, "Profile"),
         )
     }
-    val transactions = remember {
-        listOf(
-            HomeTransaction(
-                icon = R.drawable.shopping_bag,
-                title = "Shopping",
-                subtitle = "Buy some grocery",
-                amount = "- $120",
-                time = "10:00 AM",
-                type = TransactionType.EXPENSE,
-            ),
-            HomeTransaction(
-                icon = R.drawable.document,
-                title = "Subscription",
-                subtitle = "Disney+ Annual..",
-                amount = "- $80",
-                time = "03:30 PM",
-                type = TransactionType.EXPENSE,
-            ),
-            HomeTransaction(
-                icon = R.drawable.restaurant,
-                title = "Food",
-                subtitle = "Buy a ramen",
-                amount = "- $32",
-                time = "07:30 PM",
-                type = TransactionType.EXPENSE,
-            ),
-        )
-    }
-
     Scaffold(
         containerColor = AppTheme.colors.background,
         bottomBar = {
             Box(modifier = Modifier.navigationBarsPadding()) {
                 PrimaryBottomNavigation(
                     items = bottomItems,
-                    selectedRoute = selectedBottomRoute,
+                    selectedRoute = uiState.selectedBottomRoute,
                     onItemClick = { item -> onBottomRouteSelected(item.route) },
                     onFabClick = {},
                 )
@@ -136,9 +141,9 @@ fun HomeScreen(
     ) { innerPadding ->
         HomeContent(
             innerPadding = innerPadding,
-            selectedRange = selectedRange,
+            uiState = uiState,
             onTimeRangeSelected = onTimeRangeSelected,
-            transactions = transactions,
+            onSetBudgetClick = onSetBudgetClick,
         )
     }
 }
@@ -146,9 +151,9 @@ fun HomeScreen(
 @Composable
 private fun HomeContent(
     innerPadding: PaddingValues,
-    selectedRange: String,
+    uiState: HomeUiState,
     onTimeRangeSelected: (String) -> Unit,
-    transactions: List<HomeTransaction>,
+    onSetBudgetClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -172,7 +177,18 @@ private fun HomeContent(
             )
         }
 
-        BalanceSummaryCard()
+        BalanceSummaryCard(
+            accountBalance = uiState.accountBalance,
+            budget = uiState.budget,
+            expenses = uiState.expenses,
+            onSetBudgetClick = onSetBudgetClick,
+        )
+        if (uiState.budget == null) {
+            Spacer(modifier = Modifier.height(Dimens.spacing16))
+            BudgetInfoTip(
+                onSetBudgetClick = onSetBudgetClick,
+            )
+        }
         Spacer(modifier = Modifier.height(Dimens.spacing24))
 
         Text(
@@ -186,7 +202,7 @@ private fun HomeContent(
 
         TimeRangeTab(
             options = listOf("Today", "Week", "Month", "Year"),
-            selectedOption = selectedRange,
+            selectedOption = uiState.selectedRange,
             onOptionSelected = onTimeRangeSelected,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -206,22 +222,35 @@ private fun HomeContent(
         }
         Spacer(modifier = Modifier.height(Dimens.spacing12))
 
-        transactions.forEach { transaction ->
-            TransactionCard(
-                icon = ImageVector.vectorResource(id = transaction.icon),
-                title = transaction.title,
-                subtitle = transaction.subtitle,
-                amount = transaction.amount,
-                time = transaction.time,
-                type = transaction.type,
+        if (uiState.transactions.isEmpty()) {
+            Text(
+                text = stringResource(id = AppR.string.home_empty_transactions),
+                style = AppTheme.typography.bodyMedium,
+                color = AppTheme.colors.onSurfaceVariant,
             )
-            Spacer(modifier = Modifier.height(Dimens.spacing12))
+        } else {
+            uiState.transactions.forEach { transaction ->
+                TransactionCard(
+                    icon = ImageVector.vectorResource(id = transaction.icon),
+                    title = transaction.title,
+                    subtitle = transaction.subtitle,
+                    amount = transaction.amount,
+                    time = transaction.time,
+                    type = transaction.type,
+                )
+                Spacer(modifier = Modifier.height(Dimens.spacing12))
+            }
         }
     }
 }
 
 @Composable
-private fun BalanceSummaryCard() {
+private fun BalanceSummaryCard(
+    accountBalance: Double,
+    budget: Double?,
+    expenses: Double,
+    onSetBudgetClick: () -> Unit,
+) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(Dimens.radius24),
@@ -240,7 +269,7 @@ private fun BalanceSummaryCard() {
             )
             Spacer(modifier = Modifier.height(Dimens.spacing8))
             Text(
-                text = "$9400",
+                text = "$${accountBalance.toInt()}",
                 style = AppTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold),
                 color = AppTheme.colors.onBackground,
             )
@@ -250,17 +279,24 @@ private fun BalanceSummaryCard() {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(Dimens.spacing16),
             ) {
+                if (budget == null) {
+                    MissingBudgetCard(
+                        modifier = Modifier.weight(1f),
+                        onClick = onSetBudgetClick,
+                    )
+                } else {
+                    StatCard(
+                        modifier = Modifier.weight(1f),
+                        label = stringResource(id = AppR.string.home_budget_label),
+                        value = "$${budget.toInt()}",
+                        icon = R.drawable.line_chart_2,
+                        background = AppTheme.colors.primary,
+                    )
+                }
                 StatCard(
                     modifier = Modifier.weight(1f),
-                    label = "Income",
-                    value = "$5000",
-                    icon = R.drawable.income,
-                    background = incomeGreen,
-                )
-                StatCard(
-                    modifier = Modifier.weight(1f),
-                    label = "Expenses",
-                    value = "$1200",
+                    label = stringResource(id = AppR.string.home_expenses_label),
+                    value = "$${expenses.toInt()}",
                     icon = R.drawable.expense,
                     background = AppTheme.colors.error,
                 )
@@ -316,6 +352,166 @@ private fun StatCard(
                     color = AppTheme.colors.onPrimary,
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun MissingBudgetCard(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier
+            .border(
+                width = Dimens.borderThick,
+                color = AppTheme.colors.primary.copy(alpha = 0.4f),
+                shape = RoundedCornerShape(Dimens.radius24),
+            )
+            .clickable(onClick = onClick),
+        color = AppTheme.colors.surfaceVariant,
+        shape = RoundedCornerShape(Dimens.radius24),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(Dimens.spacing12),
+            verticalArrangement = Arrangement.spacedBy(Dimens.spacing8),
+        ) {
+            Text(
+                text = stringResource(id = AppR.string.home_budget_label),
+                style = AppTheme.typography.bodyMedium,
+                color = AppTheme.colors.onSurface,
+            )
+            Text(
+                text = stringResource(id = AppR.string.home_budget_not_set),
+                style = AppTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                color = AppTheme.colors.primary,
+            )
+            Text(
+                text = stringResource(id = AppR.string.home_set_budget_cta),
+                style = AppTheme.typography.bodySmall,
+                color = AppTheme.colors.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+@Composable
+private fun BudgetInfoTip(
+    onSetBudgetClick: () -> Unit,
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = AppTheme.colors.surfaceVariant,
+        shape = RoundedCornerShape(Dimens.radius16),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(Dimens.spacing16),
+            verticalArrangement = Arrangement.spacedBy(Dimens.spacing8),
+        ) {
+            Text(
+                text = stringResource(id = AppR.string.home_budget_tip_title),
+                style = AppTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = AppTheme.colors.onSurface,
+            )
+            Text(
+                text = stringResource(id = AppR.string.home_budget_tip_desc),
+                style = AppTheme.typography.bodyMedium,
+                color = AppTheme.colors.onSurfaceVariant,
+            )
+            Text(
+                text = stringResource(id = AppR.string.home_budget_tip_disadvantage),
+                style = AppTheme.typography.bodySmall,
+                color = AppTheme.colors.error,
+            )
+            Text(
+                text = stringResource(id = AppR.string.home_set_budget_cta),
+                style = AppTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                color = AppTheme.colors.primary,
+                modifier = Modifier.clickable(onClick = onSetBudgetClick),
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun BudgetSetupBottomSheet(
+    onDismiss: () -> Unit,
+    onSaveBudget: (Double, String?) -> Unit,
+) {
+    var budgetInput by remember { mutableStateOf("") }
+    var descriptionInput by remember { mutableStateOf("") }
+    val parsedBudget = budgetInput.toDoubleOrNull()
+    val canContinue = parsedBudget != null && parsedBudget > 0.0
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = AppTheme.colors.surface,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Dimens.spacing24)
+                .padding(bottom = Dimens.spacing24),
+            verticalArrangement = Arrangement.spacedBy(Dimens.spacing16),
+        ) {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = AppTheme.colors.primary,
+                shape = RoundedCornerShape(Dimens.radius24),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(Dimens.spacing20),
+                ) {
+                    Text(
+                        text = stringResource(id = AppR.string.home_budget_sheet_title),
+                        style = AppTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = AppTheme.colors.onPrimary,
+                    )
+                    Spacer(modifier = Modifier.height(Dimens.spacing8))
+                    Text(
+                        text = "$${parsedBudget?.toInt() ?: 0}",
+                        style = AppTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold),
+                        color = AppTheme.colors.onPrimary,
+                    )
+                }
+            }
+
+            InputField(
+                value = budgetInput,
+                onValueChange = { input ->
+                    val filtered = input.filter { it.isDigit() }.take(MAX_BUDGET_INPUT_LENGTH)
+                    budgetInput = filtered
+                },
+                placeholder = stringResource(id = AppR.string.home_budget_sheet_amount_hint),
+                leadingIcon = ImageVector.vectorResource(id = R.drawable.wallet_3),
+            )
+
+            InputField(
+                value = descriptionInput,
+                onValueChange = { descriptionInput = it },
+                placeholder = stringResource(id = AppR.string.home_budget_sheet_description_hint),
+                leadingIcon = ImageVector.vectorResource(id = R.drawable.document),
+            )
+
+            LargeButton(
+                text = stringResource(id = AppR.string.home_budget_sheet_continue),
+                onClick = {
+                    parsedBudget?.let { budgetValue ->
+                        onSaveBudget(
+                            budgetValue,
+                            descriptionInput,
+                        )
+                    }
+                },
+                enabled = canContinue,
+            )
         }
     }
 }
@@ -383,7 +579,7 @@ private fun SpendFrequencyChart() {
     }
 }
 
-private data class HomeTransaction(
+data class HomeTransaction(
     val icon: Int,
     val title: String,
     val subtitle: String,
@@ -392,15 +588,31 @@ private data class HomeTransaction(
     val type: TransactionType,
 )
 
+data class HomeUiState(
+    val accountBalance: Double,
+    val budget: Double?,
+    val expenses: Double,
+    val transactions: List<HomeTransaction>,
+    val selectedBottomRoute: String,
+    val selectedRange: String,
+)
+
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 private fun HomeScreenPreview() {
     MoneyTrackTheme(darkTheme = false) {
         HomeScreen(
-            selectedBottomRoute = ROUTE_HOME,
-            selectedRange = "Today",
+            uiState = HomeUiState(
+                accountBalance = 0.0,
+                budget = null,
+                expenses = 0.0,
+                transactions = emptyList(),
+                selectedBottomRoute = ROUTE_HOME,
+                selectedRange = "Today",
+            ),
             onBottomRouteSelected = {},
             onTimeRangeSelected = {},
+            onSetBudgetClick = {},
         )
     }
 }

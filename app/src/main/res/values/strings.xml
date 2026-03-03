@@ -36,4 +36,16 @@
     <string name="pin_auth_prompt_subtitle">Authenticate to continue</string>
     <string name="home_placeholder_title">Welcome to MoneyTrack</string>
     <string name="home_placeholder_subtitle">Home screen integration is next.</string>
+    <string name="home_empty_transactions">No transactions yet.</string>
+    <string name="home_budget_label">Budget</string>
+    <string name="home_expenses_label">Expenses</string>
+    <string name="home_budget_not_set">Not set</string>
+    <string name="home_set_budget_cta">Set budget now</string>
+    <string name="home_budget_tip_title">Budget helps you stay in control</string>
+    <string name="home_budget_tip_desc">A monthly budget helps you plan expenses and avoid overspending.</string>
+    <string name="home_budget_tip_disadvantage">Without a budget, it’s easy to lose track and exceed your limits.</string>
+    <string name="home_budget_sheet_title">Set your monthly budget</string>
+    <string name="home_budget_sheet_amount_hint">Budget amount</string>
+    <string name="home_budget_sheet_description_hint">Description (optional)</string>
+    <string name="home_budget_sheet_continue">Continue</string>
 </resources>
