@@ -1,4 +1,5 @@
 package com.moneytrack.feature
 
-class FeatureManager {
+interface FeatureManager {
+    fun isEnabled(feature: FeatureFlag): Boolean
 }

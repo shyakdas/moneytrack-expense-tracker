@@ -1,4 +1,8 @@
 package com.moneytrack.feature
 
-class FeatureFlag {
+enum class FeatureFlag {
+    NEW_HOME,
+    EXPORT_TRANSACTIONS,
+    EXPERIMENTAL_CHARTS,
+    KILL_SWITCH,
 }

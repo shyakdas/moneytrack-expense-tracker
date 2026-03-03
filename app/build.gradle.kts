@@ -1,3 +1,5 @@
+import org.gradle.kotlin.dsl.implementation
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -52,6 +54,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     flavorDimensions += "environment"
@@ -62,10 +65,12 @@ android {
             dimension = "environment"
             applicationIdSuffix = ".dev"
             versionNameSuffix = "-dev"
+            buildConfigField("String", "ENVIRONMENT", "\"DEV\"")
         }
 
         create("prod") {
             dimension = "environment"
+            buildConfigField("String", "ENVIRONMENT", "\"PROD\"")
         }
     }
 }
@@ -177,5 +182,6 @@ dependencies {
 
     // Firebase
     implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.config)
     implementation(libs.firebase.analytics)
 }
