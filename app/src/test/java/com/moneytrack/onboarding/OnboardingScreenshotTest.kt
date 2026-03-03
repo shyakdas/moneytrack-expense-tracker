@@ -18,28 +18,70 @@ class OnboardingScreenshotTest {
     @Test
     fun onboarding_page1_light() {
         paparazzi.snapshot {
-            OnboardingSnapshotContent(initialPage = 0)
+            OnboardingSnapshotContent(
+                initialPage = 0,
+                darkTheme = false,
+            )
         }
     }
 
     @Test
     fun onboarding_page2_light() {
         paparazzi.snapshot {
-            OnboardingSnapshotContent(initialPage = 1)
+            OnboardingSnapshotContent(
+                initialPage = 1,
+                darkTheme = false,
+            )
         }
     }
 
     @Test
     fun onboarding_page3_light() {
         paparazzi.snapshot {
-            OnboardingSnapshotContent(initialPage = 2)
+            OnboardingSnapshotContent(
+                initialPage = 2,
+                darkTheme = false,
+            )
+        }
+    }
+
+    @Test
+    fun onboarding_page1_dark() {
+        paparazzi.snapshot {
+            OnboardingSnapshotContent(
+                initialPage = 0,
+                darkTheme = true,
+            )
+        }
+    }
+
+    @Test
+    fun onboarding_page2_dark() {
+        paparazzi.snapshot {
+            OnboardingSnapshotContent(
+                initialPage = 1,
+                darkTheme = true,
+            )
+        }
+    }
+
+    @Test
+    fun onboarding_page3_dark() {
+        paparazzi.snapshot {
+            OnboardingSnapshotContent(
+                initialPage = 2,
+                darkTheme = true,
+            )
         }
     }
 }
 
 @Composable
-private fun OnboardingSnapshotContent(initialPage: Int) {
-    MoneyTrackTheme(darkTheme = false) {
+private fun OnboardingSnapshotContent(
+    initialPage: Int,
+    darkTheme: Boolean,
+) {
+    MoneyTrackTheme(darkTheme = darkTheme) {
         OnboardingScreen(
             pages = listOf(
                 OnboardingPage(

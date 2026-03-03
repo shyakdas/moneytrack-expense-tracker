@@ -1,14 +1,24 @@
 package com.moneytrack.onboarding.presentation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.moneytrack.R
 import com.moneytrack.onboarding.domain.model.OnboardingPage
 
 @Composable
 fun OnboardingRoute(
+    onCompleted: () -> Unit,
     viewModel: OnboardingViewModel = hiltViewModel(),
 ) {
+    LaunchedEffect(viewModel) {
+        viewModel.events.collect { event ->
+            when (event) {
+                OnboardingEvent.Completed -> onCompleted()
+            }
+        }
+    }
+
     OnboardingScreen(
         pages = onboardingPages(),
         onFinished = { viewModel.onAction(OnboardingAction.OnFinishedClick) },
