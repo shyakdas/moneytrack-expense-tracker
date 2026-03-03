@@ -21,4 +21,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "MoneyTrack"
 include(":app")
-include(":core")
+include(":DesignSystem")
+project(":DesignSystem").projectDir = file("designsystem")

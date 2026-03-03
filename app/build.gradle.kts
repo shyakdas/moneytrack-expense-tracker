@@ -149,7 +149,7 @@ detekt {
 }
 
 dependencies {
-    implementation(project(":core"))
+    implementation(project(":DesignSystem"))
 
     // Core
     implementation(libs.androidx.core.ktx)
