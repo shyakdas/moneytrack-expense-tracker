@@ -1,8 +1,11 @@
+import org.gradle.kotlin.dsl.implementation
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ktlint)
     alias(libs.plugins.detekt)
+    id("com.google.gms.google-services")
     jacoco
 }
 
@@ -51,6 +54,24 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
+    }
+
+    flavorDimensions += "environment"
+
+    productFlavors {
+
+        create("dev") {
+            dimension = "environment"
+            applicationIdSuffix = ".dev"
+            versionNameSuffix = "-dev"
+            buildConfigField("String", "ENVIRONMENT", "\"DEV\"")
+        }
+
+        create("prod") {
+            dimension = "environment"
+            buildConfigField("String", "ENVIRONMENT", "\"PROD\"")
+        }
     }
 }
 
@@ -59,7 +80,7 @@ jacoco {
 }
 
 tasks.register<JacocoReport>("jacocoTestReport") {
-    dependsOn("testDebugUnitTest")
+    dependsOn("testDevDebugUnitTest")
 
     reports {
         xml.required.set(true)
@@ -78,7 +99,7 @@ tasks.register<JacocoReport>("jacocoTestReport") {
     val debugTree =
         fileTree(
             layout.buildDirectory.dir(
-                "intermediates/javac/debug",
+                "intermediates/javac/devDebug",
             ),
         ) {
             exclude(fileFilter)
@@ -87,7 +108,7 @@ tasks.register<JacocoReport>("jacocoTestReport") {
     val kotlinDebugTree =
         fileTree(
             layout.buildDirectory.dir(
-                "tmp/kotlin-classes/debug",
+                "tmp/kotlin-classes/devDebug",
             ),
         ) {
             exclude(fileFilter)
@@ -112,8 +133,8 @@ tasks.register<JacocoReport>("jacocoTestReport") {
             layout.buildDirectory,
         ) {
             include(
-                "jacoco/testDebugUnitTest.exec",
-                "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec",
+                "jacoco/testDevDebugUnitTest.exec",
+                "outputs/unit_test_code_coverage/devDebugUnitTest/testDevDebugUnitTest.exec",
             )
         },
     )
@@ -158,4 +179,9 @@ dependencies {
 
     // Splash
     implementation(libs.androidx.core.splashscreen)
+
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.config)
+    implementation(libs.firebase.analytics)
 }

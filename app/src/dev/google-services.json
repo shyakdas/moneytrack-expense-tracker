@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "21125095973",
+    "project_id": "moneytrack-dev",
+    "storage_bucket": "moneytrack-dev.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:21125095973:android:b1ff5da7ca7cb5731cd5cc",
+        "android_client_info": {
+          "package_name": "com.moneytrack.dev"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBN7sFztrDjl8yY-47HrsOSmXrRCZkC_CA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
