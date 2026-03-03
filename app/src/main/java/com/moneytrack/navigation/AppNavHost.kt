@@ -6,6 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.moneytrack.onboarding.presentation.OnboardingRoute
+import com.moneytrack.pinsetup.presentation.PinSetupRoute
 
 @Composable
 fun AppNavHost(
@@ -19,7 +20,29 @@ fun AppNavHost(
         modifier = modifier,
     ) {
         composable(AppDestination.Onboarding.route) {
-            OnboardingRoute()
+            OnboardingRoute(
+                onCompleted = {
+                    navController.navigate(AppDestination.PinSetup.route) {
+                        popUpTo(AppDestination.Onboarding.route) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
+            )
+        }
+
+        composable(AppDestination.PinSetup.route) {
+            PinSetupRoute(
+                onCompleted = {
+                    navController.navigate(AppDestination.Home.route) {
+                        popUpTo(AppDestination.PinSetup.route) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
+            )
+        }
+
+        composable(AppDestination.Home.route) {
+            HomePlaceholderScreen()
         }
     }
 }

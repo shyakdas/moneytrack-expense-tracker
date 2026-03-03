@@ -9,6 +9,16 @@
     <string name="onboarding_prev">Previous page</string>
     <string name="onboarding_next">Next page</string>
     <string name="onboarding_finish">Finish onboarding</string>
-    <string name="auth_placeholder_title">Authentication</string>
-    <string name="auth_placeholder_subtitle">Sign up / login flow comes next</string>
+    <string name="pin_intro_title">Secure your app</string>
+    <string name="pin_intro_subtitle">Choose PIN or biometric now. You can also skip and enable it later.</string>
+    <string name="pin_intro_set_pin">Set PIN</string>
+    <string name="pin_intro_use_biometric">Use Biometric</string>
+    <string name="pin_intro_skip">Skip for now</string>
+    <string name="pin_create_title">Let\'s set up your PIN</string>
+    <string name="pin_confirm_title">Ok. Re type your PIN again.</string>
+    <string name="pin_delete">Del</string>
+    <string name="pin_submit">Submit PIN</string>
+    <string name="pin_mismatch_error">PIN didn\'t match. Try again.</string>
+    <string name="home_placeholder_title">Welcome to MoneyTrack</string>
+    <string name="home_placeholder_subtitle">Home screen integration is next.</string>
 </resources>
