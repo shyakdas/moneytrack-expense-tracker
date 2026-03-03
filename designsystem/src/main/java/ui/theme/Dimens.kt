@@ -24,6 +24,7 @@ object Dimens {
     val spacing32 = 32.dp
     val spacing36 = 36.dp
     val spacing48 = 48.dp
+    val spacing72 = 72.dp
 
     val spacing6 = 6.dp
 
@@ -99,5 +100,6 @@ object Dimens {
 
     val progressSmallHeight = 14.dp
     val warningIconSize = 36.dp
+    val onboardingIllustrationHeight = 312.dp
 
 }
