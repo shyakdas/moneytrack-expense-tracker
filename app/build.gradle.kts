@@ -80,7 +80,7 @@ jacoco {
 }
 
 tasks.register<JacocoReport>("jacocoTestReport") {
-    dependsOn("testDebugUnitTest")
+    dependsOn("testDevDebugUnitTest")
 
     reports {
         xml.required.set(true)
@@ -99,7 +99,7 @@ tasks.register<JacocoReport>("jacocoTestReport") {
     val debugTree =
         fileTree(
             layout.buildDirectory.dir(
-                "intermediates/javac/debug",
+                "intermediates/javac/devDebug",
             ),
         ) {
             exclude(fileFilter)
@@ -108,7 +108,7 @@ tasks.register<JacocoReport>("jacocoTestReport") {
     val kotlinDebugTree =
         fileTree(
             layout.buildDirectory.dir(
-                "tmp/kotlin-classes/debug",
+                "tmp/kotlin-classes/devDebug",
             ),
         ) {
             exclude(fileFilter)
@@ -133,8 +133,8 @@ tasks.register<JacocoReport>("jacocoTestReport") {
             layout.buildDirectory,
         ) {
             include(
-                "jacoco/testDebugUnitTest.exec",
-                "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec",
+                "jacoco/testDevDebugUnitTest.exec",
+                "outputs/unit_test_code_coverage/devDebugUnitTest/testDevDebugUnitTest.exec",
             )
         },
     )

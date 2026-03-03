@@ -5,6 +5,8 @@ import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
 import com.moneytrack.BuildConfig
 
 object RemoteConfigProvider {
+    private const val DEV_FETCH_INTERVAL_SECONDS = 0L
+    private const val PROD_FETCH_INTERVAL_SECONDS = 3600L
 
     fun create(): FirebaseRemoteConfig {
 
@@ -13,9 +15,9 @@ object RemoteConfigProvider {
         val settings = FirebaseRemoteConfigSettings.Builder()
             .setMinimumFetchIntervalInSeconds(
                 if (BuildConfig.ENVIRONMENT == "DEV") {
-                    0      // Always fetch fresh in dev
+                    DEV_FETCH_INTERVAL_SECONDS
                 } else {
-                    3600   // 1 hour cache in prod
+                    PROD_FETCH_INTERVAL_SECONDS
                 },
             ).build()
 
