@@ -1,8 +1,9 @@
 package com.moneytrack.feature
 
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
+import javax.inject.Inject
 
-class FirebaseFeatureManager(
+class FirebaseFeatureManager @Inject constructor(
     private val remoteConfig: FirebaseRemoteConfig
 ) : FeatureManager {
 

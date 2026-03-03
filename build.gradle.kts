@@ -12,6 +12,10 @@ plugins {
     // God classes, long methods, bad Kotlin patterns
     alias(libs.plugins.detekt) apply false
 
+    // Dependency injection
+    alias(libs.plugins.hilt.android) apply false
+    alias(libs.plugins.ksp) apply false
+
     // Screenshot testing
     alias(libs.plugins.paparazzi) apply false
 
