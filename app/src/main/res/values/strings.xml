@@ -1,3 +1,14 @@
 <resources>
     <string name="app_name">MoneyTrack</string>
+    <string name="onboarding_title_control">Gain total control of your money</string>
+    <string name="onboarding_desc_control">Become your own money manager and make every cent count</string>
+    <string name="onboarding_title_track">Know where your money goes</string>
+    <string name="onboarding_desc_track">Track your transactions easily, with categories and financial report</string>
+    <string name="onboarding_title_plan">Planning ahead</string>
+    <string name="onboarding_desc_plan">Setup your budget for each category so you stay in control</string>
+    <string name="onboarding_prev">Previous page</string>
+    <string name="onboarding_next">Next page</string>
+    <string name="onboarding_finish">Finish onboarding</string>
+    <string name="auth_placeholder_title">Authentication</string>
+    <string name="auth_placeholder_subtitle">Sign up / login flow comes next</string>
 </resources>
