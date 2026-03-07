@@ -6,8 +6,6 @@ import com.moneytrack.home.domain.model.Budget
 import com.moneytrack.home.domain.usecase.ObserveBudgetUseCase
 import com.moneytrack.home.domain.usecase.UpsertBudgetUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.text.NumberFormat
-import java.util.Locale
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -94,18 +92,35 @@ class HomeViewModel @Inject constructor(
     }
 
     fun formatCurrency(value: Double): String {
-        return "$${indianNumberFormatter.format(value.toLong())}"
+        return "$${formatIndianNumber(value.toLong())}"
+    }
+
+    private fun formatIndianNumber(value: Long): String {
+        val isNegative = value < 0
+        val digits = kotlin.math.abs(value).toString()
+        if (digits.length <= 3) {
+            return if (isNegative) "-$digits" else digits
+        }
+
+        val lastThree = digits.takeLast(3)
+        val remaining = digits.dropLast(3)
+        val firstGroupSize = if (remaining.length % 2 == 0) 2 else 1
+        val groupedRemaining = buildString {
+            append(remaining.substring(0, firstGroupSize))
+            var index = firstGroupSize
+            while (index < remaining.length) {
+                append(",")
+                append(remaining.substring(index, index + 2))
+                index += 2
+            }
+        }
+
+        val result = "$groupedRemaining,$lastThree"
+        return if (isNegative) "-$result" else result
     }
 
     private companion object {
         private const val DEFAULT_BOTTOM_ROUTE = "home"
         private const val DEFAULT_TIME_RANGE = "Today"
-
-        val indianNumberFormatter: NumberFormat = NumberFormat.getIntegerInstance(
-            Locale.Builder()
-                .setLanguage("en")
-                .setRegion("IN")
-                .build(),
-        )
     }
 }
