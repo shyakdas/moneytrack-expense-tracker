@@ -55,7 +55,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.moneytrack.designsystem.R
+import com.moneytrack.common.ui.LottieAnimationView
 import com.moneytrack.R as AppR
+import kotlinx.coroutines.delay
 import ui.components.card.transaction.TransactionCard
 import ui.components.card.transaction.TransactionType
 import ui.components.card.bottomsheet.SheetBlurHost
@@ -76,10 +78,12 @@ private const val ROUTE_TRANSACTION = "transaction"
 private const val ROUTE_BUDGET = "budget"
 private const val ROUTE_PROFILE = "profile"
 private const val MAX_BUDGET_INPUT_LENGTH = 8
+private const val BUDGET_SUCCESS_DISMISS_DELAY_MS = 1200L
 private val SUMMARY_CARD_MIN_HEIGHT = 118.dp
 private enum class BudgetSheetStep {
     PRIVACY,
     INPUT,
+    SUCCESS,
 }
 
 @Composable
@@ -116,6 +120,8 @@ fun HomeRoute() {
                     amount = budgetValue,
                     description = description,
                 )
+            },
+            onSavedCompleted = {
                 showBudgetSheet = false
             },
         )
@@ -453,11 +459,19 @@ private fun BudgetSetupBottomSheet(
     onDismiss: () -> Unit,
     formatAmount: (Double) -> String,
     onSaveBudget: (Double, String?) -> Unit,
+    onSavedCompleted: () -> Unit,
 ) {
     var budgetInput by remember { mutableStateOf("") }
     var sheetStep by remember { mutableStateOf(BudgetSheetStep.PRIVACY) }
     val parsedBudget = budgetInput.toDoubleOrNull()
     val canContinue = parsedBudget != null && parsedBudget > 0.0
+
+    LaunchedEffect(sheetStep) {
+        if (sheetStep == BudgetSheetStep.SUCCESS) {
+            delay(BUDGET_SUCCESS_DISMISS_DELAY_MS)
+            onSavedCompleted()
+        }
+    }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -555,10 +569,32 @@ private fun BudgetSetupBottomSheet(
                                     budgetValue,
                                     null,
                                 )
+                                sheetStep = BudgetSheetStep.SUCCESS
                             }
                         },
                         enabled = canContinue,
                     )
+                }
+
+                BudgetSheetStep.SUCCESS -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = Dimens.spacing24),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(Dimens.spacing12),
+                    ) {
+                        LottieAnimationView(
+                            rawRes = AppR.raw.lottie_budget_wallet,
+                            modifier = Modifier.size(Dimens.spacing72),
+                            iterations = 1,
+                        )
+                        Text(
+                            text = stringResource(id = AppR.string.home_budget_saved_title),
+                            style = AppTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = AppTheme.colors.onSurface,
+                        )
+                    }
                 }
             }
         }

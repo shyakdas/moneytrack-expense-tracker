@@ -4,7 +4,6 @@ package com.moneytrack.onboarding.presentation
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -33,7 +32,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -41,6 +39,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import kotlinx.coroutines.launch
 import com.moneytrack.R
+import com.moneytrack.common.ui.LottieAnimationView
 import com.moneytrack.onboarding.domain.model.OnboardingPage
 import ui.theme.AppTheme
 import ui.theme.Dimens
@@ -84,7 +83,10 @@ fun OnboardingScreen(
                 .weight(PAGER_WEIGHT)
                 .fillMaxWidth(),
         ) { pageIndex ->
-            OnboardingPageItem(page = pages[pageIndex])
+            OnboardingPageItem(
+                page = pages[pageIndex],
+                pageIndex = pageIndex,
+            )
         }
 
         PageIndicators(
@@ -221,18 +223,25 @@ private fun OnboardingNavButton(
 }
 
 @Composable
-private fun OnboardingPageItem(page: OnboardingPage) {
+private fun OnboardingPageItem(
+    page: OnboardingPage,
+    pageIndex: Int,
+) {
+    val animationRes = when (pageIndex) {
+        0 -> R.raw.lottie_onboarding_finance
+        1 -> R.raw.lottie_onboarding_track
+        else -> R.raw.lottie_budget_wallet
+    }
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Image(
-            painter = painterResource(id = page.imageRes),
-            contentDescription = null,
+        LottieAnimationView(
+            rawRes = animationRes,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(Dimens.onboardingIllustrationHeight),
-            contentScale = ContentScale.Fit,
         )
 
         Spacer(modifier = Modifier.height(Dimens.spacing24))

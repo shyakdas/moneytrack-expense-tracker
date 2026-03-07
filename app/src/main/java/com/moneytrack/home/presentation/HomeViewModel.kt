@@ -49,7 +49,7 @@ class HomeViewModel @Inject constructor(
         )
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5_000),
+        started = SharingStarted.WhileSubscribed(WHILE_SUBSCRIBED_TIMEOUT_MS),
         initialValue = HomeUiState(
             accountBalanceText = formatCurrency(accountBalance),
             hasBudget = false,
@@ -98,20 +98,24 @@ class HomeViewModel @Inject constructor(
     private fun formatIndianNumber(value: Long): String {
         val isNegative = value < 0
         val digits = kotlin.math.abs(value).toString()
-        if (digits.length <= 3) {
+        if (digits.length <= INDIAN_LAST_GROUP_SIZE) {
             return if (isNegative) "-$digits" else digits
         }
 
-        val lastThree = digits.takeLast(3)
-        val remaining = digits.dropLast(3)
-        val firstGroupSize = if (remaining.length % 2 == 0) 2 else 1
+        val lastThree = digits.takeLast(INDIAN_LAST_GROUP_SIZE)
+        val remaining = digits.dropLast(INDIAN_LAST_GROUP_SIZE)
+        val firstGroupSize = if (remaining.length % INDIAN_MIDDLE_GROUP_SIZE == 0) {
+            INDIAN_MIDDLE_GROUP_SIZE
+        } else {
+            1
+        }
         val groupedRemaining = buildString {
             append(remaining.substring(0, firstGroupSize))
             var index = firstGroupSize
             while (index < remaining.length) {
                 append(",")
-                append(remaining.substring(index, index + 2))
-                index += 2
+                append(remaining.substring(index, index + INDIAN_MIDDLE_GROUP_SIZE))
+                index += INDIAN_MIDDLE_GROUP_SIZE
             }
         }
 
@@ -122,5 +126,8 @@ class HomeViewModel @Inject constructor(
     private companion object {
         private const val DEFAULT_BOTTOM_ROUTE = "home"
         private const val DEFAULT_TIME_RANGE = "Today"
+        private const val WHILE_SUBSCRIBED_TIMEOUT_MS = 5_000L
+        private const val INDIAN_LAST_GROUP_SIZE = 3
+        private const val INDIAN_MIDDLE_GROUP_SIZE = 2
     }
 }
