@@ -64,6 +64,12 @@ jobs:
           name: coverage-report
           path: app/build/reports/jacoco/jacocoTestReport
 
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: app/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml
+          fail_ci_if_error: false
+
       - name: Print coverage summary
         run: |
           grep -A 5 "<counter type=\"INSTRUCTION\"" \
