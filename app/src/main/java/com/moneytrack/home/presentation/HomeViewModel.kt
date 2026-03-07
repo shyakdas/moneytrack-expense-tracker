@@ -42,6 +42,7 @@ class HomeViewModel @Inject constructor(
         HomeUiState(
             accountBalanceText = formatCurrency(accountBalance),
             hasBudget = budgetState != null,
+            budgetAmount = budgetState?.amount,
             budgetText = budgetState?.amount?.let(::formatCurrency),
             hasExpenses = expenses > 0.0,
             expensesText = formatCurrency(expenses),
@@ -55,6 +56,7 @@ class HomeViewModel @Inject constructor(
         initialValue = HomeUiState(
             accountBalanceText = formatCurrency(accountBalance),
             hasBudget = false,
+            budgetAmount = null,
             budgetText = null,
             hasExpenses = false,
             expensesText = formatCurrency(expenses),

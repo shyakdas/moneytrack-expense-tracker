@@ -4,6 +4,12 @@
 
 package com.moneytrack.home.presentation
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -48,6 +54,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -58,8 +65,10 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.moneytrack.designsystem.R
 import com.moneytrack.common.ui.LottieAnimationView
+import com.moneytrack.reminder.presentation.NotificationPermissionViewModel
 import com.moneytrack.R as AppR
 import kotlinx.coroutines.delay
+import androidx.core.content.ContextCompat
 import ui.components.card.transaction.TransactionCard
 import ui.components.card.transaction.TransactionType
 import ui.components.card.bottomsheet.SheetBlurHost
@@ -91,31 +100,81 @@ private enum class BudgetSheetStep {
 @Composable
 fun HomeRoute() {
     val viewModel: HomeViewModel = hiltViewModel()
+    val notificationPermissionViewModel: NotificationPermissionViewModel = hiltViewModel()
     val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
+    val notificationPermissionUiState =
+        notificationPermissionViewModel.uiState.collectAsStateWithLifecycle().value
     val budget = viewModel.budget.collectAsStateWithLifecycle().value
     val isBudgetLoaded = viewModel.isBudgetLoaded.collectAsStateWithLifecycle().value
+    val context = LocalContext.current
+    var hasNotificationPermission by remember {
+        mutableStateOf(context.hasNotificationPermission())
+    }
     var showBudgetSheet by remember { mutableStateOf(false) }
+    var budgetSheetInitialAmount by remember { mutableStateOf<Double?>(null) }
     var hasShownInitialBudgetPrompt by remember { mutableStateOf(false) }
+    val shouldShowNotificationPermissionSheet = notificationPermissionUiState.isPermissionPromptVisible &&
+        !hasNotificationPermission
 
-    SheetBlurHost(isSheetVisible = showBudgetSheet) {
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        hasNotificationPermission = granted || context.hasNotificationPermission()
+        notificationPermissionViewModel.markPermissionPromptHandled()
+        notificationPermissionViewModel.hidePermissionPrompt()
+    }
+
+    SheetBlurHost(isSheetVisible = showBudgetSheet || shouldShowNotificationPermissionSheet) {
         HomeScreen(
             uiState = uiState,
             onBottomRouteSelected = viewModel::onBottomRouteSelected,
             onTimeRangeSelected = viewModel::onTimeRangeSelected,
-            onSetBudgetClick = { showBudgetSheet = true },
+            onSetBudgetClick = { budgetAmount ->
+                budgetSheetInitialAmount = budgetAmount
+                showBudgetSheet = true
+            },
         )
     }
 
-    LaunchedEffect(isBudgetLoaded, budget) {
+    LaunchedEffect(notificationPermissionUiState.isPromptHandled, hasNotificationPermission) {
+        if (!notificationPermissionUiState.isPromptHandled && !hasNotificationPermission) {
+            notificationPermissionViewModel.showPermissionPrompt()
+        }
+    }
+
+    LaunchedEffect(isBudgetLoaded, budget, shouldShowNotificationPermissionSheet) {
         if (isBudgetLoaded && budget == null && !hasShownInitialBudgetPrompt) {
+            if (shouldShowNotificationPermissionSheet) {
+                return@LaunchedEffect
+            }
             showBudgetSheet = true
+            budgetSheetInitialAmount = null
             hasShownInitialBudgetPrompt = true
         }
+    }
+
+    if (shouldShowNotificationPermissionSheet) {
+        NotificationPermissionBottomSheet(
+            notificationsPerDay = notificationPermissionUiState.reminderSettings.notificationsPerDay,
+            onAllowNotifications = {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                } else {
+                    notificationPermissionViewModel.markPermissionPromptHandled()
+                    notificationPermissionViewModel.hidePermissionPrompt()
+                }
+            },
+            onNotNow = {
+                notificationPermissionViewModel.markPermissionPromptHandled()
+                notificationPermissionViewModel.hidePermissionPrompt()
+            },
+        )
     }
 
     if (showBudgetSheet) {
         BudgetSetupBottomSheet(
             onDismiss = { showBudgetSheet = false },
+            initialBudgetAmount = budgetSheetInitialAmount,
             formatAmount = viewModel::formatCurrency,
             onSaveBudget = { budgetValue, description ->
                 viewModel.saveBudget(
@@ -130,12 +189,20 @@ fun HomeRoute() {
     }
 }
 
+private fun Context.hasNotificationPermission(): Boolean {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return true
+    return ContextCompat.checkSelfPermission(
+        this,
+        Manifest.permission.POST_NOTIFICATIONS,
+    ) == PackageManager.PERMISSION_GRANTED
+}
+
 @Composable
 fun HomeScreen(
     uiState: HomeUiState,
     onBottomRouteSelected: (String) -> Unit,
     onTimeRangeSelected: (String) -> Unit,
-    onSetBudgetClick: () -> Unit,
+    onSetBudgetClick: (Double?) -> Unit,
 ) {
     val bottomItems = remember {
         listOf(
@@ -172,8 +239,16 @@ private fun HomeContent(
     innerPadding: PaddingValues,
     uiState: HomeUiState,
     onTimeRangeSelected: (String) -> Unit,
-    onSetBudgetClick: () -> Unit,
+    onSetBudgetClick: (Double?) -> Unit,
 ) {
+    if (!uiState.hasBudget) {
+        BudgetRequiredState(
+            innerPadding = innerPadding,
+            onSetBudgetClick = { onSetBudgetClick(null) },
+        )
+        return
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -204,6 +279,7 @@ private fun HomeContent(
             BalanceSummaryCard(
                 accountBalanceText = uiState.accountBalanceText,
                 hasBudget = uiState.hasBudget,
+                budgetAmount = uiState.budgetAmount,
                 budgetText = uiState.budgetText,
                 expensesText = uiState.expensesText,
                 onSetBudgetClick = onSetBudgetClick,
@@ -281,12 +357,38 @@ private fun HomeContent(
 }
 
 @Composable
+private fun BudgetRequiredState(
+    innerPadding: PaddingValues,
+    onSetBudgetClick: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(innerPadding)
+            .padding(horizontal = Dimens.spacing24),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        LottieAnimationView(
+            rawRes = AppR.raw.lottie_home_budget_prompt,
+            modifier = Modifier.size(Dimens.lottieHeroSize),
+        )
+        Spacer(modifier = Modifier.height(Dimens.spacing24))
+        LargeButton(
+            text = stringResource(id = AppR.string.home_set_budget_cta),
+            onClick = onSetBudgetClick,
+        )
+    }
+}
+
+@Composable
 private fun BalanceSummaryCard(
     accountBalanceText: String,
     hasBudget: Boolean,
+    budgetAmount: Double?,
     budgetText: String?,
     expensesText: String,
-    onSetBudgetClick: () -> Unit,
+    onSetBudgetClick: (Double?) -> Unit,
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -319,7 +421,7 @@ private fun BalanceSummaryCard(
                 if (!hasBudget) {
                     MissingBudgetCard(
                         modifier = Modifier.weight(1f),
-                        onClick = onSetBudgetClick,
+                        onClick = { onSetBudgetClick(null) },
                     )
                 } else {
                     StatCard(
@@ -328,6 +430,7 @@ private fun BalanceSummaryCard(
                         value = budgetText.orEmpty(),
                         icon = R.drawable.line_chart_2,
                         background = AppTheme.colors.primary,
+                        onClick = { onSetBudgetClick(budgetAmount) },
                     )
                 }
                 StatCard(
@@ -348,10 +451,19 @@ private fun StatCard(
     value: String,
     icon: Int,
     background: Color,
+    onClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     Surface(
-        modifier = modifier.heightIn(min = SUMMARY_CARD_MIN_HEIGHT),
+        modifier = modifier
+            .heightIn(min = SUMMARY_CARD_MIN_HEIGHT)
+            .let { base ->
+                if (onClick == null) {
+                    base
+                } else {
+                    base.clickable(onClick = onClick)
+                }
+            },
         color = background,
         shape = RoundedCornerShape(Dimens.radius24),
     ) {
@@ -425,8 +537,7 @@ private fun MissingBudgetCard(
                 width = Dimens.borderThick,
                 color = AppTheme.colors.primary.copy(alpha = 0.4f),
                 shape = RoundedCornerShape(Dimens.radius24),
-            )
-            .clickable(onClick = onClick),
+            ),
         color = AppTheme.colors.surfaceVariant,
         shape = RoundedCornerShape(Dimens.radius24),
     ) {
@@ -434,22 +545,60 @@ private fun MissingBudgetCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(Dimens.spacing12),
+            horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(Dimens.spacing8),
         ) {
+            LottieAnimationView(
+                rawRes = AppR.raw.lottie_budget_wallet,
+                modifier = Modifier.size(Dimens.spacing36),
+                iterations = 1,
+            )
+            LargeButton(
+                text = stringResource(id = AppR.string.home_set_budget_cta),
+                onClick = onClick,
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun NotificationPermissionBottomSheet(
+    notificationsPerDay: Int,
+    onAllowNotifications: () -> Unit,
+    onNotNow: () -> Unit,
+) {
+    ModalBottomSheet(
+        onDismissRequest = onNotNow,
+        containerColor = AppTheme.colors.surface,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Dimens.spacing24)
+                .padding(bottom = Dimens.spacing24),
+            verticalArrangement = Arrangement.spacedBy(Dimens.spacing16),
+        ) {
             Text(
-                text = stringResource(id = AppR.string.home_budget_label),
-                style = AppTheme.typography.bodyMedium,
+                text = stringResource(id = AppR.string.home_notification_sheet_title),
+                style = AppTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = AppTheme.colors.onSurface,
             )
             Text(
-                text = stringResource(id = AppR.string.home_budget_not_set),
-                style = AppTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                color = AppTheme.colors.primary,
-            )
-            Text(
-                text = stringResource(id = AppR.string.home_set_budget_cta),
+                text = stringResource(
+                    id = AppR.string.home_notification_sheet_desc,
+                    notificationsPerDay,
+                ),
                 style = AppTheme.typography.bodySmall,
                 color = AppTheme.colors.onSurfaceVariant,
+            )
+            LargeButton(
+                text = stringResource(id = AppR.string.home_notification_sheet_enable),
+                onClick = onAllowNotifications,
+            )
+            LargeButton(
+                text = stringResource(id = AppR.string.home_notification_sheet_not_now),
+                onClick = onNotNow,
             )
         }
     }
@@ -459,12 +608,17 @@ private fun MissingBudgetCard(
 @Composable
 private fun BudgetSetupBottomSheet(
     onDismiss: () -> Unit,
+    initialBudgetAmount: Double?,
     formatAmount: (Double) -> String,
     onSaveBudget: (Double, String?) -> Unit,
     onSavedCompleted: () -> Unit,
 ) {
-    var budgetInput by remember { mutableStateOf("") }
-    var sheetStep by remember { mutableStateOf(BudgetSheetStep.PRIVACY) }
+    var budgetInput by remember(initialBudgetAmount) {
+        mutableStateOf(initialBudgetAmount?.toLong()?.toString().orEmpty())
+    }
+    var sheetStep by remember(initialBudgetAmount) {
+        mutableStateOf(if (initialBudgetAmount == null) BudgetSheetStep.PRIVACY else BudgetSheetStep.INPUT)
+    }
     val parsedBudget = budgetInput.toDoubleOrNull()
     val canContinue = parsedBudget != null && parsedBudget > 0.0
 
@@ -678,6 +832,7 @@ data class HomeTransaction(
 data class HomeUiState(
     val accountBalanceText: String,
     val hasBudget: Boolean,
+    val budgetAmount: Double?,
     val budgetText: String?,
     val hasExpenses: Boolean,
     val expensesText: String,
@@ -694,6 +849,7 @@ private fun HomeScreenPreview() {
             uiState = HomeUiState(
                 accountBalanceText = "$0",
                 hasBudget = false,
+                budgetAmount = null,
                 budgetText = null,
                 hasExpenses = false,
                 expensesText = "$0",
@@ -703,7 +859,7 @@ private fun HomeScreenPreview() {
             ),
             onBottomRouteSelected = {},
             onTimeRangeSelected = {},
-            onSetBudgetClick = {},
+            onSetBudgetClick = { },
         )
     }
 }

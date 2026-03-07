@@ -91,6 +91,7 @@ class HomeScreenUiTest {
         return HomeUiState(
             accountBalanceText = "$0",
             hasBudget = false,
+            budgetAmount = null,
             budgetText = null,
             hasExpenses = hasExpenses,
             expensesText = "$0",
