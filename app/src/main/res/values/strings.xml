@@ -52,4 +52,5 @@
     <string name="home_budget_sheet_amount_hint">Budget amount</string>
     <string name="home_budget_sheet_description_hint">Description (optional)</string>
     <string name="home_budget_sheet_continue">Continue</string>
+    <string name="home_budget_saved_title">Budget saved</string>
 </resources>

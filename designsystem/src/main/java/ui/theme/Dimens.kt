@@ -101,5 +101,6 @@ object Dimens {
     val progressSmallHeight = 14.dp
     val warningIconSize = 36.dp
     val onboardingIllustrationHeight = 312.dp
+    val lottieHeroSize = 140.dp
 
 }

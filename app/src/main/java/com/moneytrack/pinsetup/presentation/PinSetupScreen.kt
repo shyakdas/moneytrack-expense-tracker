@@ -28,14 +28,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import com.airbnb.lottie.compose.LottieConstants
 import com.moneytrack.R
+import com.moneytrack.common.ui.LottieAnimationView
 import ui.theme.AppTheme
 import ui.theme.Dimens
 import ui.theme.MoneyTrackTheme
@@ -73,18 +74,11 @@ private fun PinSetupSuccessScreen() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Box(
-            modifier = Modifier
-                .size(Dimens.spacing72)
-                .background(AppTheme.colors.primary, shape = CircleShape),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = "✓",
-                style = AppTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                color = AppTheme.colors.onPrimary,
-            )
-        }
+        LottieAnimationView(
+            rawRes = R.raw.lottie_success_check,
+            modifier = Modifier.size(Dimens.lottieHeroSize),
+            iterations = 1,
+        )
         Spacer(modifier = Modifier.height(Dimens.spacing24))
         Text(
             text = stringResource(R.string.pin_setup_success_title),
@@ -119,27 +113,13 @@ private fun PinSetupIntroScreen(
     ) {
         Spacer(modifier = Modifier.weight(1f))
 
-        Box(
+        LottieAnimationView(
+            rawRes = R.raw.lottie_secure_shield,
             modifier = Modifier
-                .size(Dimens.buttonLLargeHeight)
-                .scale(animatedScale)
-                .background(
-                    brush = Brush.linearGradient(
-                        listOf(
-                            AppTheme.colors.primary,
-                            AppTheme.colors.primary.copy(alpha = 0.75f),
-                        ),
-                    ),
-                    shape = CircleShape,
-                ),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                painter = painterResource(com.moneytrack.designsystem.R.drawable.settings),
-                contentDescription = null,
-                tint = AppTheme.colors.onPrimary,
-            )
-        }
+                .size(Dimens.lottieHeroSize)
+                .scale(animatedScale),
+            iterations = LottieConstants.IterateForever,
+        )
 
         Spacer(modifier = Modifier.height(Dimens.spacing24))
 
