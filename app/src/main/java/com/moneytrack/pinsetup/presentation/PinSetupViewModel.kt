@@ -91,6 +91,10 @@ class PinSetupViewModel @Inject constructor(
                 showRecoveryError = false,
             )
         }
+
+        if (_uiState.value.enteredPin.length == PIN_LENGTH) {
+            submitPin()
+        }
     }
 
     private fun deleteDigit() {

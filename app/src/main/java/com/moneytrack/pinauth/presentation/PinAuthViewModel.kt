@@ -72,6 +72,10 @@ class PinAuthViewModel @Inject constructor(
                 showPinError = false,
             )
         }
+
+        if (_uiState.value.enteredPin.length == PIN_LENGTH) {
+            submitPin()
+        }
     }
 
     private fun deleteDigit() {

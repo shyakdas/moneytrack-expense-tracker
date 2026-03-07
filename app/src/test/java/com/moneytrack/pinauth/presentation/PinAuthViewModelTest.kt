@@ -99,6 +99,44 @@ class PinAuthViewModelTest {
         assertEquals(PinAuthMode.BIOMETRIC, viewModel.uiState.value.mode)
     }
 
+    @Test
+    fun enteringFourthDigitCorrectPin_autoAuthenticatesWithoutSubmit() = runTest {
+        val viewModel = createViewModel(
+            repository = FakeSecurityRepository(
+                status = PinSetupStatus.PIN_ENABLED,
+                savedPin = "1234",
+            ),
+        )
+        val eventDeferred = async { viewModel.events.first() }
+        advanceUntilIdle()
+
+        "1234".forEach { char ->
+            viewModel.onAction(PinAuthAction.EnterDigit(char.digitToInt()))
+        }
+        advanceUntilIdle()
+
+        assertEquals(PinAuthEvent.Authenticated, eventDeferred.await())
+    }
+
+    @Test
+    fun enteringFourthDigitWrongPin_autoShowsErrorWithoutSubmit() = runTest {
+        val viewModel = createViewModel(
+            repository = FakeSecurityRepository(
+                status = PinSetupStatus.PIN_ENABLED,
+                savedPin = "1234",
+            ),
+        )
+        advanceUntilIdle()
+
+        "9999".forEach { char ->
+            viewModel.onAction(PinAuthAction.EnterDigit(char.digitToInt()))
+        }
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.showPinError)
+        assertEquals("", viewModel.uiState.value.enteredPin)
+    }
+
     private fun createViewModel(repository: FakeSecurityRepository): PinAuthViewModel {
         return PinAuthViewModel(
             getPinSetupStatusUseCase = GetPinSetupStatusUseCase(repository),
