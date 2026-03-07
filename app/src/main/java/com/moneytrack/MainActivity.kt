@@ -1,6 +1,8 @@
 package com.moneytrack
 
 import android.os.Bundle
+import android.graphics.Color
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -24,7 +26,16 @@ class MainActivity : FragmentActivity() {
         splashScreen.setKeepOnScreenCondition {
             appEntryViewModel.uiState.value.isLoading
         }
-        enableEdgeToEdge()
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.auto(
+                lightScrim = Color.TRANSPARENT,
+                darkScrim = Color.TRANSPARENT,
+            ),
+            navigationBarStyle = SystemBarStyle.auto(
+                lightScrim = Color.TRANSPARENT,
+                darkScrim = Color.TRANSPARENT,
+            ),
+        )
         setContent {
             val uiState = appEntryViewModel.uiState.collectAsStateWithLifecycle().value
             val appLockUiState = appLockViewModel.uiState.collectAsStateWithLifecycle().value

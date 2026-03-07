@@ -1,12 +1,14 @@
 package ui.components.navigation.bottomNav
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -39,21 +41,26 @@ internal fun BottomBarItem(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        IconButton(
-            onClick = onClick,
-            modifier = Modifier.testTag("NavItem_${item.route}")
+        Box(
+            modifier = Modifier
+                .size(Dimens.iconButtonSize)
+                .clickable(onClick = onClick)
+                .testTag("NavItem_${item.route}"),
+            contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = ImageVector.vectorResource(id = item.icon),
                 contentDescription = item.label,
                 tint = color,
-                modifier = Modifier.size(Dimens.icon32)
+                modifier = Modifier.size(Dimens.icon24)
             )
         }
 
+        Spacer(modifier = Modifier.height(Dimens.spacing1))
+
         Text(
             text = item.label,
-            style = AppTheme.typography.labelLarge,
+            style = AppTheme.typography.labelMedium,
             color = color
         )
     }

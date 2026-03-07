@@ -7,6 +7,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.moneytrack.home.presentation.HomeRoute
 import com.moneytrack.onboarding.presentation.OnboardingRoute
 import com.moneytrack.pinauth.presentation.PinAuthRoute
 import com.moneytrack.pinsetup.presentation.PinSetupRoute
@@ -74,7 +75,7 @@ fun AppNavHost(
         }
 
         composable(AppDestination.Home.route) {
-            HomePlaceholderScreen()
+            HomeRoute()
         }
     }
 }

@@ -100,6 +100,39 @@ class PinSetupViewModelTest {
         assertFalse(state.showRecoveryError)
     }
 
+    @Test
+    fun enterFourthDigitInCreatePin_autoMovesToConfirmPin() = runTest {
+        val viewModel = createViewModel(FakeSecurityRepository())
+
+        viewModel.onAction(PinSetupAction.SelectPin)
+        enterPin(viewModel, "1234")
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertEquals(PinSetupStage.CONFIRM_PIN, state.stage)
+        assertEquals("", state.enteredPin)
+        assertEquals("1234", state.firstPin)
+    }
+
+    @Test
+    fun enterFourthDigitInConfirmPin_autoCompletesFlow() = runTest {
+        val fakeRepository = FakeSecurityRepository()
+        val viewModel = createViewModel(fakeRepository)
+        val completedEvent = async { viewModel.events.first() }
+
+        viewModel.onAction(PinSetupAction.SelectPin)
+        enterPin(viewModel, "1234")
+        enterPin(viewModel, "1234")
+        advanceUntilIdle()
+
+        assertEquals(PinSetupStage.SUCCESS, viewModel.uiState.value.stage)
+        assertEquals(PinSetupStatus.PIN_ENABLED, fakeRepository.savedStatus)
+
+        advanceTimeBy(1200)
+        advanceUntilIdle()
+        assertEquals(PinSetupEvent.Completed, completedEvent.await())
+    }
+
     private fun createViewModel(repository: FakeSecurityRepository): PinSetupViewModel {
         return PinSetupViewModel(
             completePinSetupWithPinUseCase = CompletePinSetupWithPinUseCase(repository),
