@@ -16,6 +16,9 @@ object ExpenseReminderScheduler {
     private const val NIGHT_REMINDER_HOUR = 22
     private const val TEST_REMINDER_HOUR = 0
     private const val TEST_REMINDER_MINUTE = 15
+
+    private const val REQUEST_CODE_MULTIPLIER = 100
+
     private val reminderTimes = listOf(
         ReminderTime(hour = TEST_REMINDER_HOUR, minute = TEST_REMINDER_MINUTE),
         ReminderTime(hour = MORNING_REMINDER_HOUR, minute = 0),
@@ -92,7 +95,7 @@ object ExpenseReminderScheduler {
         }
         return PendingIntent.getBroadcast(
             context,
-            (hourOfDay * 100) + minute,
+            (hourOfDay * REQUEST_CODE_MULTIPLIER) + minute,
             intent,
             flags,
         )
