@@ -1,3 +1,5 @@
+// Copyright (c) 2026 shyakdas
+
 package com.moneytrack.home.domain.usecase
 
 import com.moneytrack.home.domain.repository.BudgetRepository

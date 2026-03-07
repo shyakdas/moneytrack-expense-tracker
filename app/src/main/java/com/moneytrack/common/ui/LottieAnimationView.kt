@@ -1,3 +1,5 @@
+// Copyright (c) 2026 shyakdas
+
 package com.moneytrack.common.ui
 
 import androidx.annotation.RawRes

@@ -1,3 +1,5 @@
+<!-- Copyright (c) 2026 shyakdas -->
+
 # MoneyTrack – Offline Expense Tracker 💸
 
 [![PR Checks](https://github.com/shyakdas/moneytrack-expense-tracker/actions/workflows/pr-quality-checks.yml/badge.svg)](https://github.com/shyakdas/moneytrack-expense-tracker/actions)

@@ -1,3 +1,5 @@
+// Copyright (c) 2026 shyakdas
+
 package com.moneytrack.onboarding.data.repository
 
 import io.mockk.coEvery

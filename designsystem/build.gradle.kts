@@ -1,3 +1,5 @@
+// Copyright (c) 2026 shyakdas
+
 plugins {
     id("com.android.library")
     alias(libs.plugins.kotlin.compose)

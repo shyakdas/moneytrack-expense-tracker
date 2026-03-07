@@ -1,3 +1,5 @@
+// Copyright (c) 2026 shyakdas
+
 package ui.components.navigation.topNav
 
 import androidx.compose.foundation.layout.Column

@@ -1,3 +1,5 @@
+// Copyright (c) 2026 shyakdas
+
 package com.moneytrack.pinsetup.presentation
 
 import com.moneytrack.security.domain.model.PinSetupStatus

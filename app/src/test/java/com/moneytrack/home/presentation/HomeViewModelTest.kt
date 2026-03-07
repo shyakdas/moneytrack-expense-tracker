@@ -1,3 +1,5 @@
+// Copyright (c) 2026 shyakdas
+
 package com.moneytrack.home.presentation
 
 import com.moneytrack.home.domain.model.Budget

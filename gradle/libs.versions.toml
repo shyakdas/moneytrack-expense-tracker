@@ -1,3 +1,5 @@
+# Copyright (c) 2026 shyakdas
+
 [versions]
 agp = "9.0.0"
 coreSplashscreen = "1.2.0"

@@ -1,3 +1,5 @@
+// Copyright (c) 2026 shyakdas
+
 package com.moneytrack.security.domain.usecase
 
 import kotlinx.coroutines.flow.Flow

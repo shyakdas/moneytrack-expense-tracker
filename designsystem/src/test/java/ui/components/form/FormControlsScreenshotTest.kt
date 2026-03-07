@@ -1,3 +1,5 @@
+// Copyright (c) 2026 shyakdas
+
 package ui.components.form
 
 import app.cash.paparazzi.DeviceConfig

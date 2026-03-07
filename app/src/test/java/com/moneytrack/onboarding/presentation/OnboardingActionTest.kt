@@ -1,3 +1,5 @@
+// Copyright (c) 2026 shyakdas
+
 package com.moneytrack.onboarding.presentation
 
 import org.junit.Assert.assertTrue

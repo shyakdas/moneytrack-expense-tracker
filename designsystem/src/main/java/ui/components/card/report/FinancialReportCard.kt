@@ -1,3 +1,5 @@
+// Copyright (c) 2026 shyakdas
+
 package ui.components.card.report
 
 import androidx.compose.foundation.background
