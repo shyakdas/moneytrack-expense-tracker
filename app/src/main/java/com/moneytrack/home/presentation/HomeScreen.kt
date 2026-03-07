@@ -1,6 +1,6 @@
 // Copyright (c) 2026 shyakdas
 
-@file:Suppress("MagicNumber", "LongMethod", "TooManyFunctions", "UnusedPrivateMember")
+@file:Suppress("MagicNumber", "LongMethod", "TooManyFunctions", "UnusedPrivateMember", "LongParameterList")
 
 package com.moneytrack.home.presentation
 
