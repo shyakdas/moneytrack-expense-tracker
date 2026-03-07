@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,7 +18,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.platform.LocalConfiguration
 import ui.theme.AppTheme
 import ui.theme.Dimens
 
@@ -28,6 +31,7 @@ fun TimeRangeTab(
     onOptionSelected: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val compact = LocalConfiguration.current.screenWidthDp < 360
     Row(
         modifier = modifier
             .height(Dimens.buttonSmallHeight)
@@ -42,7 +46,11 @@ fun TimeRangeTab(
             TimeRangeTabItem(
                 text = option,
                 isSelected = option == selectedOption,
-                onClick = { onOptionSelected(option) }
+                onClick = { onOptionSelected(option) },
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+                compact = compact,
             )
         }
     }
@@ -52,7 +60,9 @@ fun TimeRangeTab(
 private fun TimeRangeTabItem(
     text: String,
     isSelected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    compact: Boolean = false,
 ) {
     val backgroundColor by animateColorAsState(
         targetValue = if (isSelected)
@@ -71,21 +81,23 @@ private fun TimeRangeTabItem(
     )
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .height(Dimens.spacing32)
-            .padding(horizontal = Dimens.spacing4)
+            .padding(horizontal = Dimens.spacing2)
             .background(
                 color = backgroundColor,
                 shape = RoundedCornerShape(Dimens.radius20)
             )
             .clickable(onClick = onClick)
-            .padding(horizontal = Dimens.spacing20),
+            .padding(horizontal = if (compact) Dimens.spacing8 else Dimens.spacing12),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
             style = AppTheme.typography.bodySmall,
-            color = textColor
+            color = textColor,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }

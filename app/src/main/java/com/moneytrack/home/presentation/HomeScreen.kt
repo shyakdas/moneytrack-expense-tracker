@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -32,6 +33,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,6 +48,7 @@ import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
@@ -55,6 +58,7 @@ import com.moneytrack.designsystem.R
 import com.moneytrack.R as AppR
 import ui.components.card.transaction.TransactionCard
 import ui.components.card.transaction.TransactionType
+import ui.components.card.bottomsheet.SheetBlurHost
 import ui.components.navigation.bottomNav.BottomNavItem
 import ui.components.navigation.bottomNav.PrimaryBottomNavigation
 import ui.components.navigation.button.LargeButton
@@ -72,34 +76,41 @@ private const val ROUTE_TRANSACTION = "transaction"
 private const val ROUTE_BUDGET = "budget"
 private const val ROUTE_PROFILE = "profile"
 private const val MAX_BUDGET_INPUT_LENGTH = 8
+private val SUMMARY_CARD_MIN_HEIGHT = 118.dp
+private enum class BudgetSheetStep {
+    PRIVACY,
+    INPUT,
+}
 
 @Composable
 fun HomeRoute() {
     val viewModel: HomeViewModel = hiltViewModel()
+    val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
     val budget = viewModel.budget.collectAsStateWithLifecycle().value
-    var selectedBottomRoute by remember { mutableStateOf(ROUTE_HOME) }
-    var selectedRange by remember { mutableStateOf("Today") }
+    val isBudgetLoaded = viewModel.isBudgetLoaded.collectAsStateWithLifecycle().value
     var showBudgetSheet by remember { mutableStateOf(false) }
+    var hasShownInitialBudgetPrompt by remember { mutableStateOf(false) }
 
-    val uiState = HomeUiState(
-        accountBalance = 0.0,
-        budget = budget?.amount,
-        expenses = 0.0,
-        transactions = emptyList(),
-        selectedBottomRoute = selectedBottomRoute,
-        selectedRange = selectedRange,
-    )
+    SheetBlurHost(isSheetVisible = showBudgetSheet) {
+        HomeScreen(
+            uiState = uiState,
+            onBottomRouteSelected = viewModel::onBottomRouteSelected,
+            onTimeRangeSelected = viewModel::onTimeRangeSelected,
+            onSetBudgetClick = { showBudgetSheet = true },
+        )
+    }
 
-    HomeScreen(
-        uiState = uiState,
-        onBottomRouteSelected = { route -> selectedBottomRoute = route },
-        onTimeRangeSelected = { range -> selectedRange = range },
-        onSetBudgetClick = { showBudgetSheet = true },
-    )
+    LaunchedEffect(isBudgetLoaded, budget) {
+        if (isBudgetLoaded && budget == null && !hasShownInitialBudgetPrompt) {
+            showBudgetSheet = true
+            hasShownInitialBudgetPrompt = true
+        }
+    }
 
     if (showBudgetSheet) {
         BudgetSetupBottomSheet(
             onDismiss = { showBudgetSheet = false },
+            formatAmount = viewModel::formatCurrency,
             onSaveBudget = { budgetValue, description ->
                 viewModel.saveBudget(
                     amount = budgetValue,
@@ -159,8 +170,7 @@ private fun HomeContent(
         modifier = Modifier
             .fillMaxSize()
             .padding(innerPadding)
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = Dimens.spacing16),
+            .verticalScroll(rememberScrollState()),
     ) {
         Box(
             modifier = Modifier
@@ -176,68 +186,86 @@ private fun HomeContent(
                 ),
             )
         }
+        Spacer(modifier = Modifier.height(Dimens.spacing12))
 
-        BalanceSummaryCard(
-            accountBalance = uiState.accountBalance,
-            budget = uiState.budget,
-            expenses = uiState.expenses,
-            onSetBudgetClick = onSetBudgetClick,
-        )
-        if (uiState.budget == null) {
-            Spacer(modifier = Modifier.height(Dimens.spacing16))
-            BudgetInfoTip(
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Dimens.spacing16),
+        ) {
+            BalanceSummaryCard(
+                accountBalanceText = uiState.accountBalanceText,
+                hasBudget = uiState.hasBudget,
+                budgetText = uiState.budgetText,
+                expensesText = uiState.expensesText,
                 onSetBudgetClick = onSetBudgetClick,
             )
-        }
-        Spacer(modifier = Modifier.height(Dimens.spacing24))
+            Spacer(modifier = Modifier.height(Dimens.spacing24))
 
-        Text(
-            text = "Spend Frequency",
-            style = AppTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-            color = AppTheme.colors.onBackground,
-        )
-        Spacer(modifier = Modifier.height(Dimens.spacing16))
-        SpendFrequencyChart()
-        Spacer(modifier = Modifier.height(Dimens.spacing16))
-
-        TimeRangeTab(
-            options = listOf("Today", "Week", "Month", "Year"),
-            selectedOption = uiState.selectedRange,
-            onOptionSelected = onTimeRangeSelected,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        Spacer(modifier = Modifier.height(Dimens.spacing20))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
             Text(
-                text = "Recent Transaction",
+                text = "Spend Frequency",
                 style = AppTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                 color = AppTheme.colors.onBackground,
             )
-            Spacer(modifier = Modifier.weight(1f))
-            SeeAllPill(onClick = {})
-        }
-        Spacer(modifier = Modifier.height(Dimens.spacing12))
+            Spacer(modifier = Modifier.height(Dimens.spacing16))
+            if (uiState.hasExpenses) {
+                SpendFrequencyChart()
+                Spacer(modifier = Modifier.height(Dimens.spacing16))
 
-        if (uiState.transactions.isEmpty()) {
-            Text(
-                text = stringResource(id = AppR.string.home_empty_transactions),
-                style = AppTheme.typography.bodyMedium,
-                color = AppTheme.colors.onSurfaceVariant,
-            )
-        } else {
-            uiState.transactions.forEach { transaction ->
-                TransactionCard(
-                    icon = ImageVector.vectorResource(id = transaction.icon),
-                    title = transaction.title,
-                    subtitle = transaction.subtitle,
-                    amount = transaction.amount,
-                    time = transaction.time,
-                    type = transaction.type,
+                TimeRangeTab(
+                    options = listOf("Today", "Week", "Month", "Year"),
+                    selectedOption = uiState.selectedRange,
+                    onOptionSelected = onTimeRangeSelected,
+                    modifier = Modifier.fillMaxWidth(),
                 )
+            } else {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(Dimens.radius16),
+                    color = AppTheme.colors.surfaceVariant,
+                ) {
+                    Text(
+                        text = stringResource(id = AppR.string.home_spend_frequency_empty),
+                        modifier = Modifier.padding(Dimens.spacing16),
+                        style = AppTheme.typography.bodySmall,
+                        color = AppTheme.colors.onSurfaceVariant,
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(Dimens.spacing20))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "Recent Transaction",
+                    style = AppTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                    color = AppTheme.colors.onBackground,
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                SeeAllPill(onClick = {})
+            }
+            Spacer(modifier = Modifier.height(Dimens.spacing12))
+
+            if (uiState.transactions.isEmpty()) {
+                Text(
+                    text = stringResource(id = AppR.string.home_empty_transactions_desc),
+                    style = AppTheme.typography.bodySmall,
+                    color = AppTheme.colors.onSurfaceVariant,
+                )
+            } else {
+                uiState.transactions.forEach { transaction ->
+                    TransactionCard(
+                        icon = ImageVector.vectorResource(id = transaction.icon),
+                        title = transaction.title,
+                        subtitle = transaction.subtitle,
+                        amount = transaction.amount,
+                        time = transaction.time,
+                        type = transaction.type,
+                    )
+                    Spacer(modifier = Modifier.height(Dimens.spacing12))
+                }
                 Spacer(modifier = Modifier.height(Dimens.spacing12))
             }
         }
@@ -246,9 +274,10 @@ private fun HomeContent(
 
 @Composable
 private fun BalanceSummaryCard(
-    accountBalance: Double,
-    budget: Double?,
-    expenses: Double,
+    accountBalanceText: String,
+    hasBudget: Boolean,
+    budgetText: String?,
+    expensesText: String,
     onSetBudgetClick: () -> Unit,
 ) {
     Surface(
@@ -269,7 +298,7 @@ private fun BalanceSummaryCard(
             )
             Spacer(modifier = Modifier.height(Dimens.spacing8))
             Text(
-                text = "$${accountBalance.toInt()}",
+                text = accountBalanceText,
                 style = AppTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold),
                 color = AppTheme.colors.onBackground,
             )
@@ -279,7 +308,7 @@ private fun BalanceSummaryCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(Dimens.spacing16),
             ) {
-                if (budget == null) {
+                if (!hasBudget) {
                     MissingBudgetCard(
                         modifier = Modifier.weight(1f),
                         onClick = onSetBudgetClick,
@@ -288,7 +317,7 @@ private fun BalanceSummaryCard(
                     StatCard(
                         modifier = Modifier.weight(1f),
                         label = stringResource(id = AppR.string.home_budget_label),
-                        value = "$${budget.toInt()}",
+                        value = budgetText.orEmpty(),
                         icon = R.drawable.line_chart_2,
                         background = AppTheme.colors.primary,
                     )
@@ -296,7 +325,7 @@ private fun BalanceSummaryCard(
                 StatCard(
                     modifier = Modifier.weight(1f),
                     label = stringResource(id = AppR.string.home_expenses_label),
-                    value = "$${expenses.toInt()}",
+                    value = expensesText,
                     icon = R.drawable.expense,
                     background = AppTheme.colors.error,
                 )
@@ -314,43 +343,63 @@ private fun StatCard(
     modifier: Modifier = Modifier,
 ) {
     Surface(
-        modifier = modifier,
+        modifier = modifier.heightIn(min = SUMMARY_CARD_MIN_HEIGHT),
         color = background,
         shape = RoundedCornerShape(Dimens.radius24),
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(Dimens.spacing12),
-            verticalAlignment = Alignment.CenterVertically,
+        androidx.compose.foundation.layout.BoxWithConstraints(
+            modifier = Modifier.fillMaxSize(),
         ) {
-            Box(
-                modifier = Modifier
-                    .size(Dimens.iconContainerSize)
-                    .background(
-                        color = AppTheme.colors.onPrimary,
-                        shape = RoundedCornerShape(Dimens.radius16),
-                    ),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = ImageVector.vectorResource(id = icon),
-                    contentDescription = null,
-                    tint = background,
-                )
+            val compact = maxWidth < 170.dp
+            val iconSize = if (compact) Dimens.spacing36 else Dimens.iconContainerSize
+            val labelStyle = if (compact) {
+                AppTheme.typography.bodySmall
+            } else {
+                AppTheme.typography.bodyMedium
             }
-            Spacer(modifier = Modifier.width(Dimens.spacing8))
-            Column {
-                Text(
-                    text = label,
-                    style = AppTheme.typography.bodyMedium,
-                    color = AppTheme.colors.onPrimary,
-                )
-                Text(
-                    text = value,
-                    style = AppTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                    color = AppTheme.colors.onPrimary,
-                )
+            val valueStyle = if (compact) {
+                AppTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+            } else {
+                AppTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(Dimens.spacing12),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(iconSize)
+                        .background(
+                            color = AppTheme.colors.onPrimary,
+                            shape = RoundedCornerShape(Dimens.radius16),
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = ImageVector.vectorResource(id = icon),
+                        contentDescription = null,
+                        tint = background,
+                    )
+                }
+                Spacer(modifier = Modifier.width(if (compact) Dimens.spacing6 else Dimens.spacing8))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = label,
+                        style = labelStyle,
+                        color = AppTheme.colors.onPrimary,
+                        maxLines = if (compact) 2 else 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = value,
+                        style = valueStyle,
+                        color = AppTheme.colors.onPrimary,
+                        maxLines = 1,
+                    )
+                }
             }
         }
     }
@@ -363,6 +412,7 @@ private fun MissingBudgetCard(
 ) {
     Surface(
         modifier = modifier
+            .heightIn(min = SUMMARY_CARD_MIN_HEIGHT)
             .border(
                 width = Dimens.borderThick,
                 color = AppTheme.colors.primary.copy(alpha = 0.4f),
@@ -397,54 +447,15 @@ private fun MissingBudgetCard(
     }
 }
 
-@Composable
-private fun BudgetInfoTip(
-    onSetBudgetClick: () -> Unit,
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = AppTheme.colors.surfaceVariant,
-        shape = RoundedCornerShape(Dimens.radius16),
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(Dimens.spacing16),
-            verticalArrangement = Arrangement.spacedBy(Dimens.spacing8),
-        ) {
-            Text(
-                text = stringResource(id = AppR.string.home_budget_tip_title),
-                style = AppTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = AppTheme.colors.onSurface,
-            )
-            Text(
-                text = stringResource(id = AppR.string.home_budget_tip_desc),
-                style = AppTheme.typography.bodyMedium,
-                color = AppTheme.colors.onSurfaceVariant,
-            )
-            Text(
-                text = stringResource(id = AppR.string.home_budget_tip_disadvantage),
-                style = AppTheme.typography.bodySmall,
-                color = AppTheme.colors.error,
-            )
-            Text(
-                text = stringResource(id = AppR.string.home_set_budget_cta),
-                style = AppTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                color = AppTheme.colors.primary,
-                modifier = Modifier.clickable(onClick = onSetBudgetClick),
-            )
-        }
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun BudgetSetupBottomSheet(
     onDismiss: () -> Unit,
+    formatAmount: (Double) -> String,
     onSaveBudget: (Double, String?) -> Unit,
 ) {
     var budgetInput by remember { mutableStateOf("") }
-    var descriptionInput by remember { mutableStateOf("") }
+    var sheetStep by remember { mutableStateOf(BudgetSheetStep.PRIVACY) }
     val parsedBudget = budgetInput.toDoubleOrNull()
     val canContinue = parsedBudget != null && parsedBudget > 0.0
 
@@ -459,59 +470,97 @@ private fun BudgetSetupBottomSheet(
                 .padding(bottom = Dimens.spacing24),
             verticalArrangement = Arrangement.spacedBy(Dimens.spacing16),
         ) {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = AppTheme.colors.primary,
-                shape = RoundedCornerShape(Dimens.radius24),
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(Dimens.spacing20),
-                ) {
-                    Text(
-                        text = stringResource(id = AppR.string.home_budget_sheet_title),
-                        style = AppTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = AppTheme.colors.onPrimary,
+            when (sheetStep) {
+                BudgetSheetStep.PRIVACY -> {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(Dimens.radius16),
+                        color = AppTheme.colors.surfaceVariant,
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(Dimens.spacing16),
+                            verticalArrangement = Arrangement.spacedBy(Dimens.spacing8),
+                        ) {
+                            Text(
+                                text = stringResource(id = AppR.string.home_budget_privacy_title),
+                                style = AppTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                color = AppTheme.colors.onSurface,
+                            )
+                            Text(
+                                text = stringResource(id = AppR.string.home_budget_privacy_desc),
+                                style = AppTheme.typography.bodySmall,
+                                color = AppTheme.colors.onSurfaceVariant,
+                            )
+                            Text(
+                                text = stringResource(id = AppR.string.home_budget_need_title),
+                                style = AppTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                color = AppTheme.colors.onSurface,
+                            )
+                            Text(
+                                text = stringResource(id = AppR.string.home_budget_need_desc),
+                                style = AppTheme.typography.bodySmall,
+                                color = AppTheme.colors.onSurfaceVariant,
+                            )
+                        }
+                    }
+
+                    LargeButton(
+                        text = stringResource(id = AppR.string.home_budget_sheet_next),
+                        onClick = { sheetStep = BudgetSheetStep.INPUT },
                     )
-                    Spacer(modifier = Modifier.height(Dimens.spacing8))
-                    Text(
-                        text = "$${parsedBudget?.toInt() ?: 0}",
-                        style = AppTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold),
-                        color = AppTheme.colors.onPrimary,
+                }
+
+                BudgetSheetStep.INPUT -> {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = AppTheme.colors.primary,
+                        shape = RoundedCornerShape(Dimens.radius24),
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(Dimens.spacing20),
+                        ) {
+                            Text(
+                                text = stringResource(id = AppR.string.home_budget_sheet_title),
+                                style = AppTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                color = AppTheme.colors.onPrimary,
+                            )
+                            Spacer(modifier = Modifier.height(Dimens.spacing8))
+                            Text(
+                                text = formatAmount(parsedBudget ?: 0.0),
+                                style = AppTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold),
+                                color = AppTheme.colors.onPrimary,
+                            )
+                        }
+                    }
+
+                    InputField(
+                        value = budgetInput,
+                        onValueChange = { input ->
+                            val filtered = input.filter { it.isDigit() }.take(MAX_BUDGET_INPUT_LENGTH)
+                            budgetInput = filtered
+                        },
+                        placeholder = stringResource(id = AppR.string.home_budget_sheet_amount_hint),
+                        leadingIcon = ImageVector.vectorResource(id = R.drawable.wallet_3),
+                    )
+
+                    LargeButton(
+                        text = stringResource(id = AppR.string.home_budget_sheet_continue),
+                        onClick = {
+                            parsedBudget?.let { budgetValue ->
+                                onSaveBudget(
+                                    budgetValue,
+                                    null,
+                                )
+                            }
+                        },
+                        enabled = canContinue,
                     )
                 }
             }
-
-            InputField(
-                value = budgetInput,
-                onValueChange = { input ->
-                    val filtered = input.filter { it.isDigit() }.take(MAX_BUDGET_INPUT_LENGTH)
-                    budgetInput = filtered
-                },
-                placeholder = stringResource(id = AppR.string.home_budget_sheet_amount_hint),
-                leadingIcon = ImageVector.vectorResource(id = R.drawable.wallet_3),
-            )
-
-            InputField(
-                value = descriptionInput,
-                onValueChange = { descriptionInput = it },
-                placeholder = stringResource(id = AppR.string.home_budget_sheet_description_hint),
-                leadingIcon = ImageVector.vectorResource(id = R.drawable.document),
-            )
-
-            LargeButton(
-                text = stringResource(id = AppR.string.home_budget_sheet_continue),
-                onClick = {
-                    parsedBudget?.let { budgetValue ->
-                        onSaveBudget(
-                            budgetValue,
-                            descriptionInput,
-                        )
-                    }
-                },
-                enabled = canContinue,
-            )
         }
     }
 }
@@ -589,9 +638,11 @@ data class HomeTransaction(
 )
 
 data class HomeUiState(
-    val accountBalance: Double,
-    val budget: Double?,
-    val expenses: Double,
+    val accountBalanceText: String,
+    val hasBudget: Boolean,
+    val budgetText: String?,
+    val hasExpenses: Boolean,
+    val expensesText: String,
     val transactions: List<HomeTransaction>,
     val selectedBottomRoute: String,
     val selectedRange: String,
@@ -603,9 +654,11 @@ private fun HomeScreenPreview() {
     MoneyTrackTheme(darkTheme = false) {
         HomeScreen(
             uiState = HomeUiState(
-                accountBalance = 0.0,
-                budget = null,
-                expenses = 0.0,
+                accountBalanceText = "$0",
+                hasBudget = false,
+                budgetText = null,
+                hasExpenses = false,
+                expensesText = "$0",
                 transactions = emptyList(),
                 selectedBottomRoute = ROUTE_HOME,
                 selectedRange = "Today",

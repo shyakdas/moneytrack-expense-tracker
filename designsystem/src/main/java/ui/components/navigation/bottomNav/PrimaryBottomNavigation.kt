@@ -69,7 +69,7 @@ fun PrimaryBottomNavigation(
             shape = CircleShape,
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .offset(y = -Dimens.spacing28)
+                .offset(y = -Dimens.spacing20)
                 .size(Dimens.fabSize)
                 .shadow(Dimens.spacing8, CircleShape)
                 .testTag("BottomBarFab")
@@ -112,4 +112,3 @@ private fun PrimaryBottomNavigationPreview() {
         }
     }
 }
-
