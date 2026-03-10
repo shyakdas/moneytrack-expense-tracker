@@ -31,7 +31,7 @@ jobs:
           key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/*.toml') }}
 
       - run: chmod +x ./gradlew
-      - run: ./gradlew ktlintCheck detekt
+      - run: ./gradlew ktlintCheck detekt :app:lintDevDebug
 
   tests:
     name: Unit Tests & Coverage

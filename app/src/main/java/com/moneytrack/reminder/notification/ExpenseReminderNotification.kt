@@ -2,14 +2,18 @@
 
 package com.moneytrack.reminder.notification
 
+import android.Manifest
+import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import com.moneytrack.MainActivity
 import com.moneytrack.R
 
@@ -35,6 +39,7 @@ object ExpenseReminderNotification {
         manager.createNotificationChannel(channel)
     }
 
+    @SuppressLint("MissingPermission")
     fun show(
         context: Context,
         notificationId: Int,
@@ -42,6 +47,7 @@ object ExpenseReminderNotification {
     ) {
         ensureChannel(context)
         if (!NotificationManagerCompat.from(context).areNotificationsEnabled()) return
+        if (!hasNotificationPermission(context)) return
 
         val tapIntent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -63,5 +69,13 @@ object ExpenseReminderNotification {
             .build()
 
         NotificationManagerCompat.from(context).notify(notificationId, notification)
+    }
+
+    private fun hasNotificationPermission(context: Context): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return true
+        return ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.POST_NOTIFICATIONS,
+        ) == PackageManager.PERMISSION_GRANTED
     }
 }

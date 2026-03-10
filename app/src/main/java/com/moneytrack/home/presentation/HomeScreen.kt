@@ -55,12 +55,13 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.moneytrack.designsystem.R
@@ -451,8 +452,8 @@ private fun StatCard(
     value: String,
     icon: Int,
     background: Color,
-    onClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
 ) {
     Surface(
         modifier = modifier
@@ -585,8 +586,9 @@ private fun NotificationPermissionBottomSheet(
                 color = AppTheme.colors.onSurface,
             )
             Text(
-                text = stringResource(
-                    id = AppR.string.home_notification_sheet_desc,
+                text = pluralStringResource(
+                    id = AppR.plurals.home_notification_sheet_desc,
+                    count = notificationsPerDay,
                     notificationsPerDay,
                 ),
                 style = AppTheme.typography.bodySmall,

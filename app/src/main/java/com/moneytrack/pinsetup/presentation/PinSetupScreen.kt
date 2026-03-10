@@ -32,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -199,8 +200,9 @@ private fun PinEntryScreen(
                 text = if (uiState.isLockedOut) {
                     stringResource(R.string.pin_locked_out_error)
                 } else {
-                    stringResource(
-                        R.string.pin_mismatch_error_with_attempts,
+                    pluralStringResource(
+                        id = R.plurals.pin_mismatch_error_with_attempts,
+                        count = MAX_CONFIRM_ATTEMPTS - uiState.failedAttempts,
                         MAX_CONFIRM_ATTEMPTS - uiState.failedAttempts,
                     )
                 },
