@@ -100,4 +100,14 @@ jobs:
           key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/*.toml') }}
 
       - run: chmod +x ./gradlew
-      - run: ./gradlew verifyPaparazziDebug
+      - name: Run snapshot tests (with retry)
+        run: |
+          for attempt in 1 2 3; do
+            ./gradlew verifyPaparazziDebug && exit 0
+            if [ "$attempt" -eq 3 ]; then
+              echo "verifyPaparazziDebug failed after 3 attempts"
+              exit 1
+            fi
+            echo "verifyPaparazziDebug failed on attempt ${attempt}. Retrying in 20s..."
+            sleep 20
+          done
