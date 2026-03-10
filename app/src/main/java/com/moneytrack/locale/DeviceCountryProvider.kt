@@ -2,34 +2,33 @@
 
 package com.moneytrack.locale
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.telephony.TelephonyManager
+import androidx.core.os.ConfigurationCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
-import javax.inject.Inject
-import javax.inject.Singleton
 import java.util.Currency
 import java.util.Locale
+import javax.inject.Inject
+import javax.inject.Singleton
 
 @Singleton
 class DeviceCountryProvider @Inject constructor(
     @param:ApplicationContext private val context: Context,
-) {
+) : CountryProvider {
 
-    fun getCountryCode(): String {
-        val networkCountry = telephonyCountryCode { it.networkCountryIso }
-        if (networkCountry.isNotEmpty()) return networkCountry
-
-        val simCountry = telephonyCountryCode { it.simCountryIso }
-        if (simCountry.isNotEmpty()) return simCountry
-
-        val localeCountry = Locale.getDefault().country.orEmpty()
-        if (localeCountry.isNotEmpty()) return localeCountry.uppercase(Locale.US)
-
-        return DEFAULT_COUNTRY_CODE
+    override fun getCountryCode(): String {
+        val localeCountry = Locale.getDefault().country.orEmpty().uppercase(Locale.US)
+        val configCountry = configurationCountryCode()
+        val resolved = listOf(
+            telephonyCountryCode { it.networkCountryIso },
+            telephonyCountryCode { it.simCountryIso },
+            configCountry,
+            localeCountry,
+        ).firstOrNull { it.isNotEmpty() }
+        return resolved ?: DEFAULT_COUNTRY_CODE
     }
 
-    fun getCurrencySymbol(): String {
+    override fun getCurrencySymbol(): String {
         val countryCode = getCountryCode()
         val locale = Locale.Builder()
             .setLanguage("en")
@@ -46,6 +45,11 @@ class DeviceCountryProvider @Inject constructor(
         val telephonyManager = context.getSystemService(TelephonyManager::class.java) ?: return ""
         val raw = runCatching { selector(telephonyManager).orEmpty() }.getOrDefault("")
         return raw.uppercase(Locale.US)
+    }
+
+    private fun configurationCountryCode(): String {
+        val locale = ConfigurationCompat.getLocales(context.resources.configuration)[0] ?: return ""
+        return locale.country.orEmpty().uppercase(Locale.US)
     }
 
     private companion object {

@@ -6,6 +6,7 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import java.util.Calendar
 
 object ExpenseReminderScheduler {
@@ -47,16 +48,26 @@ object ExpenseReminderScheduler {
             context = context,
             hourOfDay = hourOfDay,
             minute = minute,
-            flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         alarmManager.cancel(pendingIntent)
-        try {
-            alarmManager.setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                triggerAtMillis,
-                pendingIntent,
-            )
-        } catch (_: SecurityException) {
+        val canUseExactAlarm = Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+            alarmManager.canScheduleExactAlarms()
+
+        if (canUseExactAlarm) {
+            try {
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerAtMillis,
+                    pendingIntent,
+                )
+            } catch (_: SecurityException) {
+                alarmManager.setAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerAtMillis,
+                    pendingIntent,
+                )
+            }
+        } else {
             alarmManager.setAndAllowWhileIdle(
                 AlarmManager.RTC_WAKEUP,
                 triggerAtMillis,
@@ -87,7 +98,6 @@ object ExpenseReminderScheduler {
         context: Context,
         hourOfDay: Int,
         minute: Int,
-        flags: Int,
     ): PendingIntent {
         val intent = Intent(context, ExpenseReminderReceiver::class.java).apply {
             putExtra(EXTRA_REMINDER_HOUR, hourOfDay)
@@ -97,7 +107,7 @@ object ExpenseReminderScheduler {
             context,
             (hourOfDay * REQUEST_CODE_MULTIPLIER) + minute,
             intent,
-            flags,
+            PENDING_INTENT_FLAGS,
         )
     }
 
@@ -105,4 +115,7 @@ object ExpenseReminderScheduler {
         val hour: Int,
         val minute: Int,
     )
+
+    private const val PENDING_INTENT_FLAGS =
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
 }

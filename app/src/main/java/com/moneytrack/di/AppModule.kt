@@ -5,6 +5,8 @@ package com.moneytrack.di
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.moneytrack.feature.FeatureManager
 import com.moneytrack.feature.FirebaseFeatureManager
+import com.moneytrack.locale.CountryProvider
+import com.moneytrack.locale.DeviceCountryProvider
 import com.moneytrack.remote.RemoteConfigProvider
 import dagger.Module
 import dagger.Provides
@@ -25,4 +27,10 @@ object AppModule {
     fun provideFeatureManager(
         firebaseFeatureManager: FirebaseFeatureManager,
     ): FeatureManager = firebaseFeatureManager
+
+    @Provides
+    @Singleton
+    fun provideCountryProvider(
+        deviceCountryProvider: DeviceCountryProvider,
+    ): CountryProvider = deviceCountryProvider
 }

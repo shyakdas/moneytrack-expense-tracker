@@ -6,6 +6,7 @@ import com.moneytrack.home.domain.model.Budget
 import com.moneytrack.home.domain.repository.BudgetRepository
 import com.moneytrack.home.domain.usecase.ObserveBudgetUseCase
 import com.moneytrack.home.domain.usecase.UpsertBudgetUseCase
+import com.moneytrack.locale.CountryProvider
 import com.moneytrack.testutil.MainDispatcherRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -31,11 +32,47 @@ class HomeViewModelTest {
 
     @Test
     fun formatCurrency_formatsUsingIndianGrouping() {
-        val viewModel = createViewModel(FakeBudgetRepository())
+        val viewModel = createViewModel(
+            repository = FakeBudgetRepository(),
+            countryProvider = FakeCountryProvider(
+                countryCode = "IN",
+                currencySymbol = "₹",
+            ),
+        )
 
         val formatted = viewModel.formatCurrency(1000000.0)
 
-        assertEquals("$10,00,000", formatted)
+        assertEquals("₹10,00,000", formatted)
+    }
+
+    @Test
+    fun formatCurrency_formatsUsingUsStyleForUsCountry() {
+        val viewModel = createViewModel(
+            repository = FakeBudgetRepository(),
+            countryProvider = FakeCountryProvider(
+                countryCode = "US",
+                currencySymbol = "$",
+            ),
+        )
+
+        val formatted = viewModel.formatCurrency(1000000.0)
+
+        assertEquals("$1,000,000", formatted)
+    }
+
+    @Test
+    fun formatCurrency_negativeValue_keepsMinusBeforeCurrencySymbol() {
+        val viewModel = createViewModel(
+            repository = FakeBudgetRepository(),
+            countryProvider = FakeCountryProvider(
+                countryCode = "US",
+                currencySymbol = "$",
+            ),
+        )
+
+        val formatted = viewModel.formatCurrency(-1200.0)
+
+        assertEquals("-$1,200", formatted)
     }
 
     @Test
@@ -53,7 +90,13 @@ class HomeViewModelTest {
     @Test
     fun uiState_withBudget_usesFormattedBudgetAndMarksBudgetAvailable() = runTest {
         val repository = FakeBudgetRepository()
-        val viewModel = createViewModel(repository)
+        val viewModel = createViewModel(
+            repository = repository,
+            countryProvider = FakeCountryProvider(
+                countryCode = "IN",
+                currencySymbol = "₹",
+            ),
+        )
         val collectJob = launch { viewModel.uiState.collect { } }
 
         repository.emitBudget(
@@ -67,15 +110,21 @@ class HomeViewModelTest {
 
         val state = viewModel.uiState.value
         assertTrue(state.hasBudget)
-        assertEquals("$1,00,000", state.budgetText)
-        assertEquals("$0", state.accountBalanceText)
+        assertEquals("₹1,00,000", state.budgetText)
+        assertEquals("₹0", state.accountBalanceText)
         assertFalse(state.hasExpenses)
         collectJob.cancel()
     }
 
     @Test
     fun onSelections_updatesUiStateValues() = runTest {
-        val viewModel = createViewModel(FakeBudgetRepository())
+        val viewModel = createViewModel(
+            repository = FakeBudgetRepository(),
+            countryProvider = FakeCountryProvider(
+                countryCode = "IN",
+                currencySymbol = "₹",
+            ),
+        )
         val collectJob = launch { viewModel.uiState.collect { } }
 
         viewModel.onBottomRouteSelected("budget")
@@ -88,10 +137,17 @@ class HomeViewModelTest {
         collectJob.cancel()
     }
 
-    private fun createViewModel(repository: FakeBudgetRepository): HomeViewModel {
+    private fun createViewModel(
+        repository: FakeBudgetRepository,
+        countryProvider: CountryProvider = FakeCountryProvider(
+            countryCode = "IN",
+            currencySymbol = "₹",
+        ),
+    ): HomeViewModel {
         return HomeViewModel(
             observeBudgetUseCase = ObserveBudgetUseCase(repository),
             upsertBudgetUseCase = UpsertBudgetUseCase(repository),
+            countryProvider = countryProvider,
         )
     }
 
@@ -118,5 +174,13 @@ class HomeViewModelTest {
         fun emitBudget(budget: Budget?) {
             budgetFlow.value = budget
         }
+    }
+
+    private class FakeCountryProvider(
+        private val countryCode: String,
+        private val currencySymbol: String,
+    ) : CountryProvider {
+        override fun getCountryCode(): String = countryCode
+        override fun getCurrencySymbol(): String = currencySymbol
     }
 }

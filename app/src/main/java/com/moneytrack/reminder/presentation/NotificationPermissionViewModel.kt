@@ -4,6 +4,7 @@ package com.moneytrack.reminder.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.moneytrack.locale.CountryProvider
 import com.moneytrack.reminder.domain.model.ReminderNotificationSettings
 import com.moneytrack.reminder.domain.usecase.ObserveNotificationPermissionPromptHandledUseCase
 import com.moneytrack.reminder.domain.usecase.ObserveReminderNotificationSettingsUseCase
@@ -23,9 +24,12 @@ class NotificationPermissionViewModel @Inject constructor(
     observeNotificationPermissionPromptHandledUseCase: ObserveNotificationPermissionPromptHandledUseCase,
     observeReminderNotificationSettingsUseCase: ObserveReminderNotificationSettingsUseCase,
     private val setNotificationPermissionPromptHandledUseCase: SetNotificationPermissionPromptHandledUseCase,
+    countryProvider: CountryProvider,
 ) : ViewModel() {
 
     private val _isPermissionPromptVisible = MutableStateFlow(false)
+    private val defaultReminderMessage =
+        "Add your expenses in MoneyTrack to stay on top of your ${countryProvider.getCurrencySymbol()} budget."
     val uiState: StateFlow<NotificationPermissionUiState> = combine(
         _isPermissionPromptVisible,
         observeNotificationPermissionPromptHandledUseCase(),
@@ -39,7 +43,12 @@ class NotificationPermissionViewModel @Inject constructor(
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(WHILE_SUBSCRIBED_TIMEOUT_MS),
-        initialValue = NotificationPermissionUiState(),
+        initialValue = NotificationPermissionUiState(
+            reminderSettings = ReminderNotificationSettings(
+                notificationsPerDay = DEFAULT_NOTIFICATIONS_PER_DAY,
+                reminderMessage = defaultReminderMessage,
+            ),
+        ),
     )
 
     fun showPermissionPrompt() {
@@ -62,7 +71,7 @@ data class NotificationPermissionUiState(
     val isPromptHandled: Boolean = false,
     val reminderSettings: ReminderNotificationSettings = ReminderNotificationSettings(
         notificationsPerDay = DEFAULT_NOTIFICATIONS_PER_DAY,
-        reminderMessage = "Add your expenses in MoneyTrack today.",
+        reminderMessage = "Add your expenses in MoneyTrack to stay on top of your budget.",
     ),
 )
 

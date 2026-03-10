@@ -68,7 +68,7 @@ class HomeScreenUiTest {
                                 icon = com.moneytrack.designsystem.R.drawable.expense,
                                 title = "Shopping",
                                 subtitle = "Groceries",
-                                amount = "- $120",
+                                amount = "-$120",
                                 time = "10:00 AM",
                                 type = TransactionType.EXPENSE,
                             ),
@@ -84,17 +84,69 @@ class HomeScreenUiTest {
         composeRule.onNodeWithText("Shopping").assertIsDisplayed()
     }
 
+    @Test
+    fun inrAmounts_areDisplayedInHomeSummary() {
+        composeRule.setContent {
+            MoneyTrackTheme {
+                HomeScreen(
+                    uiState = baseState(
+                        hasExpenses = true,
+                        hasBudget = true,
+                        accountBalanceText = "₹2,50,000",
+                        budgetText = "₹1,00,000",
+                        expensesText = "₹12,500",
+                    ),
+                    onBottomRouteSelected = {},
+                    onTimeRangeSelected = {},
+                    onSetBudgetClick = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("₹2,50,000").assertIsDisplayed()
+        composeRule.onNodeWithText("₹1,00,000").assertIsDisplayed()
+        composeRule.onNodeWithText("₹12,500").assertIsDisplayed()
+    }
+
+    @Test
+    fun usdAmounts_areDisplayedInHomeSummary() {
+        composeRule.setContent {
+            MoneyTrackTheme {
+                HomeScreen(
+                    uiState = baseState(
+                        hasExpenses = true,
+                        hasBudget = true,
+                        accountBalanceText = "$250,000",
+                        budgetText = "$100,000",
+                        expensesText = "$12,500",
+                    ),
+                    onBottomRouteSelected = {},
+                    onTimeRangeSelected = {},
+                    onSetBudgetClick = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("$250,000").assertIsDisplayed()
+        composeRule.onNodeWithText("$100,000").assertIsDisplayed()
+        composeRule.onNodeWithText("$12,500").assertIsDisplayed()
+    }
+
     private fun baseState(
         hasExpenses: Boolean,
+        hasBudget: Boolean = false,
+        accountBalanceText: String = "$0",
+        budgetText: String? = null,
+        expensesText: String = "$0",
         transactions: List<HomeTransaction> = emptyList(),
     ): HomeUiState {
         return HomeUiState(
-            accountBalanceText = "$0",
-            hasBudget = false,
+            accountBalanceText = accountBalanceText,
+            hasBudget = hasBudget,
             budgetAmount = null,
-            budgetText = null,
+            budgetText = budgetText,
             hasExpenses = hasExpenses,
-            expensesText = "$0",
+            expensesText = expensesText,
             transactions = transactions,
             selectedBottomRoute = "home",
             selectedRange = "Today",
