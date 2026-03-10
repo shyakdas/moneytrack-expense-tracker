@@ -62,6 +62,17 @@ android {
         buildConfig = true
     }
 
+    lint {
+        abortOnError = true
+        warningsAsErrors = true
+        disable +=
+            setOf(
+                "AndroidGradlePluginVersion",
+                "GradleDependency",
+                "NewerVersionAvailable",
+            )
+    }
+
     flavorDimensions += "environment"
 
     productFlavors {
@@ -175,7 +186,7 @@ tasks.register<JacocoReport>("jacocoTestReport") {
 detekt {
     buildUponDefaultConfig = true
     allRules = false
-    config = files("$rootDir/config/detekt/detekt.yml")
+    config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
 }
 
 dependencies {
