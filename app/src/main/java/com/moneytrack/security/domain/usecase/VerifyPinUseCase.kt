@@ -1,3 +1,5 @@
+// Copyright (c) 2026 shyakdas
+
 package com.moneytrack.security.domain.usecase
 
 import com.moneytrack.security.domain.repository.SecurityRepository

@@ -1,3 +1,5 @@
+// Copyright (c) 2026 shyakdas
+
 package com.moneytrack.data.local.db.dao
 
 import androidx.room.Dao

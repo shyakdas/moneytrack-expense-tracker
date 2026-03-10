@@ -1,3 +1,5 @@
+// Copyright (c) 2026 shyakdas
+
 package com.moneytrack.remote
 
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig

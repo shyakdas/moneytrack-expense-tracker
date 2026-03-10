@@ -1,3 +1,5 @@
+// Copyright (c) 2026 shyakdas
+
 import org.gradle.kotlin.dsl.implementation
 
 plugins {

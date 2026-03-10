@@ -1,3 +1,5 @@
+// Copyright (c) 2026 shyakdas
+
 package com.moneytrack.home
 
 import app.cash.paparazzi.DeviceConfig
@@ -23,6 +25,7 @@ class HomeScreenshotTest {
                     uiState = HomeUiState(
                         accountBalanceText = "$0",
                         hasBudget = false,
+                        budgetAmount = null,
                         budgetText = null,
                         hasExpenses = false,
                         expensesText = "$0",
@@ -46,6 +49,7 @@ class HomeScreenshotTest {
                     uiState = HomeUiState(
                         accountBalanceText = "$9,400",
                         hasBudget = true,
+                        budgetAmount = 40000.0,
                         budgetText = "$40,000",
                         hasExpenses = true,
                         expensesText = "$1,200",

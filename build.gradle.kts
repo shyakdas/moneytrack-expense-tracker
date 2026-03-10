@@ -1,3 +1,5 @@
+// Copyright (c) 2026 shyakdas
+
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.dsl.LibraryExtension
 

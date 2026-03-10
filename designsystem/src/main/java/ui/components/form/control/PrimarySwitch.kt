@@ -1,3 +1,5 @@
+// Copyright (c) 2026 shyakdas
+
 package ui.components.form.control
 
 import androidx.compose.foundation.background

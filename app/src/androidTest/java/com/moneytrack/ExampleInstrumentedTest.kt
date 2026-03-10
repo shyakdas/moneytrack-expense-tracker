@@ -1,3 +1,5 @@
+// Copyright (c) 2026 shyakdas
+
 package com.MoneyTrack
 
 import androidx.test.platform.app.InstrumentationRegistry

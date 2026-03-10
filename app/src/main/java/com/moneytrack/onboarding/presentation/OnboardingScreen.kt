@@ -1,3 +1,5 @@
+// Copyright (c) 2026 shyakdas
+
 @file:Suppress("MagicNumber")
 
 package com.moneytrack.onboarding.presentation

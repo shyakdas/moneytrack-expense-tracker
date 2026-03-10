@@ -1,3 +1,5 @@
+// Copyright (c) 2026 shyakdas
+
 package com.moneytrack.security.domain.usecase
 
 internal fun String.sha256(): String {

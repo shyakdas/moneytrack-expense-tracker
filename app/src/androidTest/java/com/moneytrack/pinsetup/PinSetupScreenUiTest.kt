@@ -1,3 +1,5 @@
+// Copyright (c) 2026 shyakdas
+
 package com.moneytrack.pinsetup
 
 import androidx.compose.ui.test.assertIsDisplayed

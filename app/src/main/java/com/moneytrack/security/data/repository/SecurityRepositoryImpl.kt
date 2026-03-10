@@ -1,3 +1,5 @@
+// Copyright (c) 2026 shyakdas
+
 package com.moneytrack.security.data.repository
 
 import kotlinx.coroutines.flow.Flow

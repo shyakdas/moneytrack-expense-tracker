@@ -1,3 +1,5 @@
+// Copyright (c) 2026 shyakdas
+
 @file:Suppress("MagicNumber", "LongMethod", "TooManyFunctions", "UnusedPrivateMember")
 
 package com.moneytrack.pinauth.presentation

@@ -1,3 +1,5 @@
+<!-- Copyright (c) 2026 shyakdas -->
+
 <resources>
     <string name="app_name">MoneyTrack</string>
     <string name="onboarding_title_control">Money clarity, every day</string>
@@ -53,4 +55,8 @@
     <string name="home_budget_sheet_description_hint">Description (optional)</string>
     <string name="home_budget_sheet_continue">Continue</string>
     <string name="home_budget_saved_title">Budget saved</string>
+    <string name="home_notification_sheet_title">Stay on track with smart reminders</string>
+    <string name="home_notification_sheet_desc">Allow notifications so MoneyTrack can remind you to log expenses. We send %1$d reminders daily by default, and you can change both count and message later in Settings.</string>
+    <string name="home_notification_sheet_enable">Allow notifications</string>
+    <string name="home_notification_sheet_not_now">Not now</string>
 </resources>

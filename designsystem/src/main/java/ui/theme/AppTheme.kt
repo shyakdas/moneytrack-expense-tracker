@@ -1,3 +1,5 @@
+// Copyright (c) 2026 shyakdas
+
 package ui.theme
 
 import androidx.compose.runtime.Composable
