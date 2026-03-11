@@ -99,7 +99,9 @@ private enum class BudgetSheetStep {
 }
 
 @Composable
-fun HomeRoute() {
+fun HomeRoute(
+    onAddExpenseClick: () -> Unit,
+) {
     val viewModel: HomeViewModel = hiltViewModel()
     val notificationPermissionViewModel: NotificationPermissionViewModel = hiltViewModel()
     val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
@@ -128,12 +130,14 @@ fun HomeRoute() {
     SheetBlurHost(isSheetVisible = showBudgetSheet || shouldShowNotificationPermissionSheet) {
         HomeScreen(
             uiState = uiState,
+            isBudgetLoaded = isBudgetLoaded,
             onBottomRouteSelected = viewModel::onBottomRouteSelected,
             onTimeRangeSelected = viewModel::onTimeRangeSelected,
             onSetBudgetClick = { budgetAmount ->
                 budgetSheetInitialAmount = budgetAmount
                 showBudgetSheet = true
             },
+            onAddExpenseClick = onAddExpenseClick,
         )
     }
 
@@ -201,9 +205,11 @@ private fun Context.hasNotificationPermission(): Boolean {
 @Composable
 fun HomeScreen(
     uiState: HomeUiState,
+    isBudgetLoaded: Boolean = true,
     onBottomRouteSelected: (String) -> Unit,
     onTimeRangeSelected: (String) -> Unit,
     onSetBudgetClick: (Double?) -> Unit,
+    onAddExpenseClick: () -> Unit = {},
 ) {
     val bottomItems = remember {
         listOf(
@@ -221,7 +227,7 @@ fun HomeScreen(
                     items = bottomItems,
                     selectedRoute = uiState.selectedBottomRoute,
                     onItemClick = { item -> onBottomRouteSelected(item.route) },
-                    onFabClick = {},
+                    onFabClick = onAddExpenseClick,
                 )
             }
         },
@@ -229,6 +235,7 @@ fun HomeScreen(
         HomeContent(
             innerPadding = innerPadding,
             uiState = uiState,
+            isBudgetLoaded = isBudgetLoaded,
             onTimeRangeSelected = onTimeRangeSelected,
             onSetBudgetClick = onSetBudgetClick,
         )
@@ -239,9 +246,20 @@ fun HomeScreen(
 private fun HomeContent(
     innerPadding: PaddingValues,
     uiState: HomeUiState,
+    isBudgetLoaded: Boolean,
     onTimeRangeSelected: (String) -> Unit,
     onSetBudgetClick: (Double?) -> Unit,
 ) {
+    if (!isBudgetLoaded) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .background(AppTheme.colors.background),
+        )
+        return
+    }
+
     if (!uiState.hasBudget) {
         BudgetRequiredState(
             innerPadding = innerPadding,
@@ -862,6 +880,7 @@ private fun HomeScreenPreview() {
             onBottomRouteSelected = {},
             onTimeRangeSelected = {},
             onSetBudgetClick = { },
+            onAddExpenseClick = {},
         )
     }
 }

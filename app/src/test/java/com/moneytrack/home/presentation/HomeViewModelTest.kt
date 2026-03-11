@@ -7,6 +7,7 @@ import com.moneytrack.home.domain.repository.BudgetRepository
 import com.moneytrack.home.domain.usecase.ObserveBudgetUseCase
 import com.moneytrack.home.domain.usecase.UpsertBudgetUseCase
 import com.moneytrack.locale.CountryProvider
+import com.moneytrack.locale.CurrencyFormatter
 import com.moneytrack.testutil.MainDispatcherRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -144,10 +145,11 @@ class HomeViewModelTest {
             currencySymbol = "₹",
         ),
     ): HomeViewModel {
+        val currencyFormatter = CurrencyFormatter(countryProvider = countryProvider)
         return HomeViewModel(
             observeBudgetUseCase = ObserveBudgetUseCase(repository),
             upsertBudgetUseCase = UpsertBudgetUseCase(repository),
-            countryProvider = countryProvider,
+            currencyFormatter = currencyFormatter,
         )
     }
 

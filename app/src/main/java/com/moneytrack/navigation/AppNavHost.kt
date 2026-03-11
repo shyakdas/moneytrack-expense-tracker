@@ -9,12 +9,14 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.moneytrack.expense.presentation.ExpenseRoute
 import com.moneytrack.home.presentation.HomeRoute
 import com.moneytrack.onboarding.presentation.OnboardingRoute
 import com.moneytrack.pinauth.presentation.PinAuthRoute
 import com.moneytrack.pinsetup.presentation.PinSetupRoute
 
 @Composable
+@Suppress("LongMethod")
 fun AppNavHost(
     startDestination: String,
     forcePinAuth: Boolean,
@@ -77,7 +79,21 @@ fun AppNavHost(
         }
 
         composable(AppDestination.Home.route) {
-            HomeRoute()
+            HomeRoute(
+                onAddExpenseClick = {
+                    navController.navigate(AppDestination.Expense.route) {
+                        launchSingleTop = true
+                    }
+                },
+            )
+        }
+
+        composable(AppDestination.Expense.route) {
+            ExpenseRoute(
+                onBackClick = {
+                    navController.popBackStack()
+                },
+            )
         }
     }
 }

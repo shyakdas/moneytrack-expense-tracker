@@ -3,7 +3,9 @@
 package com.moneytrack.home
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.moneytrack.home.presentation.HomeScreen
@@ -130,6 +132,23 @@ class HomeScreenUiTest {
         composeRule.onNodeWithText("$250,000").assertIsDisplayed()
         composeRule.onNodeWithText("$100,000").assertIsDisplayed()
         composeRule.onNodeWithText("$12,500").assertIsDisplayed()
+    }
+
+    @Test
+    fun budgetLoading_doesNotShowSetBudgetNowCta() {
+        composeRule.setContent {
+            MoneyTrackTheme {
+                HomeScreen(
+                    uiState = baseState(hasExpenses = false),
+                    isBudgetLoaded = false,
+                    onBottomRouteSelected = {},
+                    onTimeRangeSelected = {},
+                    onSetBudgetClick = {},
+                )
+            }
+        }
+
+        composeRule.onAllNodesWithText("Set budget now").assertCountEquals(0)
     }
 
     private fun baseState(

@@ -8,14 +8,17 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
 import com.moneytrack.designsystem.R
 import ui.theme.AppTheme
@@ -37,6 +40,10 @@ fun InputField(
         modifier = modifier
             .height(Dimens.inputHeight)
             .fillMaxWidth()
+            .background(
+                color = AppTheme.colors.background,
+                shape = RoundedCornerShape(Dimens.radius16)
+            )
             .border(
                 width = Dimens.spacing1,
                 color = AppTheme.colors.outline,
@@ -73,6 +80,10 @@ fun InputField(
                 onValueChange = onValueChange,
                 enabled = enabled,
                 singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Words
+                ),
+                cursorBrush = SolidColor(AppTheme.colors.primary),
                 textStyle = textStyle.copy(
                     color = AppTheme.colors.onSurface
                 ),
