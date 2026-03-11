@@ -2,15 +2,17 @@
 
 package com.moneytrack.home
 
-import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.moneytrack.home.presentation.HomeScreen
 import com.moneytrack.home.presentation.HomeUiState
 import com.moneytrack.home.presentation.HomeTransaction
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -24,12 +26,16 @@ class HomeScreenUiTest {
     val composeRule = createComposeRule()
 
     @Test
-    fun noExpenses_showsSpendFrequencyEmptyMessage() {
+    fun noSpendFrequencyData_showsEmptyMessageAndTabs() {
         composeRule.setContent {
             MoneyTrackTheme {
                 HomeScreen(
-                    uiState = baseState(hasExpenses = false),
+                    uiState = baseState(
+                        hasExpenses = false,
+                        hasSpendFrequencyData = false,
+                    ),
                     onBottomRouteSelected = {},
+                    onSeeAllTransactionsClick = {},
                     onTimeRangeSelected = {},
                     onSetBudgetClick = {},
                 )
@@ -37,6 +43,8 @@ class HomeScreenUiTest {
         }
 
         composeRule.onNodeWithText("Add expenses to view spend frequency.").assertIsDisplayed()
+        composeRule.onNodeWithText("Today").assertIsDisplayed()
+        composeRule.onNodeWithText("Week").assertIsDisplayed()
     }
 
     @Test
@@ -46,9 +54,11 @@ class HomeScreenUiTest {
                 HomeScreen(
                     uiState = baseState(
                         hasExpenses = true,
+                        hasSpendFrequencyData = true,
                         transactions = emptyList(),
                     ),
                     onBottomRouteSelected = {},
+                    onSeeAllTransactionsClick = {},
                     onTimeRangeSelected = {},
                     onSetBudgetClick = {},
                 )
@@ -65,6 +75,7 @@ class HomeScreenUiTest {
                 HomeScreen(
                     uiState = baseState(
                         hasExpenses = true,
+                        hasSpendFrequencyData = true,
                         transactions = listOf(
                             HomeTransaction(
                                 icon = com.moneytrack.designsystem.R.drawable.expense,
@@ -77,6 +88,7 @@ class HomeScreenUiTest {
                         ),
                     ),
                     onBottomRouteSelected = {},
+                    onSeeAllTransactionsClick = {},
                     onTimeRangeSelected = {},
                     onSetBudgetClick = {},
                 )
@@ -84,6 +96,38 @@ class HomeScreenUiTest {
         }
 
         composeRule.onNodeWithText("Shopping").assertIsDisplayed()
+        composeRule.onNodeWithText("Groceries").assertIsDisplayed()
+    }
+
+    @Test
+    fun transactionWithoutSubtitle_hidesSubtitleLine() {
+        composeRule.setContent {
+            MoneyTrackTheme {
+                HomeScreen(
+                    uiState = baseState(
+                        hasExpenses = true,
+                        hasSpendFrequencyData = true,
+                        transactions = listOf(
+                            HomeTransaction(
+                                icon = com.moneytrack.designsystem.R.drawable.expense,
+                                title = "Expense",
+                                subtitle = null,
+                                amount = "-₹120",
+                                time = "10:00 AM",
+                                type = TransactionType.EXPENSE,
+                            ),
+                        ),
+                    ),
+                    onBottomRouteSelected = {},
+                    onSeeAllTransactionsClick = {},
+                    onTimeRangeSelected = {},
+                    onSetBudgetClick = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("Expense").assertIsDisplayed()
+        composeRule.onAllNodesWithText("No note added").assertCountEquals(0)
     }
 
     @Test
@@ -94,11 +138,13 @@ class HomeScreenUiTest {
                     uiState = baseState(
                         hasExpenses = true,
                         hasBudget = true,
+                        hasSpendFrequencyData = true,
                         accountBalanceText = "₹2,50,000",
                         budgetText = "₹1,00,000",
                         expensesText = "₹12,500",
                     ),
                     onBottomRouteSelected = {},
+                    onSeeAllTransactionsClick = {},
                     onTimeRangeSelected = {},
                     onSetBudgetClick = {},
                 )
@@ -111,27 +157,26 @@ class HomeScreenUiTest {
     }
 
     @Test
-    fun usdAmounts_areDisplayedInHomeSummary() {
+    fun seeAll_clickTriggersNavigationCallback() {
+        var clickedCount = 0
         composeRule.setContent {
             MoneyTrackTheme {
                 HomeScreen(
                     uiState = baseState(
                         hasExpenses = true,
-                        hasBudget = true,
-                        accountBalanceText = "$250,000",
-                        budgetText = "$100,000",
-                        expensesText = "$12,500",
+                        hasSpendFrequencyData = true,
                     ),
                     onBottomRouteSelected = {},
+                    onSeeAllTransactionsClick = { clickedCount++ },
                     onTimeRangeSelected = {},
                     onSetBudgetClick = {},
                 )
             }
         }
 
-        composeRule.onNodeWithText("$250,000").assertIsDisplayed()
-        composeRule.onNodeWithText("$100,000").assertIsDisplayed()
-        composeRule.onNodeWithText("$12,500").assertIsDisplayed()
+        composeRule.onNodeWithText("See All").performClick()
+
+        assertEquals(1, clickedCount)
     }
 
     @Test
@@ -142,6 +187,7 @@ class HomeScreenUiTest {
                     uiState = baseState(hasExpenses = false),
                     isBudgetLoaded = false,
                     onBottomRouteSelected = {},
+                    onSeeAllTransactionsClick = {},
                     onTimeRangeSelected = {},
                     onSetBudgetClick = {},
                 )
@@ -154,6 +200,7 @@ class HomeScreenUiTest {
     private fun baseState(
         hasExpenses: Boolean,
         hasBudget: Boolean = false,
+        hasSpendFrequencyData: Boolean = false,
         accountBalanceText: String = "$0",
         budgetText: String? = null,
         expensesText: String = "$0",
@@ -166,6 +213,8 @@ class HomeScreenUiTest {
             budgetText = budgetText,
             hasExpenses = hasExpenses,
             expensesText = expensesText,
+            spendFrequencyPoints = if (hasSpendFrequencyData) listOf(12f, 24f, 18f, 36f) else emptyList(),
+            hasSpendFrequencyData = hasSpendFrequencyData,
             transactions = transactions,
             selectedBottomRoute = "home",
             selectedRange = "Today",
