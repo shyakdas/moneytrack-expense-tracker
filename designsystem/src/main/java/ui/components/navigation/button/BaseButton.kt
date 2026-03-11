@@ -27,34 +27,7 @@ internal fun BaseButton(
 ) {
 
     val isFullWidth = size == ButtonSize.LARGE
-
-    val backgroundColor: Color
-    val contentColor: Color
-    val borderStroke: BorderStroke?
-
-    when (variant) {
-
-        ButtonVariant.PRIMARY -> {
-            backgroundColor = AppTheme.colors.primary
-            contentColor = AppTheme.colors.onPrimary
-            borderStroke = null
-        }
-
-        ButtonVariant.SECONDARY -> {
-            backgroundColor = AppTheme.colors.primary.copy(alpha = 0.12f)
-            contentColor = AppTheme.colors.primary
-            borderStroke = null
-        }
-
-        ButtonVariant.TERTIARY -> {
-            backgroundColor = Color.Transparent
-            contentColor = AppTheme.colors.onSurface
-            borderStroke = BorderStroke(
-                width = Dimens.spacing1,
-                color = AppTheme.colors.outline
-            )
-        }
-    }
+    val buttonColors = buttonStyle(variant = variant, enabled = enabled)
 
     Surface(
         modifier = modifier
@@ -65,9 +38,9 @@ internal fun BaseButton(
             .height(size.height)
             .clickable(enabled = enabled, onClick = onClick),
         shape = RoundedCornerShape(Dimens.spacing16),
-        color = backgroundColor,
-        contentColor = contentColor,
-        border = borderStroke
+        color = buttonColors.backgroundColor,
+        contentColor = buttonColors.contentColor,
+        border = buttonColors.borderStroke
     ) {
         Row(
             modifier = Modifier.padding(horizontal = size.horizontalPadding),
@@ -80,7 +53,7 @@ internal fun BaseButton(
                     imageVector = leadingIcon,
                     contentDescription = null,
                     modifier = Modifier.size(size.iconSize),
-                    tint = contentColor
+                    tint = buttonColors.contentColor
                 )
                 Spacer(modifier = Modifier.width(Dimens.spacing8))
             }
@@ -88,8 +61,41 @@ internal fun BaseButton(
             Text(
                 text = text,
                 style = AppTheme.typography.titleMedium,
-                color = contentColor
+                color = buttonColors.contentColor
             )
         }
     }
 }
+
+@Composable
+private fun buttonStyle(
+    variant: ButtonVariant,
+    enabled: Boolean,
+): ButtonStyle {
+    // The design language is intentionally unified across variants for now.
+    val resolvedVariant = variant
+    val baseBackgroundColor = AppTheme.colors.background
+    val baseContentColor = AppTheme.colors.onBackground
+    val contentAlpha = if (enabled) 1f else 0.48f
+    val borderAlpha = if (enabled) 1f else 0.48f
+    val borderColor = when (resolvedVariant) {
+        ButtonVariant.PRIMARY,
+        ButtonVariant.SECONDARY,
+        ButtonVariant.TERTIARY -> baseContentColor.copy(alpha = borderAlpha)
+    }
+
+    return ButtonStyle(
+        backgroundColor = baseBackgroundColor,
+        contentColor = baseContentColor.copy(alpha = contentAlpha),
+        borderStroke = BorderStroke(
+            width = Dimens.spacing1,
+            color = borderColor,
+        ),
+    )
+}
+
+private data class ButtonStyle(
+    val backgroundColor: Color,
+    val contentColor: Color,
+    val borderStroke: BorderStroke,
+)
