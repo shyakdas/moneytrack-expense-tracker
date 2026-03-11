@@ -128,6 +128,7 @@ fun HomeRoute() {
     SheetBlurHost(isSheetVisible = showBudgetSheet || shouldShowNotificationPermissionSheet) {
         HomeScreen(
             uiState = uiState,
+            isBudgetLoaded = isBudgetLoaded,
             onBottomRouteSelected = viewModel::onBottomRouteSelected,
             onTimeRangeSelected = viewModel::onTimeRangeSelected,
             onSetBudgetClick = { budgetAmount ->
@@ -201,6 +202,7 @@ private fun Context.hasNotificationPermission(): Boolean {
 @Composable
 fun HomeScreen(
     uiState: HomeUiState,
+    isBudgetLoaded: Boolean = true,
     onBottomRouteSelected: (String) -> Unit,
     onTimeRangeSelected: (String) -> Unit,
     onSetBudgetClick: (Double?) -> Unit,
@@ -229,6 +231,7 @@ fun HomeScreen(
         HomeContent(
             innerPadding = innerPadding,
             uiState = uiState,
+            isBudgetLoaded = isBudgetLoaded,
             onTimeRangeSelected = onTimeRangeSelected,
             onSetBudgetClick = onSetBudgetClick,
         )
@@ -239,9 +242,20 @@ fun HomeScreen(
 private fun HomeContent(
     innerPadding: PaddingValues,
     uiState: HomeUiState,
+    isBudgetLoaded: Boolean,
     onTimeRangeSelected: (String) -> Unit,
     onSetBudgetClick: (Double?) -> Unit,
 ) {
+    if (!isBudgetLoaded) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .background(AppTheme.colors.background),
+        )
+        return
+    }
+
     if (!uiState.hasBudget) {
         BudgetRequiredState(
             innerPadding = innerPadding,
