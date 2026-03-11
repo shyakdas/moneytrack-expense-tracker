@@ -1,12 +1,20 @@
 // Copyright (c) 2026 shyakdas
 
-@file:Suppress("LongMethod", "UnusedPrivateMember", "LongParameterList")
+@file:Suppress("LongMethod", "UnusedPrivateMember", "LongParameterList", "TooManyFunctions")
 
 package com.moneytrack.expense.presentation
 
+import android.content.Context
+import android.content.Intent
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.provider.OpenableColumns
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -47,7 +55,10 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
@@ -56,9 +67,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.content.FileProvider
 import com.moneytrack.R
 import com.moneytrack.designsystem.R as DsR
 import com.moneytrack.expense.domain.model.ExpenseCategory
+import java.io.File
 import ui.components.card.bottomsheet.SheetBlurHost
 import ui.components.form.control.PrimarySwitch
 import ui.components.form.input.InputField
@@ -70,6 +83,9 @@ import ui.theme.MoneyTrackTheme
 private const val CATEGORY_SHEET_VISIBLE_ROWS = 5
 private const val FALLBACK_CATEGORY_COLOR_HEX = "#7F3DFF"
 private const val SELECTED_ITEM_ALPHA = 0.12f
+private const val ATTACHMENT_IMAGE_EXTENSION = ".jpg"
+private const val ATTACHMENT_CACHE_DIR = "expense_attachments"
+private const val ATTACHMENT_FILE_PREFIX = "receipt_"
 private val fallbackCategoryColor = categoryColor(FALLBACK_CATEGORY_COLOR_HEX)
 
 @Composable
@@ -79,16 +95,65 @@ fun ExpenseScreen(
     onContinueClick: () -> Unit,
     onAmountChanged: (String) -> Unit,
     onDescriptionChanged: (String) -> Unit,
+    onAttachmentSelected: (String, String, ExpenseAttachmentType) -> Unit,
+    onAttachmentRemoved: () -> Unit,
     onCategorySelected: (Long) -> Unit,
 ) {
+    val context = LocalContext.current
     var isRepeatEnabled by remember { mutableStateOf(false) }
     var showCategorySheet by remember { mutableStateOf(false) }
+    var showAttachmentSheet by remember { mutableStateOf(false) }
+    var pendingCameraUri by remember { mutableStateOf<Uri?>(null) }
+    val imageFallbackName = stringResource(id = R.string.expense_attachment_image_fallback_name)
+    val documentFallbackName = stringResource(id = R.string.expense_attachment_document_fallback_name)
 
-    SheetBlurHost(isSheetVisible = showCategorySheet) {
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        uri ?: return@rememberLauncherForActivityResult
+        context.takePersistableReadPermission(uri)
+        onAttachmentSelected(
+            uri.toString(),
+            context.resolveDisplayName(uri) ?: imageFallbackName,
+            ExpenseAttachmentType.IMAGE,
+        )
+        showAttachmentSheet = false
+    }
+
+    val documentPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        uri ?: return@rememberLauncherForActivityResult
+        context.takePersistableReadPermission(uri)
+        onAttachmentSelected(
+            uri.toString(),
+            context.resolveDisplayName(uri) ?: documentFallbackName,
+            ExpenseAttachmentType.DOCUMENT,
+        )
+        showAttachmentSheet = false
+    }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture(),
+    ) { isCaptured ->
+        val capturedUri = pendingCameraUri
+        if (isCaptured && capturedUri != null) {
+            onAttachmentSelected(
+                capturedUri.toString(),
+                context.resolveDisplayName(capturedUri) ?: imageFallbackName,
+                ExpenseAttachmentType.IMAGE,
+            )
+        }
+        pendingCameraUri = null
+        showAttachmentSheet = false
+    }
+
+    SheetBlurHost(isSheetVisible = showCategorySheet || showAttachmentSheet) {
         ExpenseContent(
             amountInput = uiState.amountInput,
             amountText = uiState.amountText,
             description = uiState.description,
+            attachment = uiState.attachment,
             selectedCategory = uiState.selectedCategory,
             isRepeatEnabled = isRepeatEnabled,
             onRepeatChanged = { isRepeatEnabled = it },
@@ -96,6 +161,8 @@ fun ExpenseScreen(
             onContinueClick = onContinueClick,
             onAmountChanged = onAmountChanged,
             onDescriptionChanged = onDescriptionChanged,
+            onAttachmentClick = { showAttachmentSheet = true },
+            onAttachmentRemoved = onAttachmentRemoved,
             onCategoryFieldClick = { showCategorySheet = true },
         )
     }
@@ -110,6 +177,23 @@ fun ExpenseScreen(
             },
         )
     }
+
+    if (showAttachmentSheet) {
+        AttachmentPickerBottomSheet(
+            onDismiss = { showAttachmentSheet = false },
+            onCameraClick = {
+                val captureUri = context.createCameraAttachmentUri()
+                pendingCameraUri = captureUri
+                cameraLauncher.launch(captureUri)
+            },
+            onImageClick = {
+                imagePickerLauncher.launch(arrayOf("image/*"))
+            },
+            onDocumentClick = {
+                documentPickerLauncher.launch(arrayOf("application/pdf", "*/*"))
+            },
+        )
+    }
 }
 
 @Composable
@@ -117,6 +201,7 @@ private fun ExpenseContent(
     amountInput: String,
     amountText: String,
     description: String,
+    attachment: ExpenseAttachmentUiState?,
     selectedCategory: ExpenseCategory?,
     isRepeatEnabled: Boolean,
     onRepeatChanged: (Boolean) -> Unit,
@@ -124,6 +209,8 @@ private fun ExpenseContent(
     onContinueClick: () -> Unit,
     onAmountChanged: (String) -> Unit,
     onDescriptionChanged: (String) -> Unit,
+    onAttachmentClick: () -> Unit,
+    onAttachmentRemoved: () -> Unit,
     onCategoryFieldClick: () -> Unit,
 ) {
     Column(
@@ -197,15 +284,22 @@ private fun ExpenseContent(
                     )
                     Spacer(modifier = Modifier.height(Dimens.spacing16))
 
-                InputField(
-                    value = description,
-                    onValueChange = onDescriptionChanged,
-                    placeholder = stringResource(id = R.string.expense_description_placeholder),
-                )
-                Spacer(modifier = Modifier.height(Dimens.spacing16))
+                    InputField(
+                        value = description,
+                        onValueChange = onDescriptionChanged,
+                        placeholder = stringResource(id = R.string.expense_description_placeholder),
+                    )
+                    Spacer(modifier = Modifier.height(Dimens.spacing16))
 
-                AttachmentInput()
-                Spacer(modifier = Modifier.height(Dimens.spacing24))
+                    if (attachment == null) {
+                        AttachmentInput(onClick = onAttachmentClick)
+                    } else {
+                        AttachmentPreview(
+                            attachment = attachment,
+                            onRemoveClick = onAttachmentRemoved,
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(Dimens.spacing24))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -463,7 +557,9 @@ private fun CategoryPickerItem(
 }
 
 @Composable
-private fun AttachmentInput() {
+private fun AttachmentInput(
+    onClick: () -> Unit,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -473,6 +569,7 @@ private fun AttachmentInput() {
                 color = AppTheme.colors.outline.copy(alpha = 0.5f),
                 shape = RoundedCornerShape(Dimens.radius16),
             )
+            .clickable(onClick = onClick)
             .padding(horizontal = Dimens.spacing16),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
@@ -491,9 +588,248 @@ private fun AttachmentInput() {
     }
 }
 
+@Composable
+private fun AttachmentPreview(
+    attachment: ExpenseAttachmentUiState,
+    onRemoveClick: () -> Unit,
+) {
+    Box {
+        when (attachment.type) {
+            ExpenseAttachmentType.IMAGE -> ImageAttachmentPreview(
+                uriString = attachment.uriString,
+                contentDescription = attachment.name,
+            )
+            ExpenseAttachmentType.DOCUMENT -> DocumentAttachmentPreview(name = attachment.name)
+        }
+
+        Surface(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .size(Dimens.icon24)
+                .clickable(onClick = onRemoveClick),
+            shape = CircleShape,
+            color = AppTheme.colors.onSurfaceVariant.copy(alpha = 0.72f),
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = ImageVector.vectorResource(id = DsR.drawable.close),
+                    contentDescription = stringResource(id = R.string.expense_attachment_remove),
+                    tint = AppTheme.colors.onPrimary,
+                    modifier = Modifier.size(Dimens.icon16),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ImageAttachmentPreview(
+    uriString: String,
+    contentDescription: String,
+) {
+    val context = LocalContext.current
+    val bitmap = remember(uriString) {
+        runCatching {
+            context.contentResolver.openInputStream(Uri.parse(uriString))?.use { inputStream ->
+                BitmapFactory.decodeStream(inputStream)
+            }?.asImageBitmap()
+        }.getOrNull()
+    }
+
+    Surface(
+        modifier = Modifier.size(Dimens.iconContainerSize * 2),
+        shape = RoundedCornerShape(Dimens.radius16),
+        color = AppTheme.colors.surfaceVariant,
+    ) {
+        if (bitmap != null) {
+            Image(
+                bitmap = bitmap,
+                contentDescription = contentDescription,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+            )
+        } else {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = ImageVector.vectorResource(id = DsR.drawable.gallery),
+                    contentDescription = null,
+                    tint = AppTheme.colors.primary,
+                    modifier = Modifier.size(Dimens.icon24),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DocumentAttachmentPreview(
+    name: String,
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(Dimens.radius16),
+        color = AppTheme.colors.surfaceVariant,
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = Dimens.spacing16, vertical = Dimens.spacing16),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = ImageVector.vectorResource(id = DsR.drawable.document),
+                contentDescription = null,
+                tint = AppTheme.colors.primary,
+                modifier = Modifier.size(Dimens.icon24),
+            )
+            Spacer(modifier = Modifier.width(Dimens.spacing12))
+            Text(
+                text = name,
+                style = AppTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+                color = AppTheme.colors.onSurface,
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AttachmentPickerBottomSheet(
+    onDismiss: () -> Unit,
+    onCameraClick: () -> Unit,
+    onImageClick: () -> Unit,
+    onDocumentClick: () -> Unit,
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = AppTheme.colors.surface,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Dimens.spacing16)
+                .padding(bottom = Dimens.spacing24),
+        ) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .width(Dimens.spacing32)
+                    .height(Dimens.spacing4)
+                    .background(
+                        color = AppTheme.colors.primary.copy(alpha = SELECTED_ITEM_ALPHA),
+                        shape = RoundedCornerShape(Dimens.radius24),
+                    ),
+            )
+            Spacer(modifier = Modifier.height(Dimens.spacing24))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.spacing8),
+            ) {
+                AttachmentOptionCard(
+                    modifier = Modifier.weight(1f),
+                    iconRes = DsR.drawable.camera,
+                    label = stringResource(id = R.string.expense_attachment_camera),
+                    onClick = onCameraClick,
+                )
+                AttachmentOptionCard(
+                    modifier = Modifier.weight(1f),
+                    iconRes = DsR.drawable.gallery,
+                    label = stringResource(id = R.string.expense_attachment_image),
+                    onClick = onImageClick,
+                )
+                AttachmentOptionCard(
+                    modifier = Modifier.weight(1f),
+                    iconRes = DsR.drawable.document,
+                    label = stringResource(id = R.string.expense_attachment_document),
+                    onClick = onDocumentClick,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AttachmentOptionCard(
+    modifier: Modifier = Modifier,
+    iconRes: Int,
+    label: String,
+    onClick: () -> Unit,
+) {
+    Surface(
+        modifier = modifier.clickable(onClick = onClick),
+        shape = RoundedCornerShape(Dimens.radius16),
+        color = AppTheme.colors.primary.copy(alpha = SELECTED_ITEM_ALPHA),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = Dimens.spacing24),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(Dimens.spacing12),
+        ) {
+            Icon(
+                imageVector = ImageVector.vectorResource(id = iconRes),
+                contentDescription = null,
+                tint = AppTheme.colors.primary,
+                modifier = Modifier.size(Dimens.icon24),
+            )
+            Text(
+                text = label,
+                style = AppTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+                color = AppTheme.colors.primary,
+            )
+        }
+    }
+}
+
 private fun categoryColor(colorHex: String): Color = runCatching {
     Color(android.graphics.Color.parseColor(colorHex))
 }.getOrDefault(fallbackCategoryColor)
+
+private fun Context.createCameraAttachmentUri(): Uri {
+    val attachmentDirectory = File(cacheDir, ATTACHMENT_CACHE_DIR).apply {
+        mkdirs()
+    }
+    val file = File.createTempFile(
+        ATTACHMENT_FILE_PREFIX,
+        ATTACHMENT_IMAGE_EXTENSION,
+        attachmentDirectory,
+    )
+    return FileProvider.getUriForFile(
+        this,
+        "$packageName.fileprovider",
+        file,
+    )
+}
+
+private fun Context.resolveDisplayName(uri: Uri): String? {
+    val cursor = contentResolver.query(
+        uri,
+        arrayOf(OpenableColumns.DISPLAY_NAME),
+        null,
+        null,
+        null,
+    ) ?: return null
+    cursor.use {
+        val hasRow = it.moveToFirst()
+        val columnIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+        return if (hasRow && columnIndex != -1) {
+            it.getString(columnIndex)
+        } else {
+            null
+        }
+    }
+}
+
+private fun Context.takePersistableReadPermission(uri: Uri) {
+    runCatching {
+        contentResolver.takePersistableUriPermission(
+            uri,
+            Intent.FLAG_GRANT_READ_URI_PERMISSION,
+        )
+    }
+}
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
@@ -503,6 +839,11 @@ private fun ExpenseScreenPreview() {
             uiState = ExpenseUiState(
                 amountInput = "",
                 amountText = "$0",
+                attachment = ExpenseAttachmentUiState(
+                    uriString = "",
+                    name = "Receipt.jpg",
+                    type = ExpenseAttachmentType.DOCUMENT,
+                ),
                 categories = listOf(
                     ExpenseCategory(
                         id = 1L,
@@ -532,6 +873,8 @@ private fun ExpenseScreenPreview() {
             onContinueClick = {},
             onAmountChanged = {},
             onDescriptionChanged = {},
+            onAttachmentSelected = { _, _, _ -> },
+            onAttachmentRemoved = {},
             onCategorySelected = {},
         )
     }

@@ -93,6 +93,28 @@ class ExpenseViewModel @Inject constructor(
         }
     }
 
+    fun onAttachmentSelected(
+        uriString: String,
+        name: String,
+        type: ExpenseAttachmentType,
+    ) {
+        _uiState.update { state ->
+            state.copy(
+                attachment = ExpenseAttachmentUiState(
+                    uriString = uriString,
+                    name = name,
+                    type = type,
+                ),
+            )
+        }
+    }
+
+    fun onAttachmentRemoved() {
+        _uiState.update { state ->
+            state.copy(attachment = null)
+        }
+    }
+
     fun onAmountChanged(input: String) {
         val digitsOnly = input.filter(Char::isDigit).take(MAX_AMOUNT_LENGTH)
         val amountValue = digitsOnly.toDoubleOrNull() ?: DEFAULT_AMOUNT_VALUE
@@ -137,6 +159,18 @@ data class ExpenseUiState(
     val description: String = "",
     val amountInput: String = "",
     val amountText: String = "",
+    val attachment: ExpenseAttachmentUiState? = null,
 )
 
 private const val DEFAULT_AMOUNT_VALUE = 0.0
+
+data class ExpenseAttachmentUiState(
+    val uriString: String,
+    val name: String,
+    val type: ExpenseAttachmentType,
+)
+
+enum class ExpenseAttachmentType {
+    IMAGE,
+    DOCUMENT,
+}

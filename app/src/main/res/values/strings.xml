@@ -61,6 +61,12 @@
     <string name="expense_category_placeholder">Category</string>
     <string name="expense_description_placeholder">Description</string>
     <string name="expense_add_attachment">Add attachment</string>
+    <string name="expense_attachment_camera">Camera</string>
+    <string name="expense_attachment_image">Image</string>
+    <string name="expense_attachment_document">Document</string>
+    <string name="expense_attachment_remove">Remove attachment</string>
+    <string name="expense_attachment_image_fallback_name">Receipt image</string>
+    <string name="expense_attachment_document_fallback_name">Receipt document</string>
     <string name="expense_repeat_title">Repeat</string>
     <string name="expense_repeat_subtitle">Repeat transaction</string>
     <string name="expense_continue">Continue</string>

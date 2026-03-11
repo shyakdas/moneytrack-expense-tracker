@@ -19,6 +19,8 @@ fun ExpenseRoute(
         onContinueClick = {},
         onAmountChanged = viewModel::onAmountChanged,
         onDescriptionChanged = viewModel::onDescriptionChanged,
+        onAttachmentSelected = viewModel::onAttachmentSelected,
+        onAttachmentRemoved = viewModel::onAttachmentRemoved,
         onCategorySelected = viewModel::onCategorySelected,
     )
 }
