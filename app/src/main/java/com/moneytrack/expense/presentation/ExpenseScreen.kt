@@ -4,6 +4,7 @@
 
 package com.moneytrack.expense.presentation
 
+import android.app.DatePickerDialog
 import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
@@ -44,8 +45,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -71,7 +75,11 @@ import androidx.core.content.FileProvider
 import com.moneytrack.R
 import com.moneytrack.designsystem.R as DsR
 import com.moneytrack.expense.domain.model.ExpenseCategory
+import com.moneytrack.expense.domain.model.RepeatFrequency
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 import ui.components.card.bottomsheet.SheetBlurHost
 import ui.components.form.control.PrimarySwitch
 import ui.components.form.input.InputField
@@ -86,7 +94,13 @@ private const val SELECTED_ITEM_ALPHA = 0.12f
 private const val ATTACHMENT_IMAGE_EXTENSION = ".jpg"
 private const val ATTACHMENT_CACHE_DIR = "expense_attachments"
 private const val ATTACHMENT_FILE_PREFIX = "receipt_"
+private const val DATE_OUTPUT_PATTERN = "dd MMM yyyy"
+private const val END_OF_DAY_HOUR = 23
+private const val END_OF_DAY_MINUTE = 59
+private const val END_OF_DAY_SECOND = 59
+private const val END_OF_DAY_MILLISECOND = 999
 private val fallbackCategoryColor = categoryColor(FALLBACK_CATEGORY_COLOR_HEX)
+private val dateFormatter = SimpleDateFormat(DATE_OUTPUT_PATTERN, Locale.getDefault())
 
 @Composable
 fun ExpenseScreen(
@@ -97,12 +111,14 @@ fun ExpenseScreen(
     onDescriptionChanged: (String) -> Unit,
     onAttachmentSelected: (String, String, ExpenseAttachmentType) -> Unit,
     onAttachmentRemoved: () -> Unit,
+    onRepeatConfigured: (RepeatFrequency, Long) -> Unit,
+    onRepeatRemoved: () -> Unit,
     onCategorySelected: (Long) -> Unit,
 ) {
     val context = LocalContext.current
-    var isRepeatEnabled by remember { mutableStateOf(false) }
     var showCategorySheet by remember { mutableStateOf(false) }
     var showAttachmentSheet by remember { mutableStateOf(false) }
+    var showRepeatSheet by remember { mutableStateOf(false) }
     var pendingCameraUri by remember { mutableStateOf<Uri?>(null) }
     val imageFallbackName = stringResource(id = R.string.expense_attachment_image_fallback_name)
     val documentFallbackName = stringResource(id = R.string.expense_attachment_document_fallback_name)
@@ -148,21 +164,28 @@ fun ExpenseScreen(
         showAttachmentSheet = false
     }
 
-    SheetBlurHost(isSheetVisible = showCategorySheet || showAttachmentSheet) {
+    SheetBlurHost(isSheetVisible = showCategorySheet || showAttachmentSheet || showRepeatSheet) {
         ExpenseContent(
             amountInput = uiState.amountInput,
             amountText = uiState.amountText,
             description = uiState.description,
             attachment = uiState.attachment,
+            repeatSchedule = uiState.repeatSchedule,
             selectedCategory = uiState.selectedCategory,
-            isRepeatEnabled = isRepeatEnabled,
-            onRepeatChanged = { isRepeatEnabled = it },
             onBackClick = onBackClick,
             onContinueClick = onContinueClick,
             onAmountChanged = onAmountChanged,
             onDescriptionChanged = onDescriptionChanged,
             onAttachmentClick = { showAttachmentSheet = true },
             onAttachmentRemoved = onAttachmentRemoved,
+            onRepeatClick = { showRepeatSheet = true },
+            onRepeatEnabledChange = { isEnabled ->
+                if (isEnabled) {
+                    showRepeatSheet = true
+                } else {
+                    onRepeatRemoved()
+                }
+            },
             onCategoryFieldClick = { showCategorySheet = true },
         )
     }
@@ -194,6 +217,17 @@ fun ExpenseScreen(
             },
         )
     }
+
+    if (showRepeatSheet) {
+        RepeatConfigurationBottomSheet(
+            initialRepeatSchedule = uiState.repeatSchedule,
+            onDismiss = { showRepeatSheet = false },
+            onSave = { frequency, endAtEpochMillis ->
+                onRepeatConfigured(frequency, endAtEpochMillis)
+                showRepeatSheet = false
+            },
+        )
+    }
 }
 
 @Composable
@@ -202,15 +236,16 @@ private fun ExpenseContent(
     amountText: String,
     description: String,
     attachment: ExpenseAttachmentUiState?,
+    repeatSchedule: ExpenseRepeatUiState?,
     selectedCategory: ExpenseCategory?,
-    isRepeatEnabled: Boolean,
-    onRepeatChanged: (Boolean) -> Unit,
     onBackClick: () -> Unit,
     onContinueClick: () -> Unit,
     onAmountChanged: (String) -> Unit,
     onDescriptionChanged: (String) -> Unit,
     onAttachmentClick: () -> Unit,
     onAttachmentRemoved: () -> Unit,
+    onRepeatClick: () -> Unit,
+    onRepeatEnabledChange: (Boolean) -> Unit,
     onCategoryFieldClick: () -> Unit,
 ) {
     Column(
@@ -302,7 +337,9 @@ private fun ExpenseContent(
                     Spacer(modifier = Modifier.height(Dimens.spacing24))
 
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable(onClick = onRepeatClick),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
@@ -319,8 +356,16 @@ private fun ExpenseContent(
                         }
 
                         PrimarySwitch(
-                            checked = isRepeatEnabled,
-                            onCheckedChange = onRepeatChanged,
+                            checked = repeatSchedule != null,
+                            onCheckedChange = onRepeatEnabledChange,
+                        )
+                    }
+
+                    if (repeatSchedule != null) {
+                        Spacer(modifier = Modifier.height(Dimens.spacing16))
+                        RepeatSummary(
+                            repeatSchedule = repeatSchedule,
+                            onEditClick = onRepeatClick,
                         )
                     }
 
@@ -783,6 +828,183 @@ private fun AttachmentOptionCard(
     }
 }
 
+@Composable
+private fun RepeatSummary(
+    repeatSchedule: ExpenseRepeatUiState,
+    onEditClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.Top,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = stringResource(id = R.string.expense_repeat_frequency_label),
+                style = AppTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                color = AppTheme.colors.onBackground,
+            )
+            Text(
+                text = repeatSchedule.frequency.displayName(),
+                style = AppTheme.typography.bodySmall,
+                color = AppTheme.colors.onSurfaceVariant,
+            )
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = stringResource(id = R.string.expense_repeat_end_after_label),
+                style = AppTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                color = AppTheme.colors.onBackground,
+            )
+            Text(
+                text = formatDate(repeatSchedule.endAtEpochMillis),
+                style = AppTheme.typography.bodySmall,
+                color = AppTheme.colors.onSurfaceVariant,
+            )
+        }
+        Surface(
+            modifier = Modifier.clickable(onClick = onEditClick),
+            shape = RoundedCornerShape(Dimens.radius20),
+            color = AppTheme.colors.primary.copy(alpha = SELECTED_ITEM_ALPHA),
+        ) {
+            Text(
+                text = stringResource(id = R.string.expense_repeat_edit),
+                modifier = Modifier.padding(horizontal = Dimens.spacing16, vertical = Dimens.spacing8),
+                style = AppTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                color = AppTheme.colors.primary,
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RepeatConfigurationBottomSheet(
+    initialRepeatSchedule: ExpenseRepeatUiState?,
+    onDismiss: () -> Unit,
+    onSave: (RepeatFrequency, Long) -> Unit,
+) {
+    val context = LocalContext.current
+    var isFrequencyMenuExpanded by remember { mutableStateOf(false) }
+    var selectedFrequency by remember(initialRepeatSchedule) {
+        mutableStateOf(initialRepeatSchedule?.frequency)
+    }
+    var selectedEndDate by remember(initialRepeatSchedule) {
+        mutableLongStateOf(initialRepeatSchedule?.endAtEpochMillis ?: 0L)
+    }
+    val hasEndDate = selectedEndDate != 0L
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = AppTheme.colors.surface,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Dimens.spacing16)
+                .padding(bottom = Dimens.spacing24),
+        ) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .width(Dimens.spacing32)
+                    .height(Dimens.spacing4)
+                    .background(
+                        color = AppTheme.colors.primary.copy(alpha = SELECTED_ITEM_ALPHA),
+                        shape = RoundedCornerShape(Dimens.radius24),
+                    ),
+            )
+            Spacer(modifier = Modifier.height(Dimens.spacing24))
+
+            Box {
+                RepeatSelectionField(
+                    label = selectedFrequency?.displayName()
+                        ?: stringResource(id = R.string.expense_repeat_frequency_label),
+                    onClick = { isFrequencyMenuExpanded = true },
+                )
+                DropdownMenu(
+                    expanded = isFrequencyMenuExpanded,
+                    onDismissRequest = { isFrequencyMenuExpanded = false },
+                ) {
+                    RepeatFrequency.entries.forEach { frequency ->
+                        DropdownMenuItem(
+                            text = { Text(text = frequency.displayName()) },
+                            onClick = {
+                                selectedFrequency = frequency
+                                isFrequencyMenuExpanded = false
+                            },
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(Dimens.spacing16))
+
+            RepeatSelectionField(
+                label = if (hasEndDate) {
+                    formatDate(selectedEndDate)
+                } else {
+                    stringResource(id = R.string.expense_repeat_end_after_label)
+                },
+                onClick = {
+                    context.showRepeatEndDatePicker(initialDateMillis = selectedEndDate) { endAt ->
+                        selectedEndDate = endAt
+                    }
+                },
+            )
+
+            Spacer(modifier = Modifier.height(Dimens.spacing24))
+            LargeButton(
+                text = stringResource(id = R.string.expense_repeat_next),
+                onClick = {
+                    val frequency = selectedFrequency ?: return@LargeButton
+                    if (!hasEndDate) return@LargeButton
+                    onSave(frequency, selectedEndDate)
+                },
+                enabled = selectedFrequency != null && hasEndDate,
+            )
+        }
+    }
+}
+
+@Composable
+private fun RepeatSelectionField(
+    label: String,
+    onClick: () -> Unit,
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(Dimens.inputHeight)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(Dimens.radius16),
+        color = AppTheme.colors.background,
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .border(
+                    width = Dimens.borderNormal,
+                    color = AppTheme.colors.outline,
+                    shape = RoundedCornerShape(Dimens.radius16),
+                )
+                .padding(horizontal = Dimens.spacing16),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = label,
+                style = AppTheme.typography.bodyLarge,
+                color = AppTheme.colors.onSurfaceVariant,
+                modifier = Modifier.weight(1f),
+            )
+            Icon(
+                imageVector = ImageVector.vectorResource(id = DsR.drawable.arrow_down_2),
+                contentDescription = null,
+                tint = AppTheme.colors.onSurfaceVariant,
+            )
+        }
+    }
+}
+
 private fun categoryColor(colorHex: String): Color = runCatching {
     Color(android.graphics.Color.parseColor(colorHex))
 }.getOrDefault(fallbackCategoryColor)
@@ -831,6 +1053,46 @@ private fun Context.takePersistableReadPermission(uri: Uri) {
     }
 }
 
+private fun RepeatFrequency.displayName(): String = when (this) {
+    RepeatFrequency.DAILY -> "Daily"
+    RepeatFrequency.WEEKLY -> "Weekly"
+    RepeatFrequency.MONTHLY -> "Monthly"
+    RepeatFrequency.YEARLY -> "Yearly"
+}
+
+private fun formatDate(epochMillis: Long): String = dateFormatter.format(epochMillis)
+
+private fun Context.showRepeatEndDatePicker(
+    initialDateMillis: Long,
+    onDateSelected: (Long) -> Unit,
+) {
+    val initialCalendar = Calendar.getInstance().apply {
+        timeInMillis = if (initialDateMillis > 0L) {
+            initialDateMillis
+        } else {
+            System.currentTimeMillis()
+        }
+    }
+    DatePickerDialog(
+        this,
+        { _, year, month, dayOfMonth ->
+            val endCalendar = Calendar.getInstance().apply {
+                set(Calendar.YEAR, year)
+                set(Calendar.MONTH, month)
+                set(Calendar.DAY_OF_MONTH, dayOfMonth)
+                set(Calendar.HOUR_OF_DAY, END_OF_DAY_HOUR)
+                set(Calendar.MINUTE, END_OF_DAY_MINUTE)
+                set(Calendar.SECOND, END_OF_DAY_SECOND)
+                set(Calendar.MILLISECOND, END_OF_DAY_MILLISECOND)
+            }
+            onDateSelected(endCalendar.timeInMillis)
+        },
+        initialCalendar.get(Calendar.YEAR),
+        initialCalendar.get(Calendar.MONTH),
+        initialCalendar.get(Calendar.DAY_OF_MONTH),
+    ).show()
+}
+
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 private fun ExpenseScreenPreview() {
@@ -843,6 +1105,10 @@ private fun ExpenseScreenPreview() {
                     uriString = "",
                     name = "Receipt.jpg",
                     type = ExpenseAttachmentType.DOCUMENT,
+                ),
+                repeatSchedule = ExpenseRepeatUiState(
+                    frequency = RepeatFrequency.MONTHLY,
+                    endAtEpochMillis = System.currentTimeMillis(),
                 ),
                 categories = listOf(
                     ExpenseCategory(
@@ -875,6 +1141,8 @@ private fun ExpenseScreenPreview() {
             onDescriptionChanged = {},
             onAttachmentSelected = { _, _, _ -> },
             onAttachmentRemoved = {},
+            onRepeatConfigured = { _, _ -> },
+            onRepeatRemoved = {},
             onCategorySelected = {},
         )
     }

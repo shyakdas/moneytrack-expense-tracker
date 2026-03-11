@@ -4,17 +4,22 @@ package com.moneytrack.expense.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.moneytrack.expense.domain.model.ExpenseSubmissionResult
 import com.moneytrack.expense.domain.model.ExpenseCategory
-import com.moneytrack.expense.domain.usecase.AddCategoryUseCase
+import com.moneytrack.expense.domain.model.RepeatFrequency
+import com.moneytrack.expense.domain.model.RepeatSchedule
+import com.moneytrack.expense.domain.model.SubmitExpenseRequest
 import com.moneytrack.expense.domain.usecase.EnsureDefaultCategoriesUseCase
 import com.moneytrack.expense.domain.usecase.ObserveCategoriesUseCase
-import com.moneytrack.expense.domain.usecase.ReorderCategoriesUseCase
+import com.moneytrack.expense.domain.usecase.SubmitExpenseUseCase
 import com.moneytrack.locale.CurrencyFormatter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -22,8 +27,7 @@ import kotlinx.coroutines.launch
 class ExpenseViewModel @Inject constructor(
     private val observeCategoriesUseCase: ObserveCategoriesUseCase,
     private val ensureDefaultCategoriesUseCase: EnsureDefaultCategoriesUseCase,
-    private val addCategoryUseCase: AddCategoryUseCase,
-    private val reorderCategoriesUseCase: ReorderCategoriesUseCase,
+    private val submitExpenseUseCase: SubmitExpenseUseCase,
     private val currencyFormatter: CurrencyFormatter,
 ) : ViewModel() {
 
@@ -33,7 +37,8 @@ class ExpenseViewModel @Inject constructor(
         ),
     )
     val uiState: StateFlow<ExpenseUiState> = _uiState.asStateFlow()
-    private var pendingSelectionName: String? = null
+    private val _events = Channel<ExpenseEvent>(capacity = Channel.BUFFERED)
+    val events = _events.receiveAsFlow()
 
     init {
         viewModelScope.launch {
@@ -43,19 +48,10 @@ class ExpenseViewModel @Inject constructor(
         viewModelScope.launch {
             observeCategoriesUseCase().collect { categories ->
                 _uiState.update { state ->
-                    val selectionFromPending = pendingSelectionName?.let { pendingName ->
-                        categories.firstOrNull { category ->
-                            category.name.equals(pendingName, ignoreCase = true)
-                        }?.id
-                    }
                     val selectedCategoryId = when {
-                        selectionFromPending != null -> selectionFromPending
                         state.selectedCategoryId == null -> null
                         categories.any { it.id == state.selectedCategoryId } -> state.selectedCategoryId
                         else -> null
-                    }
-                    if (selectionFromPending != null) {
-                        pendingSelectionName = null
                     }
                     state.copy(
                         categories = categories,
@@ -77,13 +73,6 @@ class ExpenseViewModel @Inject constructor(
                     category.id == categoryId
                 },
             )
-        }
-    }
-
-    fun onCustomCategoryInputChanged(input: String) {
-        val filtered = input.take(MAX_CATEGORY_NAME_LENGTH)
-        _uiState.update { state ->
-            state.copy(customCategoryInput = filtered)
         }
     }
 
@@ -115,6 +104,26 @@ class ExpenseViewModel @Inject constructor(
         }
     }
 
+    fun onRepeatConfigured(
+        frequency: RepeatFrequency,
+        endAtEpochMillis: Long,
+    ) {
+        _uiState.update { state ->
+            state.copy(
+                repeatSchedule = ExpenseRepeatUiState(
+                    frequency = frequency,
+                    endAtEpochMillis = endAtEpochMillis,
+                ),
+            )
+        }
+    }
+
+    fun onRepeatRemoved() {
+        _uiState.update { state ->
+            state.copy(repeatSchedule = null)
+        }
+    }
+
     fun onAmountChanged(input: String) {
         val digitsOnly = input.filter(Char::isDigit).take(MAX_AMOUNT_LENGTH)
         val amountValue = digitsOnly.toDoubleOrNull() ?: DEFAULT_AMOUNT_VALUE
@@ -126,28 +135,13 @@ class ExpenseViewModel @Inject constructor(
         }
     }
 
-    fun addCustomCategory() {
-        val categoryName = _uiState.value.customCategoryInput.trim()
-        if (categoryName.isEmpty()) return
+    fun submitExpense() {
+        val request = _uiState.value.toSubmitExpenseRequest() ?: return
 
         viewModelScope.launch {
-            addCategoryUseCase(name = categoryName)
-            pendingSelectionName = categoryName
-            _uiState.update { state ->
-                state.copy(customCategoryInput = "")
-            }
+            val result = submitExpenseUseCase(request)
+            _events.send(ExpenseEvent.Saved(result))
         }
-    }
-
-    fun reorderCategories(categoryIds: List<Long>) {
-        viewModelScope.launch {
-            reorderCategoriesUseCase(categoryIds = categoryIds)
-        }
-    }
-
-    private companion object {
-        const val MAX_CATEGORY_NAME_LENGTH = 24
-        const val MAX_AMOUNT_LENGTH = 9
     }
 }
 
@@ -155,14 +149,15 @@ data class ExpenseUiState(
     val categories: List<ExpenseCategory> = emptyList(),
     val selectedCategoryId: Long? = null,
     val selectedCategory: ExpenseCategory? = null,
-    val customCategoryInput: String = "",
     val description: String = "",
     val amountInput: String = "",
     val amountText: String = "",
     val attachment: ExpenseAttachmentUiState? = null,
+    val repeatSchedule: ExpenseRepeatUiState? = null,
 )
 
 private const val DEFAULT_AMOUNT_VALUE = 0.0
+private const val MAX_AMOUNT_LENGTH = 9
 
 data class ExpenseAttachmentUiState(
     val uriString: String,
@@ -173,4 +168,36 @@ data class ExpenseAttachmentUiState(
 enum class ExpenseAttachmentType {
     IMAGE,
     DOCUMENT,
+}
+
+data class ExpenseRepeatUiState(
+    val frequency: RepeatFrequency,
+    val endAtEpochMillis: Long,
+)
+
+sealed interface ExpenseEvent {
+    data class Saved(
+        val result: ExpenseSubmissionResult,
+    ) : ExpenseEvent
+}
+
+private fun ExpenseRepeatUiState.toDomain(): RepeatSchedule = RepeatSchedule(
+    frequency = frequency,
+    endAtEpochMillis = endAtEpochMillis,
+)
+
+private fun ExpenseUiState.toSubmitExpenseRequest(): SubmitExpenseRequest? {
+    val amount = amountInput.toDoubleOrNull()
+    val categoryName = selectedCategory?.name
+    return if (amount != null && amount > DEFAULT_AMOUNT_VALUE && categoryName != null) {
+        SubmitExpenseRequest(
+            amount = amount,
+            description = description,
+            category = categoryName,
+            occurredAtEpochMillis = System.currentTimeMillis(),
+            repeatSchedule = repeatSchedule?.toDomain(),
+        )
+    } else {
+        null
+    }
 }

@@ -2,6 +2,10 @@
 
 package com.moneytrack.onboarding.presentation
 
+import com.moneytrack.onboarding.domain.repository.OnboardingRepository
+import com.moneytrack.onboarding.domain.usecase.SetOnboardingCompletedUseCase
+import com.moneytrack.testutil.MainDispatcherRule
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -9,10 +13,8 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
-import com.moneytrack.onboarding.domain.repository.OnboardingRepository
-import com.moneytrack.onboarding.domain.usecase.SetOnboardingCompletedUseCase
-import com.moneytrack.testutil.MainDispatcherRule
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class OnboardingViewModelTest {
 
     @get:Rule

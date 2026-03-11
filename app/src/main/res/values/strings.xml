@@ -69,6 +69,10 @@
     <string name="expense_attachment_document_fallback_name">Receipt document</string>
     <string name="expense_repeat_title">Repeat</string>
     <string name="expense_repeat_subtitle">Repeat transaction</string>
+    <string name="expense_repeat_frequency_label">Frequency</string>
+    <string name="expense_repeat_end_after_label">End After</string>
+    <string name="expense_repeat_edit">Edit</string>
+    <string name="expense_repeat_next">Next</string>
     <string name="expense_continue">Continue</string>
     <string name="expense_categories_sheet_title">Choose category</string>
     <string name="expense_categories_reorder">Reorder</string>

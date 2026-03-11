@@ -35,6 +35,11 @@
             android:exported="false" />
 
         <receiver
+            android:name=".expense.scheduler.RecurringExpenseReceiver"
+            android:enabled="true"
+            android:exported="false" />
+
+        <receiver
             android:name=".reminder.notification.ReminderBootReceiver"
             android:enabled="true"
             android:exported="false">

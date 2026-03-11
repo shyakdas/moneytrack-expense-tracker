@@ -7,6 +7,7 @@ import androidx.room.Room
 import com.moneytrack.data.local.db.MoneyTrackDatabase
 import com.moneytrack.data.local.db.dao.BudgetDao
 import com.moneytrack.data.local.db.dao.CategoryDao
+import com.moneytrack.data.local.db.dao.RecurringExpenseDao
 import com.moneytrack.data.local.db.dao.TransactionDao
 import dagger.Module
 import dagger.Provides
@@ -47,4 +48,9 @@ object DatabaseModule {
     fun provideCategoryDao(
         database: MoneyTrackDatabase,
     ): CategoryDao = database.categoryDao()
+
+    @Provides
+    fun provideRecurringExpenseDao(
+        database: MoneyTrackDatabase,
+    ): RecurringExpenseDao = database.recurringExpenseDao()
 }

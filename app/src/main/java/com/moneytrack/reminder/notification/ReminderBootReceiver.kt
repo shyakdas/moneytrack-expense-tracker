@@ -5,8 +5,16 @@ package com.moneytrack.reminder.notification
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import com.moneytrack.expense.scheduler.RecurringExpenseRescheduler
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class ReminderBootReceiver : BroadcastReceiver() {
+
+    @Inject
+    lateinit var recurringExpenseRescheduler: RecurringExpenseRescheduler
+
     override fun onReceive(
         context: Context,
         intent: Intent?,
@@ -19,6 +27,7 @@ class ReminderBootReceiver : BroadcastReceiver() {
                 -> {
                     ExpenseReminderNotification.ensureChannel(context)
                     ExpenseReminderScheduler.scheduleAll(context)
+                    recurringExpenseRescheduler.rescheduleAll(context)
                 }
         }
     }
