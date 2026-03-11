@@ -10,20 +10,13 @@ import kotlin.math.abs
 
 @Singleton
 class CurrencyFormatter @Inject constructor(
-    countryProvider: CountryProvider,
+    private val countryProvider: CountryProvider,
 ) {
 
-    private val countryCode = countryProvider.getCountryCode()
-    private val currencySymbol = countryProvider.getCurrencySymbol()
-    private val countryLocale = runCatching {
-        Locale.Builder()
-            .setLanguage("en")
-            .setRegion(countryCode)
-            .build()
-    }.getOrDefault(Locale.US)
-    private val numberFormatter = NumberFormat.getIntegerInstance(countryLocale)
-
     fun format(value: Double): String {
+        val countryCode = countryProvider.getCountryCode()
+        val currencySymbol = countryProvider.getCurrencySymbol()
+        val numberFormatter = NumberFormat.getIntegerInstance(countryLocale(countryCode))
         val absoluteValue = abs(value).toLong()
         val formattedNumber = if (countryCode == INDIA_COUNTRY_CODE) {
             formatIndianNumber(absoluteValue)
@@ -63,6 +56,13 @@ class CurrencyFormatter @Inject constructor(
 
         return "$groupedRemaining,$lastThree"
     }
+
+    private fun countryLocale(countryCode: String): Locale = runCatching {
+        Locale.Builder()
+            .setLanguage("en")
+            .setRegion(countryCode)
+            .build()
+    }.getOrDefault(Locale.US)
 
     private companion object {
         private const val INDIA_COUNTRY_CODE = "IN"

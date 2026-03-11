@@ -5,6 +5,8 @@ package com.moneytrack.navigation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -14,6 +16,7 @@ import com.moneytrack.home.presentation.HomeRoute
 import com.moneytrack.onboarding.presentation.OnboardingRoute
 import com.moneytrack.pinauth.presentation.PinAuthRoute
 import com.moneytrack.pinsetup.presentation.PinSetupRoute
+import com.moneytrack.transaction.presentation.TransactionRoute
 
 @Composable
 @Suppress("LongMethod")
@@ -80,6 +83,9 @@ fun AppNavHost(
 
         composable(AppDestination.Home.route) {
             HomeRoute(
+                onTransactionClick = {
+                    navController.navigateToTopLevel(AppDestination.Transaction.route)
+                },
                 onAddExpenseClick = {
                     navController.navigate(AppDestination.Expense.route) {
                         launchSingleTop = true
@@ -95,5 +101,28 @@ fun AppNavHost(
                 },
             )
         }
+
+        composable(AppDestination.Transaction.route) {
+            TransactionRoute(
+                onHomeClick = {
+                    navController.navigateToTopLevel(AppDestination.Home.route)
+                },
+                onAddExpenseClick = {
+                    navController.navigate(AppDestination.Expense.route) {
+                        launchSingleTop = true
+                    }
+                },
+            )
+        }
+    }
+}
+
+private fun NavHostController.navigateToTopLevel(route: String) {
+    navigate(route) {
+        popUpTo(graph.findStartDestination().id) {
+            saveState = true
+        }
+        launchSingleTop = true
+        restoreState = true
     }
 }

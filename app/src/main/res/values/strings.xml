@@ -74,6 +74,9 @@
     <string name="expense_repeat_next">Next</string>
     <string name="expense_continue">Continue</string>
     <string name="expense_categories_sheet_title">Choose category</string>
+    <string name="transaction_financial_report_cta">See your financial report</string>
+    <string name="transaction_empty_title">No transactions yet</string>
+    <string name="transaction_empty_desc">Your saved expenses will appear here.</string>
 
     <plurals name="pin_mismatch_error_with_attempts">
         <item quantity="one">PIN didn\'t match. %1$d attempt left.</item>

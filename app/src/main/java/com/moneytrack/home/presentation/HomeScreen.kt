@@ -100,6 +100,7 @@ private enum class BudgetSheetStep {
 
 @Composable
 fun HomeRoute(
+    onTransactionClick: () -> Unit,
     onAddExpenseClick: () -> Unit,
 ) {
     val viewModel: HomeViewModel = hiltViewModel()
@@ -119,6 +120,10 @@ fun HomeRoute(
     val shouldShowNotificationPermissionSheet = notificationPermissionUiState.isPermissionPromptVisible &&
         !hasNotificationPermission
 
+    LaunchedEffect(viewModel) {
+        viewModel.onBottomRouteSelected(ROUTE_HOME)
+    }
+
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
     ) { granted ->
@@ -131,7 +136,12 @@ fun HomeRoute(
         HomeScreen(
             uiState = uiState,
             isBudgetLoaded = isBudgetLoaded,
-            onBottomRouteSelected = viewModel::onBottomRouteSelected,
+            onBottomRouteSelected = { route ->
+                viewModel.onBottomRouteSelected(route)
+                if (route == ROUTE_TRANSACTION) {
+                    onTransactionClick()
+                }
+            },
             onTimeRangeSelected = viewModel::onTimeRangeSelected,
             onSetBudgetClick = { budgetAmount ->
                 budgetSheetInitialAmount = budgetAmount
@@ -225,7 +235,7 @@ fun HomeScreen(
             Box(modifier = Modifier.navigationBarsPadding()) {
                 PrimaryBottomNavigation(
                     items = bottomItems,
-                    selectedRoute = uiState.selectedBottomRoute,
+                    selectedRoute = ROUTE_HOME,
                     onItemClick = { item -> onBottomRouteSelected(item.route) },
                     onFabClick = onAddExpenseClick,
                 )

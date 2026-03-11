@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import ui.theme.AppTheme
 import ui.theme.Dimens
@@ -17,11 +18,12 @@ import ui.theme.MoneyTrackTheme
 @Composable
 fun TopNavigation(
     config: TopNavigationConfig,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    containerColor: Color = AppTheme.colors.surface,
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
-        color = AppTheme.colors.surface,
+        color = containerColor,
         tonalElevation = Dimens.spacing2
     ) {
         when (config) {
@@ -39,7 +41,10 @@ fun TopNavigation(
             }
 
             is TopNavigationConfig.DropdownWithFilter -> {
-                DropdownFilterNavigation(config)
+                DropdownFilterNavigation(
+                    config = config,
+                    containerColor = containerColor,
+                )
             }
         }
     }
