@@ -83,6 +83,7 @@ import ui.components.navigation.topNav.TopNavigationConfig
 import ui.components.form.input.InputField
 import ui.theme.AppTheme
 import ui.theme.Dimens
+import ui.theme.Green100
 import ui.theme.MoneyTrackTheme
 
 private const val ROUTE_HOME = "home"
@@ -142,6 +143,7 @@ fun HomeRoute(
                     onTransactionClick()
                 }
             },
+            onSeeAllTransactionsClick = onTransactionClick,
             onTimeRangeSelected = viewModel::onTimeRangeSelected,
             onSetBudgetClick = { budgetAmount ->
                 budgetSheetInitialAmount = budgetAmount
@@ -217,6 +219,7 @@ fun HomeScreen(
     uiState: HomeUiState,
     isBudgetLoaded: Boolean = true,
     onBottomRouteSelected: (String) -> Unit,
+    onSeeAllTransactionsClick: () -> Unit,
     onTimeRangeSelected: (String) -> Unit,
     onSetBudgetClick: (Double?) -> Unit,
     onAddExpenseClick: () -> Unit = {},
@@ -246,6 +249,7 @@ fun HomeScreen(
             innerPadding = innerPadding,
             uiState = uiState,
             isBudgetLoaded = isBudgetLoaded,
+            onSeeAllTransactionsClick = onSeeAllTransactionsClick,
             onTimeRangeSelected = onTimeRangeSelected,
             onSetBudgetClick = onSetBudgetClick,
         )
@@ -257,6 +261,7 @@ private fun HomeContent(
     innerPadding: PaddingValues,
     uiState: HomeUiState,
     isBudgetLoaded: Boolean,
+    onSeeAllTransactionsClick: () -> Unit,
     onTimeRangeSelected: (String) -> Unit,
     onSetBudgetClick: (Double?) -> Unit,
 ) {
@@ -321,16 +326,8 @@ private fun HomeContent(
                 color = AppTheme.colors.onBackground,
             )
             Spacer(modifier = Modifier.height(Dimens.spacing16))
-            if (uiState.hasExpenses) {
-                SpendFrequencyChart()
-                Spacer(modifier = Modifier.height(Dimens.spacing16))
-
-                TimeRangeTab(
-                    options = listOf("Today", "Week", "Month", "Year"),
-                    selectedOption = uiState.selectedRange,
-                    onOptionSelected = onTimeRangeSelected,
-                    modifier = Modifier.fillMaxWidth(),
-                )
+            if (uiState.hasSpendFrequencyData) {
+                SpendFrequencyChart(points = uiState.spendFrequencyPoints)
             } else {
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
@@ -345,6 +342,14 @@ private fun HomeContent(
                     )
                 }
             }
+            Spacer(modifier = Modifier.height(Dimens.spacing16))
+
+            TimeRangeTab(
+                options = listOf("Today", "Week", "Month", "Year"),
+                selectedOption = uiState.selectedRange,
+                onOptionSelected = onTimeRangeSelected,
+                modifier = Modifier.fillMaxWidth(),
+            )
             Spacer(modifier = Modifier.height(Dimens.spacing20))
 
             Row(
@@ -357,7 +362,7 @@ private fun HomeContent(
                     color = AppTheme.colors.onBackground,
                 )
                 Spacer(modifier = Modifier.weight(1f))
-                SeeAllPill(onClick = {})
+                SeeAllPill(onClick = onSeeAllTransactionsClick)
             }
             Spacer(modifier = Modifier.height(Dimens.spacing12))
 
@@ -458,7 +463,7 @@ private fun BalanceSummaryCard(
                         label = stringResource(id = AppR.string.home_budget_label),
                         value = budgetText.orEmpty(),
                         icon = R.drawable.line_chart_2,
-                        background = AppTheme.colors.primary,
+                        background = Green100,
                         onClick = { onSetBudgetClick(budgetAmount) },
                     )
                 }
@@ -788,7 +793,7 @@ private fun BudgetSetupBottomSheet(
 }
 
 @Composable
-private fun SpendFrequencyChart() {
+private fun SpendFrequencyChart(points: List<Float>) {
     val chartLineColor = AppTheme.colors.primary
     val chartFillColor = AppTheme.colors.primary.copy(alpha = 0.15f)
     val chartGridColor = AppTheme.colors.outline.copy(alpha = 0.15f)
@@ -800,24 +805,38 @@ private fun SpendFrequencyChart() {
             .background(AppTheme.colors.background),
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
-            val points = listOf(
-                Offset(0f, size.height * 0.75f),
-                Offset(size.width * 0.12f, size.height * 0.68f),
-                Offset(size.width * 0.22f, size.height * 0.66f),
-                Offset(size.width * 0.34f, size.height * 0.86f),
-                Offset(size.width * 0.46f, size.height * 0.56f),
-                Offset(size.width * 0.58f, size.height * 0.70f),
-                Offset(size.width * 0.70f, size.height * 0.45f),
-                Offset(size.width * 0.82f, size.height * 0.18f),
-                Offset(size.width * 0.92f, size.height * 0.60f),
-                Offset(size.width, size.height * 0.70f),
-            )
+            if (points.isEmpty()) {
+                drawRect(
+                    color = chartGridColor,
+                    size = Size(width = size.width, height = 1.dp.toPx()),
+                )
+                return@Canvas
+            }
+
+            val normalizedPoints = points.normalizeForChart()
+            val chartPoints = normalizedPoints.mapIndexed { index, value ->
+                val x = if (normalizedPoints.size == 1) {
+                    size.width / 2f
+                } else {
+                    size.width * index / (normalizedPoints.lastIndex.coerceAtLeast(1))
+                }
+                Offset(x, size.height * value)
+            }.let { generated ->
+                if (generated.size == 1) {
+                    listOf(
+                        Offset(0f, generated.first().y),
+                        Offset(size.width, generated.first().y),
+                    )
+                } else {
+                    generated
+                }
+            }
 
             val linePath = Path().apply {
-                moveTo(points.first().x, points.first().y)
-                for (index in 1 until points.size) {
-                    val prev = points[index - 1]
-                    val current = points[index]
+                moveTo(chartPoints.first().x, chartPoints.first().y)
+                for (index in 1 until chartPoints.size) {
+                    val prev = chartPoints[index - 1]
+                    val current = chartPoints[index]
                     val cx = (prev.x + current.x) / 2
                     cubicTo(cx, prev.y, cx, current.y, current.x, current.y)
                 }
@@ -850,14 +869,26 @@ private fun SpendFrequencyChart() {
     }
 }
 
+private fun List<Float>.normalizeForChart(): List<Float> {
+    val maxValue = maxOrNull()?.takeIf { value -> value > 0f } ?: return map { CHART_BASELINE_RATIO }
+    return map { value ->
+        val normalized = 1f - (value / maxValue) * CHART_HEIGHT_RATIO
+        normalized.coerceIn(CHART_TOP_PADDING_RATIO, CHART_BASELINE_RATIO)
+    }
+}
+
 data class HomeTransaction(
     val icon: Int,
     val title: String,
-    val subtitle: String,
+    val subtitle: String?,
     val amount: String,
     val time: String,
     val type: TransactionType,
 )
+
+private const val CHART_TOP_PADDING_RATIO = 0.12f
+private const val CHART_BASELINE_RATIO = 0.88f
+private const val CHART_HEIGHT_RATIO = 0.76f
 
 data class HomeUiState(
     val accountBalanceText: String,
@@ -866,6 +897,8 @@ data class HomeUiState(
     val budgetText: String?,
     val hasExpenses: Boolean,
     val expensesText: String,
+    val spendFrequencyPoints: List<Float>,
+    val hasSpendFrequencyData: Boolean,
     val transactions: List<HomeTransaction>,
     val selectedBottomRoute: String,
     val selectedRange: String,
@@ -883,11 +916,14 @@ private fun HomeScreenPreview() {
                 budgetText = null,
                 hasExpenses = false,
                 expensesText = "$0",
+                spendFrequencyPoints = emptyList(),
+                hasSpendFrequencyData = false,
                 transactions = emptyList(),
                 selectedBottomRoute = ROUTE_HOME,
                 selectedRange = "Today",
             ),
             onBottomRouteSelected = {},
+            onSeeAllTransactionsClick = {},
             onTimeRangeSelected = {},
             onSetBudgetClick = { },
             onAddExpenseClick = {},

@@ -21,6 +21,11 @@ class TransactionRepositoryImpl @Inject constructor(
         transactionDao.observeTransactions().map { transactions ->
             transactions.map(TransactionEntity::toDomain)
         }
+
+    override fun observeRecentTransactions(limit: Int): Flow<List<TransactionRecord>> =
+        transactionDao.observeRecentTransactions(limit = limit).map { transactions ->
+            transactions.map(TransactionEntity::toDomain)
+        }
 }
 
 private fun TransactionEntity.toDomain(): TransactionRecord = TransactionRecord(
