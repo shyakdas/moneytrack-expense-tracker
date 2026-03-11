@@ -32,7 +32,7 @@ import ui.theme.MoneyTrackTheme
 fun TransactionCard(
     icon: ImageVector,
     title: String,
-    subtitle: String,
+    subtitle: String?,
     amount: String,
     time: String,
     type: TransactionType,
@@ -82,12 +82,14 @@ fun TransactionCard(
                     color = AppTheme.colors.onSurface
                 )
 
-                Text(
-                    text = subtitle,
-                    style = AppTheme.typography.bodyMedium,
-                    color = AppTheme.colors.onSurfaceVariant,
-                    maxLines = 1
-                )
+                subtitle?.takeIf { it.isNotBlank() }?.let { subtitleText ->
+                    Text(
+                        text = subtitleText,
+                        style = AppTheme.typography.bodyMedium,
+                        color = AppTheme.colors.onSurfaceVariant,
+                        maxLines = 1
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.width(Dimens.spacing12))

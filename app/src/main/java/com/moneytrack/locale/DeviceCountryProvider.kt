@@ -20,10 +20,10 @@ class DeviceCountryProvider @Inject constructor(
         val localeCountry = Locale.getDefault().country.orEmpty().uppercase(Locale.US)
         val configCountry = configurationCountryCode()
         val resolved = listOf(
-            telephonyCountryCode { it.networkCountryIso },
-            telephonyCountryCode { it.simCountryIso },
             configCountry,
             localeCountry,
+            telephonyCountryCode { it.networkCountryIso },
+            telephonyCountryCode { it.simCountryIso },
         ).firstOrNull { it.isNotEmpty() }
         return resolved ?: DEFAULT_COUNTRY_CODE
     }
