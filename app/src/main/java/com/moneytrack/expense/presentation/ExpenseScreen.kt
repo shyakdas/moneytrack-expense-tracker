@@ -72,6 +72,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.FileProvider
+import androidx.core.graphics.toColorInt
+import androidx.core.net.toUri
 import com.moneytrack.R
 import com.moneytrack.designsystem.R as DsR
 import com.moneytrack.expense.domain.model.ExpenseCategory
@@ -100,7 +102,6 @@ private const val END_OF_DAY_MINUTE = 59
 private const val END_OF_DAY_SECOND = 59
 private const val END_OF_DAY_MILLISECOND = 999
 private val fallbackCategoryColor = categoryColor(FALLBACK_CATEGORY_COLOR_HEX)
-private val dateFormatter = SimpleDateFormat(DATE_OUTPUT_PATTERN, Locale.getDefault())
 
 @Composable
 fun ExpenseScreen(
@@ -678,7 +679,7 @@ private fun ImageAttachmentPreview(
     val context = LocalContext.current
     val bitmap = remember(uriString) {
         runCatching {
-            context.contentResolver.openInputStream(Uri.parse(uriString))?.use { inputStream ->
+            context.contentResolver.openInputStream(uriString.toUri())?.use { inputStream ->
                 BitmapFactory.decodeStream(inputStream)
             }?.asImageBitmap()
         }.getOrNull()
@@ -1009,7 +1010,7 @@ private fun RepeatSelectionField(
 }
 
 private fun categoryColor(colorHex: String): Color = runCatching {
-    Color(android.graphics.Color.parseColor(colorHex))
+    Color(colorHex.toColorInt())
 }.getOrDefault(fallbackCategoryColor)
 
 private fun Context.createCameraAttachmentUri(): Uri {
@@ -1063,7 +1064,8 @@ private fun RepeatFrequency.displayName(): String = when (this) {
     RepeatFrequency.YEARLY -> "Yearly"
 }
 
-private fun formatDate(epochMillis: Long): String = dateFormatter.format(epochMillis)
+private fun formatDate(epochMillis: Long): String =
+    SimpleDateFormat(DATE_OUTPUT_PATTERN, Locale.getDefault()).format(epochMillis)
 
 private fun Context.showRepeatEndDatePicker(
     initialDateMillis: Long,

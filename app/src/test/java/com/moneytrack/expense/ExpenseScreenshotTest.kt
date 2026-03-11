@@ -4,6 +4,7 @@ package com.moneytrack.expense
 
 import app.cash.paparazzi.DeviceConfig
 import app.cash.paparazzi.Paparazzi
+import androidx.compose.runtime.Composable
 import com.moneytrack.expense.domain.model.ExpenseCategory
 import com.moneytrack.expense.domain.model.RepeatFrequency
 import com.moneytrack.expense.presentation.ExpenseAttachmentType
@@ -11,7 +12,6 @@ import com.moneytrack.expense.presentation.ExpenseAttachmentUiState
 import com.moneytrack.expense.presentation.ExpenseContent
 import com.moneytrack.expense.presentation.ExpenseRepeatUiState
 import com.moneytrack.expense.presentation.ExpenseUiState
-import androidx.compose.runtime.Composable
 import org.junit.Rule
 import org.junit.Test
 import ui.theme.MoneyTrackTheme
@@ -25,7 +25,7 @@ class ExpenseScreenshotTest {
     fun expense_empty_light() {
         paparazzi.snapshot {
             MoneyTrackTheme(darkTheme = false) {
-                expenseSnapshotContent(
+                ExpenseSnapshotContent(
                     uiState = ExpenseUiState(
                         amountText = "$0",
                         isSubmitEnabled = false,
@@ -39,7 +39,7 @@ class ExpenseScreenshotTest {
     fun expense_configured_dark() {
         paparazzi.snapshot {
             MoneyTrackTheme(darkTheme = true) {
-                expenseSnapshotContent(
+                ExpenseSnapshotContent(
                     uiState = ExpenseUiState(
                         amountInput = "5200",
                         amountText = "$5,200",
@@ -69,7 +69,7 @@ class ExpenseScreenshotTest {
 }
 
 @Composable
-private fun expenseSnapshotContent(
+private fun ExpenseSnapshotContent(
     uiState: ExpenseUiState,
 ) {
     ExpenseContent(

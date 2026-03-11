@@ -57,7 +57,6 @@
     <string name="expense_back_content_desc">Back</string>
     <string name="expense_title">Expense</string>
     <string name="expense_amount_prompt">How much?</string>
-    <string name="expense_amount_default">$0</string>
     <string name="expense_category_placeholder">Category</string>
     <string name="expense_description_placeholder">Description</string>
     <string name="expense_add_attachment">Add attachment</string>
@@ -75,14 +74,6 @@
     <string name="expense_repeat_next">Next</string>
     <string name="expense_continue">Continue</string>
     <string name="expense_categories_sheet_title">Choose category</string>
-    <string name="expense_categories_reorder">Reorder</string>
-    <string name="expense_categories_done">Done</string>
-    <string name="expense_categories_reorder_hint">Drag categories to change their order.</string>
-    <string name="expense_add_custom_category_title">Add your own category</string>
-    <string name="expense_custom_category_placeholder">Add your category</string>
-    <string name="expense_add_custom_category">Add category</string>
-    <string name="expense_move_up">Up</string>
-    <string name="expense_move_down">Down</string>
 
     <plurals name="pin_mismatch_error_with_attempts">
         <item quantity="one">PIN didn\'t match. %1$d attempt left.</item>
