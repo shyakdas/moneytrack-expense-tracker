@@ -169,6 +169,7 @@ fun ExpenseScreen(
             amountInput = uiState.amountInput,
             amountText = uiState.amountText,
             description = uiState.description,
+            isSubmitEnabled = uiState.isSubmitEnabled,
             attachment = uiState.attachment,
             repeatSchedule = uiState.repeatSchedule,
             selectedCategory = uiState.selectedCategory,
@@ -231,10 +232,11 @@ fun ExpenseScreen(
 }
 
 @Composable
-private fun ExpenseContent(
+internal fun ExpenseContent(
     amountInput: String,
     amountText: String,
     description: String,
+    isSubmitEnabled: Boolean,
     attachment: ExpenseAttachmentUiState?,
     repeatSchedule: ExpenseRepeatUiState?,
     selectedCategory: ExpenseCategory?,
@@ -381,6 +383,7 @@ private fun ExpenseContent(
                     LargeButton(
                         text = stringResource(id = R.string.expense_continue),
                         onClick = onContinueClick,
+                        enabled = isSubmitEnabled,
                     )
                     Spacer(modifier = Modifier.navigationBarsPadding())
                 }

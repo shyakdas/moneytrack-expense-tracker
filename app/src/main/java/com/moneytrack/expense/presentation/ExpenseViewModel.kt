@@ -34,6 +34,7 @@ class ExpenseViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(
         ExpenseUiState(
             amountText = currencyFormatter.format(DEFAULT_AMOUNT_VALUE),
+            isSubmitEnabled = false,
         ),
     )
     val uiState: StateFlow<ExpenseUiState> = _uiState.asStateFlow()
@@ -131,6 +132,7 @@ class ExpenseViewModel @Inject constructor(
             state.copy(
                 amountInput = digitsOnly,
                 amountText = currencyFormatter.format(amountValue),
+                isSubmitEnabled = amountValue > DEFAULT_AMOUNT_VALUE,
             )
         }
     }
@@ -152,12 +154,14 @@ data class ExpenseUiState(
     val description: String = "",
     val amountInput: String = "",
     val amountText: String = "",
+    val isSubmitEnabled: Boolean = false,
     val attachment: ExpenseAttachmentUiState? = null,
     val repeatSchedule: ExpenseRepeatUiState? = null,
 )
 
 private const val DEFAULT_AMOUNT_VALUE = 0.0
 private const val MAX_AMOUNT_LENGTH = 9
+private const val DEFAULT_EXPENSE_CATEGORY = "Expense"
 
 data class ExpenseAttachmentUiState(
     val uriString: String,
@@ -188,8 +192,8 @@ private fun ExpenseRepeatUiState.toDomain(): RepeatSchedule = RepeatSchedule(
 
 private fun ExpenseUiState.toSubmitExpenseRequest(): SubmitExpenseRequest? {
     val amount = amountInput.toDoubleOrNull()
-    val categoryName = selectedCategory?.name
-    return if (amount != null && amount > DEFAULT_AMOUNT_VALUE && categoryName != null) {
+    val categoryName = selectedCategory?.name ?: DEFAULT_EXPENSE_CATEGORY
+    return if (amount != null && amount > DEFAULT_AMOUNT_VALUE) {
         SubmitExpenseRequest(
             amount = amount,
             description = description,
