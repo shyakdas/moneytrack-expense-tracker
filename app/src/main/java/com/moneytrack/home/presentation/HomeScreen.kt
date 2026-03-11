@@ -99,7 +99,9 @@ private enum class BudgetSheetStep {
 }
 
 @Composable
-fun HomeRoute() {
+fun HomeRoute(
+    onAddExpenseClick: () -> Unit,
+) {
     val viewModel: HomeViewModel = hiltViewModel()
     val notificationPermissionViewModel: NotificationPermissionViewModel = hiltViewModel()
     val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
@@ -135,6 +137,7 @@ fun HomeRoute() {
                 budgetSheetInitialAmount = budgetAmount
                 showBudgetSheet = true
             },
+            onAddExpenseClick = onAddExpenseClick,
         )
     }
 
@@ -206,6 +209,7 @@ fun HomeScreen(
     onBottomRouteSelected: (String) -> Unit,
     onTimeRangeSelected: (String) -> Unit,
     onSetBudgetClick: (Double?) -> Unit,
+    onAddExpenseClick: () -> Unit = {},
 ) {
     val bottomItems = remember {
         listOf(
@@ -223,7 +227,7 @@ fun HomeScreen(
                     items = bottomItems,
                     selectedRoute = uiState.selectedBottomRoute,
                     onItemClick = { item -> onBottomRouteSelected(item.route) },
-                    onFabClick = {},
+                    onFabClick = onAddExpenseClick,
                 )
             }
         },
@@ -876,6 +880,7 @@ private fun HomeScreenPreview() {
             onBottomRouteSelected = {},
             onTimeRangeSelected = {},
             onSetBudgetClick = { },
+            onAddExpenseClick = {},
         )
     }
 }

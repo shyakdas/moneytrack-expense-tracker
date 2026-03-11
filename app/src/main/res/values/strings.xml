@@ -54,6 +54,17 @@
     <string name="home_notification_sheet_title">Stay on track with smart reminders</string>
     <string name="home_notification_sheet_enable">Allow notifications</string>
     <string name="home_notification_sheet_not_now">Not now</string>
+    <string name="expense_back_content_desc">Back</string>
+    <string name="expense_title">Expense</string>
+    <string name="expense_amount_prompt">How much?</string>
+    <string name="expense_amount_default">$0</string>
+    <string name="expense_category_placeholder">Category</string>
+    <string name="expense_description_placeholder">Description</string>
+    <string name="expense_wallet_placeholder">Wallet</string>
+    <string name="expense_add_attachment">Add attachment</string>
+    <string name="expense_repeat_title">Repeat</string>
+    <string name="expense_repeat_subtitle">Repeat transaction</string>
+    <string name="expense_continue">Continue</string>
 
     <plurals name="pin_mismatch_error_with_attempts">
         <item quantity="one">PIN didn\'t match. %1$d attempt left.</item>
