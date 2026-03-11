@@ -2,6 +2,7 @@
 
 package ui.components.navigation.topNav
 
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 
 sealed class TopNavigationConfig {
@@ -21,7 +22,8 @@ sealed class TopNavigationConfig {
         val profileImage: Painter,
         val selectedMonth: String,
         val onMonthClick: () -> Unit,
-        val onActionClick: () -> Unit
+        val onActionClick: () -> Unit,
+        val actionIconTint: Color = Color.Unspecified,
     ) : TopNavigationConfig()
 
     data class DropdownWithFilter(

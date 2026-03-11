@@ -37,10 +37,17 @@ import ui.theme.MoneyTrackTheme
 
 @Composable
 internal fun ProfileSelectorNavigation(
-    config: TopNavigationConfig.ProfileWithSelector
+    config: TopNavigationConfig.ProfileWithSelector,
+    containerColor: Color = AppTheme.colors.surface,
 ) {
+    val actionIconTint = if (config.actionIconTint == Color.Unspecified) {
+        AppTheme.colors.onSurface
+    } else {
+        config.actionIconTint
+    }
+
     Surface(
-        color = AppTheme.colors.surface
+        color = containerColor
     ) {
         Row(
             modifier = Modifier
@@ -70,7 +77,7 @@ internal fun ProfileSelectorNavigation(
                 Icon(
                     imageVector = ImageVector.vectorResource(id = R.drawable.notifiaction),
                     contentDescription = "Notification",
-                    tint = AppTheme.colors.onSurface
+                    tint = actionIconTint
                 )
             }
         }

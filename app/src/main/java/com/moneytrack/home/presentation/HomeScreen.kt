@@ -289,20 +289,16 @@ private fun HomeContent(
             .padding(innerPadding)
             .verticalScroll(rememberScrollState()),
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(AppTheme.colors.surface),
-        ) {
-            TopNavigation(
-                config = TopNavigationConfig.ProfileWithSelector(
-                    profileImage = ColorPainter(AppTheme.colors.surfaceVariant),
-                    selectedMonth = "October",
-                    onMonthClick = {},
-                    onActionClick = {},
-                ),
-            )
-        }
+        TopNavigation(
+            config = TopNavigationConfig.ProfileWithSelector(
+                profileImage = ColorPainter(AppTheme.colors.surfaceVariant),
+                selectedMonth = "October",
+                onMonthClick = {},
+                onActionClick = {},
+                actionIconTint = AppTheme.colors.primary,
+            ),
+            containerColor = Color.Transparent,
+        )
         Spacer(modifier = Modifier.height(Dimens.spacing12))
 
         Column(

@@ -37,7 +37,10 @@ fun TopNavigation(
             }
 
             is TopNavigationConfig.ProfileWithSelector -> {
-                ProfileSelectorNavigation(config)
+                ProfileSelectorNavigation(
+                    config = config,
+                    containerColor = containerColor,
+                )
             }
 
             is TopNavigationConfig.DropdownWithFilter -> {
