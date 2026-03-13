@@ -77,7 +77,6 @@
     <string name="transaction_financial_report_cta">See your financial report</string>
     <string name="transaction_empty_title">No transactions yet</string>
     <string name="transaction_empty_desc">Your saved expenses will appear here.</string>
-    <string name="profile_name_default">Saver</string>
     <string name="profile_edit_content_desc">Edit profile</string>
     <string name="profile_edit_sheet_title">Choose your name</string>
     <string name="profile_edit_sheet_desc">Pick the name you want to see on your MoneyTrack profile.</string>
