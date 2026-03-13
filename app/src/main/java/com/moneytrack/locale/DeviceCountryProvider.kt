@@ -17,15 +17,12 @@ class DeviceCountryProvider @Inject constructor(
 ) : CountryProvider {
 
     override fun getCountryCode(): String {
-        val localeCountry = Locale.getDefault().country.orEmpty().uppercase(Locale.US)
-        val configCountry = configurationCountryCode()
-        val resolved = listOf(
-            configCountry,
-            localeCountry,
+        return resolveCountryCode(
+            configCountry = configurationCountryCode(),
+            localeCountry = Locale.getDefault().country.orEmpty().uppercase(Locale.US),
             telephonyCountryCode { it.networkCountryIso },
             telephonyCountryCode { it.simCountryIso },
-        ).firstOrNull { it.isNotEmpty() }
-        return resolved ?: DEFAULT_COUNTRY_CODE
+        )
     }
 
     override fun getCurrencySymbol(): String {
@@ -53,7 +50,32 @@ class DeviceCountryProvider @Inject constructor(
     }
 
     private companion object {
-        const val DEFAULT_COUNTRY_CODE = "US"
         const val DEFAULT_CURRENCY_SYMBOL = "$"
     }
 }
+
+internal fun resolveCountryCode(
+    configCountry: String,
+    localeCountry: String,
+    networkCountry: String,
+    simCountry: String,
+): String {
+    return listOf(
+        networkCountry,
+        simCountry,
+        configCountry,
+        localeCountry,
+    ).map(::validCountryCodeOrEmpty)
+        .firstOrNull(String::isNotEmpty)
+        ?: DEFAULT_COUNTRY_CODE
+}
+
+private fun validCountryCodeOrEmpty(rawCountryCode: String): String {
+    return rawCountryCode.takeIf { countryCode ->
+        countryCode.length == COUNTRY_CODE_LENGTH &&
+            countryCode.all { char -> char.isLetter() }
+    }.orEmpty()
+}
+
+internal const val DEFAULT_COUNTRY_CODE = "US"
+private const val COUNTRY_CODE_LENGTH = 2

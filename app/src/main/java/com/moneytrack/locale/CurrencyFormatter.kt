@@ -10,15 +10,18 @@ import kotlin.math.abs
 
 @Singleton
 class CurrencyFormatter @Inject constructor(
-    private val countryProvider: CountryProvider,
+    private val appCurrencyManager: AppCurrencyManager,
+    private val currencyCatalog: CurrencyCatalog,
 ) {
 
-    fun format(value: Double): String {
-        val countryCode = countryProvider.getCountryCode()
-        val currencySymbol = countryProvider.getCurrencySymbol()
-        val numberFormatter = NumberFormat.getIntegerInstance(countryLocale(countryCode))
+    fun format(
+        value: Double,
+        currencyCode: String = currentCurrencyCode(),
+    ): String {
+        val currencySymbol = currencyCatalog.find(currencyCode)?.symbol ?: currencyCode
+        val numberFormatter = NumberFormat.getIntegerInstance(DEFAULT_NUMBER_LOCALE)
         val absoluteValue = abs(value).toLong()
-        val formattedNumber = if (countryCode == INDIA_COUNTRY_CODE) {
+        val formattedNumber = if (currencyCode == INDIA_CURRENCY_CODE) {
             formatIndianNumber(absoluteValue)
         } else {
             numberFormatter.format(absoluteValue)
@@ -30,6 +33,8 @@ class CurrencyFormatter @Inject constructor(
             "$currencySymbol$formattedNumber"
         }
     }
+
+    fun currentCurrencyCode(): String = appCurrencyManager.currentCurrencyCode()
 
     private fun formatIndianNumber(value: Long): String {
         val digits = value.toString()
@@ -57,15 +62,9 @@ class CurrencyFormatter @Inject constructor(
         return "$groupedRemaining,$lastThree"
     }
 
-    private fun countryLocale(countryCode: String): Locale = runCatching {
-        Locale.Builder()
-            .setLanguage("en")
-            .setRegion(countryCode)
-            .build()
-    }.getOrDefault(Locale.US)
-
     private companion object {
-        private const val INDIA_COUNTRY_CODE = "IN"
+        private val DEFAULT_NUMBER_LOCALE = Locale.US
+        private const val INDIA_CURRENCY_CODE = "INR"
         private const val INDIAN_LAST_GROUP_SIZE = 3
         private const val INDIAN_MIDDLE_GROUP_SIZE = 2
     }

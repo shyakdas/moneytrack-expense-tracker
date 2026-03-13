@@ -6,8 +6,14 @@ import com.moneytrack.home.domain.model.Budget
 import com.moneytrack.home.domain.repository.BudgetRepository
 import com.moneytrack.home.domain.usecase.ObserveBudgetUseCase
 import com.moneytrack.home.domain.usecase.UpsertBudgetUseCase
+import com.moneytrack.locale.AppCurrencyManager
 import com.moneytrack.locale.CountryProvider
+import com.moneytrack.locale.CurrencyCatalog
 import com.moneytrack.locale.CurrencyFormatter
+import com.moneytrack.settings.domain.repository.CurrencyPreferenceRepository
+import com.moneytrack.settings.domain.usecase.ObserveAppCurrencyCodeUseCase
+import com.moneytrack.settings.domain.usecase.ObserveSelectedCurrencyCodeUseCase
+import com.moneytrack.settings.domain.usecase.SaveSelectedCurrencyCodeUseCase
 import com.moneytrack.testutil.MainDispatcherRule
 import com.moneytrack.transaction.domain.model.TransactionRecord
 import com.moneytrack.transaction.domain.model.TransactionRecordType
@@ -255,11 +261,27 @@ class HomeViewModelTest {
             currencySymbol = "₹",
         ),
     ): HomeViewModel {
-        val currencyFormatter = CurrencyFormatter(countryProvider = countryProvider)
+        val currencyCatalog = CurrencyCatalog()
+        val currencyPreferenceRepository = FakeCurrencyPreferenceRepository()
+        val appCurrencyManager = AppCurrencyManager(
+            observeSelectedCurrencyCodeUseCase = ObserveSelectedCurrencyCodeUseCase(
+                currencyPreferenceRepository = currencyPreferenceRepository,
+            ),
+            saveSelectedCurrencyCodeUseCase = SaveSelectedCurrencyCodeUseCase(
+                currencyPreferenceRepository = currencyPreferenceRepository,
+            ),
+            countryProvider = countryProvider,
+            currencyCatalog = currencyCatalog,
+        )
+        val currencyFormatter = CurrencyFormatter(
+            appCurrencyManager = appCurrencyManager,
+            currencyCatalog = currencyCatalog,
+        )
         return HomeViewModel(
             observeBudgetUseCase = ObserveBudgetUseCase(budgetRepository),
             observeTransactionsUseCase = ObserveTransactionsUseCase(transactionRepository),
             observeRecentTransactionsUseCase = ObserveRecentTransactionsUseCase(transactionRepository),
+            observeAppCurrencyCodeUseCase = ObserveAppCurrencyCodeUseCase(appCurrencyManager),
             upsertBudgetUseCase = UpsertBudgetUseCase(budgetRepository),
             currencyFormatter = currencyFormatter,
         )
@@ -314,6 +336,16 @@ class HomeViewModelTest {
     ) : CountryProvider {
         override fun getCountryCode(): String = countryCode
         override fun getCurrencySymbol(): String = currencySymbol
+    }
+
+    private class FakeCurrencyPreferenceRepository : CurrencyPreferenceRepository {
+        private val selectedCurrencyCode = MutableStateFlow<String?>(null)
+
+        override fun observeSelectedCurrencyCode(): Flow<String?> = selectedCurrencyCode.asStateFlow()
+
+        override suspend fun saveSelectedCurrencyCode(currencyCode: String) {
+            selectedCurrencyCode.value = currencyCode
+        }
     }
 }
 

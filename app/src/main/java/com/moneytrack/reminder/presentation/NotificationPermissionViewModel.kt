@@ -4,7 +4,8 @@ package com.moneytrack.reminder.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.moneytrack.locale.CountryProvider
+import com.moneytrack.locale.AppCurrencyManager
+import com.moneytrack.locale.CurrencyCatalog
 import com.moneytrack.reminder.domain.model.ReminderNotificationSettings
 import com.moneytrack.reminder.domain.usecase.ObserveNotificationPermissionPromptHandledUseCase
 import com.moneytrack.reminder.domain.usecase.ObserveReminderNotificationSettingsUseCase
@@ -24,12 +25,15 @@ class NotificationPermissionViewModel @Inject constructor(
     observeNotificationPermissionPromptHandledUseCase: ObserveNotificationPermissionPromptHandledUseCase,
     observeReminderNotificationSettingsUseCase: ObserveReminderNotificationSettingsUseCase,
     private val setNotificationPermissionPromptHandledUseCase: SetNotificationPermissionPromptHandledUseCase,
-    countryProvider: CountryProvider,
+    appCurrencyManager: AppCurrencyManager,
+    currencyCatalog: CurrencyCatalog,
 ) : ViewModel() {
 
     private val _isPermissionPromptVisible = MutableStateFlow(false)
-    private val defaultReminderMessage =
-        "Add your expenses in MoneyTrack to stay on top of your ${countryProvider.getCurrencySymbol()} budget."
+    private val defaultReminderMessage = defaultReminderMessage(
+        currencyCode = appCurrencyManager.currentCurrencyCode(),
+        currencyCatalog = currencyCatalog,
+    )
     val uiState: StateFlow<NotificationPermissionUiState> = combine(
         _isPermissionPromptVisible,
         observeNotificationPermissionPromptHandledUseCase(),
@@ -77,3 +81,11 @@ data class NotificationPermissionUiState(
 
 private const val WHILE_SUBSCRIBED_TIMEOUT_MS = 5_000L
 private const val DEFAULT_NOTIFICATIONS_PER_DAY = 3
+
+private fun defaultReminderMessage(
+    currencyCode: String,
+    currencyCatalog: CurrencyCatalog,
+): String {
+    val currencySymbol = currencyCatalog.find(currencyCode)?.symbol ?: currencyCode
+    return "Add your expenses in MoneyTrack to stay on top of your $currencySymbol budget."
+}

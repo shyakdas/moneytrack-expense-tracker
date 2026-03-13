@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
@@ -27,10 +28,11 @@ import ui.theme.MoneyTrackTheme
 
 @Composable
 internal fun BackTitleNavigation(
-    config: TopNavigationConfig.BackWithTitle
+    config: TopNavigationConfig.BackWithTitle,
+    containerColor: Color,
 ) {
     Surface(
-        color = AppTheme.colors.surface
+        color = containerColor,
     ) {
         Row(
             modifier = Modifier
@@ -84,7 +86,8 @@ private fun BackTitleNavigationPreview() {
                         showMore = true,
                         onBackClick = {},
                         onMoreClick = {}
-                    )
+                    ),
+                    containerColor = AppTheme.colors.background,
                 )
             }
         }
@@ -99,10 +102,10 @@ private fun BackTitleNavigationPreview() {
                         showMore = true,
                         onBackClick = {},
                         onMoreClick = {}
-                    )
+                    ),
+                    containerColor = AppTheme.colors.background,
                 )
             }
         }
     }
 }
-
