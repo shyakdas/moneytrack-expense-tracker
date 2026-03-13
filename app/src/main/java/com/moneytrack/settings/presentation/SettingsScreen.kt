@@ -28,6 +28,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -37,6 +38,7 @@ import ui.components.navigation.topNav.TopNavigation
 import ui.components.navigation.topNav.TopNavigationConfig
 import ui.theme.AppTheme
 import ui.theme.Dimens
+import ui.theme.MoneyTrackTheme
 
 private enum class SettingsAction {
     CURRENCY,
@@ -245,3 +247,21 @@ private fun SettingsUiState.securityLabel(): String =
         SettingsSecurityType.BIOMETRIC -> stringResource(id = R.string.settings_security_biometric)
         SettingsSecurityType.NOT_SET -> stringResource(id = R.string.settings_security_not_set)
     }
+
+@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
+@Composable
+private fun SettingsScreenPreview() {
+    MoneyTrackTheme(darkTheme = false) {
+        SettingsScreen(
+            uiState = SettingsUiState(
+                currencySymbol = "₹",
+                language = "English",
+                themeMode = SettingsThemeMode.SYSTEM,
+                securityType = SettingsSecurityType.BIOMETRIC,
+                notificationsPerDay = 3,
+            ),
+            onBackClick = {},
+            onCurrencyClick = {},
+        )
+    }
+}

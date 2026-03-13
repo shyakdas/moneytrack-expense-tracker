@@ -89,6 +89,24 @@ class CurrencyViewModelTest {
         collectJob.cancel()
     }
 
+    @Test
+    fun searchQuery_filtersByCountryName_withoutPinningSelectedItem() = runTest {
+        val repository = FakeCurrencyPreferenceRepository(initialCurrencyCode = "GBP")
+        val viewModel = createViewModel(
+            repository = repository,
+            scope = backgroundScope,
+        )
+        val collectJob = launch { viewModel.uiState.collect { } }
+
+        viewModel.onSearchQueryChanged("India")
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertEquals("India", state.searchQuery)
+        assertEquals(listOf("India"), state.currencies.map { it.countryName })
+        collectJob.cancel()
+    }
+
     private fun createViewModel(
         repository: FakeCurrencyPreferenceRepository,
         scope: CoroutineScope,

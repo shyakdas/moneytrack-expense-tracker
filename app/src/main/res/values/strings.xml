@@ -92,6 +92,7 @@
     <string name="profile_clear_data_no">No</string>
     <string name="settings_title">Settings</string>
     <string name="currency_title">Currency</string>
+    <string name="currency_search_hint">Search by country name</string>
     <string name="settings_currency">Currency</string>
     <string name="settings_language">Language</string>
     <string name="settings_theme">Theme</string>
