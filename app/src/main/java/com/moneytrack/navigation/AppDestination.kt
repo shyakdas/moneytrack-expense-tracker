@@ -8,5 +8,6 @@ sealed class AppDestination(val route: String) {
     data object PinAuth : AppDestination("pin_auth")
     data object Home : AppDestination("home")
     data object Transaction : AppDestination("transaction")
+    data object Profile : AppDestination("profile")
     data object Expense : AppDestination("expense")
 }

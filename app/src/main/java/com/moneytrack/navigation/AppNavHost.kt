@@ -16,6 +16,7 @@ import com.moneytrack.home.presentation.HomeRoute
 import com.moneytrack.onboarding.presentation.OnboardingRoute
 import com.moneytrack.pinauth.presentation.PinAuthRoute
 import com.moneytrack.pinsetup.presentation.PinSetupRoute
+import com.moneytrack.profile.presentation.ProfileRoute
 import com.moneytrack.transaction.presentation.TransactionRoute
 
 @Composable
@@ -86,6 +87,9 @@ fun AppNavHost(
                 onTransactionClick = {
                     navController.navigateToTopLevel(AppDestination.Transaction.route)
                 },
+                onProfileClick = {
+                    navController.navigateToTopLevel(AppDestination.Profile.route)
+                },
                 onAddExpenseClick = {
                     navController.navigate(AppDestination.Expense.route) {
                         launchSingleTop = true
@@ -106,6 +110,25 @@ fun AppNavHost(
             TransactionRoute(
                 onHomeClick = {
                     navController.navigateToTopLevel(AppDestination.Home.route)
+                },
+                onProfileClick = {
+                    navController.navigateToTopLevel(AppDestination.Profile.route)
+                },
+                onAddExpenseClick = {
+                    navController.navigate(AppDestination.Expense.route) {
+                        launchSingleTop = true
+                    }
+                },
+            )
+        }
+
+        composable(AppDestination.Profile.route) {
+            ProfileRoute(
+                onHomeClick = {
+                    navController.navigateToTopLevel(AppDestination.Home.route)
+                },
+                onTransactionClick = {
+                    navController.navigateToTopLevel(AppDestination.Transaction.route)
                 },
                 onAddExpenseClick = {
                     navController.navigate(AppDestination.Expense.route) {

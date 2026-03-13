@@ -102,6 +102,7 @@ private enum class BudgetSheetStep {
 @Composable
 fun HomeRoute(
     onTransactionClick: () -> Unit,
+    onProfileClick: () -> Unit,
     onAddExpenseClick: () -> Unit,
 ) {
     val viewModel: HomeViewModel = hiltViewModel()
@@ -139,8 +140,10 @@ fun HomeRoute(
             isBudgetLoaded = isBudgetLoaded,
             onBottomRouteSelected = { route ->
                 viewModel.onBottomRouteSelected(route)
-                if (route == ROUTE_TRANSACTION) {
-                    onTransactionClick()
+                when (route) {
+                    ROUTE_TRANSACTION -> onTransactionClick()
+                    ROUTE_PROFILE -> onProfileClick()
+                    else -> Unit
                 }
             },
             onSeeAllTransactionsClick = onTransactionClick,

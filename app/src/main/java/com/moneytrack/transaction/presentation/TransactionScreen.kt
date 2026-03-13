@@ -55,6 +55,7 @@ private const val ROUTE_PROFILE = "profile"
 @Composable
 fun TransactionRoute(
     onHomeClick: () -> Unit,
+    onProfileClick: () -> Unit,
     onAddExpenseClick: () -> Unit,
 ) {
     val viewModel: TransactionViewModel = hiltViewModel()
@@ -63,8 +64,10 @@ fun TransactionRoute(
     TransactionScreen(
         uiState = uiState,
         onBottomRouteClick = { route ->
-            if (route == ROUTE_HOME) {
-                onHomeClick()
+            when (route) {
+                ROUTE_HOME -> onHomeClick()
+                ROUTE_PROFILE -> onProfileClick()
+                else -> Unit
             }
         },
         onAddExpenseClick = onAddExpenseClick,
