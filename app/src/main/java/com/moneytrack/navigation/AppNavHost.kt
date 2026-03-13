@@ -18,6 +18,7 @@ import com.moneytrack.pinauth.presentation.PinAuthRoute
 import com.moneytrack.pinsetup.presentation.PinSetupRoute
 import com.moneytrack.profile.presentation.ProfileRoute
 import com.moneytrack.settings.presentation.CurrencyRoute
+import com.moneytrack.settings.presentation.SecurityRoute
 import com.moneytrack.settings.presentation.SettingsRoute
 import com.moneytrack.settings.presentation.ThemeRoute
 import com.moneytrack.transaction.presentation.TransactionRoute
@@ -161,6 +162,11 @@ fun AppNavHost(
                         launchSingleTop = true
                     }
                 },
+                onSecurityClick = {
+                    navController.navigate(AppDestination.Security.route) {
+                        launchSingleTop = true
+                    }
+                },
             )
         }
 
@@ -175,6 +181,27 @@ fun AppNavHost(
         composable(AppDestination.Theme.route) {
             ThemeRoute(
                 onBackClick = {
+                    navController.popBackStack()
+                },
+            )
+        }
+
+        composable(AppDestination.Security.route) {
+            SecurityRoute(
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onPinOptionClick = {
+                    navController.navigate(AppDestination.SecurityPinSetup.route) {
+                        launchSingleTop = true
+                    }
+                },
+            )
+        }
+
+        composable(AppDestination.SecurityPinSetup.route) {
+            PinSetupRoute(
+                onCompleted = {
                     navController.popBackStack()
                 },
             )

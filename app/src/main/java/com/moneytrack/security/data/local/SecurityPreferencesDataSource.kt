@@ -41,6 +41,12 @@ class SecurityPreferencesDataSource @Inject constructor(
         }
     }
 
+    suspend fun clearPinHash() {
+        context.appDataStore.edit { preferences ->
+            preferences.remove(PIN_HASH_KEY)
+        }
+    }
+
     suspend fun getPinHash(): String? {
         val preferences: Preferences = context.appDataStore.data.first()
         return preferences[PIN_HASH_KEY]

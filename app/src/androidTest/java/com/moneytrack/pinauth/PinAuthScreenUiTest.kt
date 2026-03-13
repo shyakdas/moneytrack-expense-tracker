@@ -127,6 +127,7 @@ class PinAuthScreenUiTest {
             override suspend fun setPinSetupStatus(status: PinSetupStatus) = Unit
             override suspend fun savePinHash(pinHash: String) = Unit
             override suspend fun getPinHash(): String = sha256(savedPin)
+            override suspend fun clearPinHash() = Unit
         }
         return PinAuthViewModel(
             getPinSetupStatusUseCase = GetPinSetupStatusUseCase(repository),

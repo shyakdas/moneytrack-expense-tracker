@@ -158,6 +158,8 @@ class PinAuthViewModelTest {
 
         override suspend fun savePinHash(pinHash: String) = Unit
 
+        override suspend fun clearPinHash() = Unit
+
         override suspend fun getPinHash(): String = savedPinHash
 
         private fun sha256(value: String): String {
