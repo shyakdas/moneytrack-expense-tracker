@@ -248,6 +248,7 @@ private fun SettingsUiState.securityLabel(): String =
         SettingsSecurityType.NOT_SET -> stringResource(id = R.string.settings_security_not_set)
     }
 
+@Suppress("UnusedPrivateMember")
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 private fun SettingsScreenPreview() {

@@ -134,52 +134,75 @@ private fun CurrencySearchBar(
                 bottom = Dimens.spacing16,
             ),
     ) {
-        Box(
+        CurrencySearchField(
+            searchQuery = searchQuery,
+            onSearchQueryChanged = onSearchQueryChanged,
+        )
+    }
+}
+
+@Composable
+private fun CurrencySearchField(
+    searchQuery: String,
+    onSearchQueryChanged: (String) -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(Dimens.buttonLargeHeight)
+            .shadow(
+                elevation = Dimens.elevation8,
+                shape = RoundedCornerShape(Dimens.radius24),
+                clip = false,
+            )
+            .background(
+                color = AppTheme.colors.surface,
+                shape = RoundedCornerShape(Dimens.radius24),
+            )
+            .border(
+                width = Dimens.borderNormal,
+                color = AppTheme.colors.outline.copy(alpha = 0.38f),
+                shape = RoundedCornerShape(Dimens.radius24),
+            )
+            .padding(horizontal = Dimens.spacing20),
+    ) {
+        CurrencySearchPlaceholder(
+            searchQuery = searchQuery,
+            modifier = Modifier.align(Alignment.CenterStart),
+        )
+
+        BasicTextField(
+            value = searchQuery,
+            onValueChange = onSearchQueryChanged,
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(
+                capitalization = KeyboardCapitalization.Words,
+            ),
+            cursorBrush = SolidColor(AppTheme.colors.primary),
+            textStyle = AppTheme.typography.bodyLarge.copy(
+                color = AppTheme.colors.onSurface,
+            ),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(Dimens.buttonLargeHeight)
-                .shadow(
-                    elevation = Dimens.elevation8,
-                    shape = RoundedCornerShape(Dimens.radius24),
-                    clip = false,
-                )
-                .background(
-                    color = AppTheme.colors.surface,
-                    shape = RoundedCornerShape(Dimens.radius24),
-                )
-                .border(
-                    width = Dimens.borderNormal,
-                    color = AppTheme.colors.outline.copy(alpha = 0.38f),
-                    shape = RoundedCornerShape(Dimens.radius24),
-                )
-                .padding(horizontal = Dimens.spacing20),
-        ) {
-            if (searchQuery.isEmpty()) {
-                Text(
-                    text = stringResource(id = R.string.currency_search_hint),
-                    style = AppTheme.typography.bodySmall,
-                    color = AppTheme.colors.onSurfaceVariant,
-                    modifier = Modifier.align(Alignment.CenterStart),
-                )
-            }
-
-            BasicTextField(
-                value = searchQuery,
-                onValueChange = onSearchQueryChanged,
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    capitalization = KeyboardCapitalization.Words,
-                ),
-                cursorBrush = SolidColor(AppTheme.colors.primary),
-                textStyle = AppTheme.typography.bodyLarge.copy(
-                    color = AppTheme.colors.onSurface,
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.CenterStart),
-            )
-        }
+                .align(Alignment.CenterStart),
+        )
     }
+}
+
+@Composable
+@Suppress("FunctionNaming")
+private fun CurrencySearchPlaceholder(
+    searchQuery: String,
+    modifier: Modifier = Modifier,
+) {
+    if (searchQuery.isNotEmpty()) return
+
+    Text(
+        text = stringResource(id = R.string.currency_search_hint),
+        style = AppTheme.typography.bodySmall,
+        color = AppTheme.colors.onSurfaceVariant,
+        modifier = modifier,
+    )
 }
 
 @Composable
@@ -223,6 +246,7 @@ private fun CurrencyRow(
     )
 }
 
+@Suppress("UnusedPrivateMember")
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 private fun CurrencyScreenLightPreview() {
@@ -236,6 +260,7 @@ private fun CurrencyScreenLightPreview() {
     }
 }
 
+@Suppress("UnusedPrivateMember")
 @Preview(showBackground = true, backgroundColor = 0xFF000000)
 @Composable
 private fun CurrencyScreenDarkPreview() {
