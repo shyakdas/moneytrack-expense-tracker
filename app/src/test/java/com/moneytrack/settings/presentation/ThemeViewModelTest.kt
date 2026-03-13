@@ -53,6 +53,18 @@ class ThemeViewModelTest {
         collectJob.cancel()
     }
 
+    @Test
+    fun uiState_defaultsToSystemMode() = runTest {
+        val repository = FakeThemePreferenceRepository(initialThemeMode = AppThemeMode.SYSTEM)
+        val viewModel = createViewModel(repository)
+        val collectJob = launch { viewModel.uiState.collect { } }
+
+        advanceUntilIdle()
+
+        assertEquals(AppThemeMode.SYSTEM, viewModel.uiState.value.selectedThemeMode)
+        collectJob.cancel()
+    }
+
     private fun createViewModel(
         repository: FakeThemePreferenceRepository,
     ): ThemeViewModel {
