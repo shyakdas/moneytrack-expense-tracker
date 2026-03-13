@@ -37,6 +37,19 @@ object ExpenseReminderScheduler {
         }
     }
 
+    fun cancelAll(context: Context) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        reminderTimes.forEach { reminderTime ->
+            alarmManager.cancel(
+                alarmPendingIntent(
+                    context = context,
+                    hourOfDay = reminderTime.hour,
+                    minute = reminderTime.minute,
+                ),
+            )
+        }
+    }
+
     fun schedule(
         context: Context,
         hourOfDay: Int,

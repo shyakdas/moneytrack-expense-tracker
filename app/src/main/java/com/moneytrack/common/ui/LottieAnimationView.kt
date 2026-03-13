@@ -16,11 +16,13 @@ fun LottieAnimationView(
     @RawRes rawRes: Int,
     modifier: Modifier = Modifier,
     iterations: Int = LottieConstants.IterateForever,
+    speed: Float = 1f,
 ) {
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(rawRes))
     LottieAnimation(
         composition = composition,
         iterations = iterations,
+        speed = speed,
         modifier = modifier,
     )
 }

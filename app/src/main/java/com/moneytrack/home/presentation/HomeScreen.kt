@@ -102,6 +102,7 @@ private enum class BudgetSheetStep {
 @Composable
 fun HomeRoute(
     onTransactionClick: () -> Unit,
+    onProfileClick: () -> Unit,
     onAddExpenseClick: () -> Unit,
 ) {
     val viewModel: HomeViewModel = hiltViewModel()
@@ -133,16 +134,20 @@ fun HomeRoute(
         notificationPermissionViewModel.hidePermissionPrompt()
     }
 
+    val onBottomRouteSelected: (String) -> Unit = { route ->
+        viewModel.onBottomRouteSelected(route)
+        when (route) {
+            ROUTE_TRANSACTION -> onTransactionClick()
+            ROUTE_PROFILE -> onProfileClick()
+            else -> Unit
+        }
+    }
+
     SheetBlurHost(isSheetVisible = showBudgetSheet || shouldShowNotificationPermissionSheet) {
         HomeScreen(
             uiState = uiState,
             isBudgetLoaded = isBudgetLoaded,
-            onBottomRouteSelected = { route ->
-                viewModel.onBottomRouteSelected(route)
-                if (route == ROUTE_TRANSACTION) {
-                    onTransactionClick()
-                }
-            },
+            onBottomRouteSelected = onBottomRouteSelected,
             onSeeAllTransactionsClick = onTransactionClick,
             onTimeRangeSelected = viewModel::onTimeRangeSelected,
             onSetBudgetClick = { budgetAmount ->
@@ -153,22 +158,23 @@ fun HomeRoute(
         )
     }
 
-    LaunchedEffect(notificationPermissionUiState.isPromptHandled, hasNotificationPermission) {
-        if (!notificationPermissionUiState.isPromptHandled && !hasNotificationPermission) {
-            notificationPermissionViewModel.showPermissionPrompt()
-        }
-    }
+    HomeNotificationPromptEffect(
+        hasNotificationPermission = hasNotificationPermission,
+        isPromptHandled = notificationPermissionUiState.isPromptHandled,
+        onShowPrompt = notificationPermissionViewModel::showPermissionPrompt,
+    )
 
-    LaunchedEffect(isBudgetLoaded, budget, shouldShowNotificationPermissionSheet) {
-        if (isBudgetLoaded && budget == null && !hasShownInitialBudgetPrompt) {
-            if (shouldShowNotificationPermissionSheet) {
-                return@LaunchedEffect
-            }
+    HomeBudgetPromptEffect(
+        isBudgetLoaded = isBudgetLoaded,
+        budget = budget,
+        shouldShowNotificationPermissionSheet = shouldShowNotificationPermissionSheet,
+        hasShownInitialBudgetPrompt = hasShownInitialBudgetPrompt,
+        onPromptShown = {
             showBudgetSheet = true
             budgetSheetInitialAmount = null
             hasShownInitialBudgetPrompt = true
-        }
-    }
+        },
+    )
 
     if (shouldShowNotificationPermissionSheet) {
         NotificationPermissionBottomSheet(
@@ -203,6 +209,37 @@ fun HomeRoute(
                 showBudgetSheet = false
             },
         )
+    }
+}
+
+@Composable
+private fun HomeNotificationPromptEffect(
+    hasNotificationPermission: Boolean,
+    isPromptHandled: Boolean,
+    onShowPrompt: () -> Unit,
+) {
+    LaunchedEffect(isPromptHandled, hasNotificationPermission) {
+        if (!isPromptHandled && !hasNotificationPermission) {
+            onShowPrompt()
+        }
+    }
+}
+
+@Composable
+private fun HomeBudgetPromptEffect(
+    isBudgetLoaded: Boolean,
+    budget: com.moneytrack.home.domain.model.Budget?,
+    shouldShowNotificationPermissionSheet: Boolean,
+    hasShownInitialBudgetPrompt: Boolean,
+    onPromptShown: () -> Unit,
+) {
+    LaunchedEffect(isBudgetLoaded, budget, shouldShowNotificationPermissionSheet) {
+        if (isBudgetLoaded && budget == null && !hasShownInitialBudgetPrompt) {
+            if (shouldShowNotificationPermissionSheet) {
+                return@LaunchedEffect
+            }
+            onPromptShown()
+        }
     }
 }
 
@@ -292,6 +329,13 @@ private fun HomeContent(
         TopNavigation(
             config = TopNavigationConfig.ProfileWithSelector(
                 profileImage = ColorPainter(AppTheme.colors.surfaceVariant),
+                profileAvatarContent = {
+                    LottieAnimationView(
+                        rawRes = AppR.raw.lottie_profile_people,
+                        modifier = Modifier.fillMaxSize(),
+                        speed = 1.2f,
+                    )
+                },
                 selectedMonth = "October",
                 onMonthClick = {},
                 onActionClick = {},

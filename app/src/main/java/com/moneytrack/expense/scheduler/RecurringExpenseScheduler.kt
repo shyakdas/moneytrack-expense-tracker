@@ -72,6 +72,18 @@ object RecurringExpenseScheduler {
         }
     }
 
+    fun cancelAll(
+        context: Context,
+        recurringExpenseIds: List<Long>,
+    ) {
+        recurringExpenseIds.forEach { recurringExpenseId ->
+            cancel(
+                context = context,
+                recurringExpenseId = recurringExpenseId,
+            )
+        }
+    }
+
     private fun pendingIntent(
         context: Context,
         recurringExpenseId: Long,

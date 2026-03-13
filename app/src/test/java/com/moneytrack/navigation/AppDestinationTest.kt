@@ -12,6 +12,8 @@ class AppDestinationTest {
         assertEquals("pin_setup", AppDestination.PinSetup.route)
         assertEquals("pin_auth", AppDestination.PinAuth.route)
         assertEquals("home", AppDestination.Home.route)
+        assertEquals("transaction", AppDestination.Transaction.route)
+        assertEquals("profile", AppDestination.Profile.route)
         assertEquals("expense", AppDestination.Expense.route)
     }
 }

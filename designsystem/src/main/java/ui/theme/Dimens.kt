@@ -93,6 +93,8 @@ object Dimens {
     val switchRadius = 12.dp
 
     val iconContainerSize = 48.dp
+    val profileAvatarSize = 92.dp
+    val profileAvatarIconSize = 40.dp
 
     val chartLineHeight = 180.dp
     val chartDonutHeight = 220.dp

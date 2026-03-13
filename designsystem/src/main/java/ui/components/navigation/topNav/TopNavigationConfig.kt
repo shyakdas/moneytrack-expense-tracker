@@ -2,6 +2,7 @@
 
 package ui.components.navigation.topNav
 
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 
@@ -20,6 +21,7 @@ sealed class TopNavigationConfig {
 
     data class ProfileWithSelector(
         val profileImage: Painter,
+        val profileAvatarContent: (@Composable () -> Unit)? = null,
         val selectedMonth: String,
         val onMonthClick: () -> Unit,
         val onActionClick: () -> Unit,
