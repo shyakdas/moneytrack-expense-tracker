@@ -77,6 +77,7 @@ data class ProfileNavigationCallbacks(
 
 data class ProfileActionCallbacks(
     val onEditClick: () -> Unit,
+    val onSettingsClick: () -> Unit,
     val onDismissEditSheet: () -> Unit,
     val onEditNameChanged: (String) -> Unit,
     val onSaveName: () -> Unit,
@@ -90,6 +91,7 @@ fun ProfileRoute(
     onHomeClick: () -> Unit,
     onTransactionClick: () -> Unit,
     onAddExpenseClick: () -> Unit,
+    onSettingsClick: () -> Unit,
 ) {
     val viewModel: ProfileViewModel = hiltViewModel()
     val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
@@ -114,6 +116,7 @@ fun ProfileRoute(
         ),
         actionCallbacks = ProfileActionCallbacks(
             onEditClick = viewModel::showEditSheet,
+            onSettingsClick = onSettingsClick,
             onDismissEditSheet = viewModel::hideEditSheet,
             onEditNameChanged = viewModel::onNameChanged,
             onSaveName = viewModel::saveName,
@@ -160,9 +163,8 @@ fun ProfileScreen(
             onActionClick = { actionType ->
                 when (actionType) {
                     ProfileActionType.CLEAR_DATA -> actionCallbacks.onClearDataClick()
-                    ProfileActionType.SETTINGS,
-                    ProfileActionType.EXPORT_DATA,
-                    -> Unit
+                    ProfileActionType.SETTINGS -> actionCallbacks.onSettingsClick()
+                    ProfileActionType.EXPORT_DATA -> Unit
                 }
             },
         )

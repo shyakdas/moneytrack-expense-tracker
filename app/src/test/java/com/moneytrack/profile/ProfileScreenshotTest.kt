@@ -59,6 +59,7 @@ class ProfileScreenshotTest {
 
     private fun previewActionCallbacks(): ProfileActionCallbacks = ProfileActionCallbacks(
         onEditClick = {},
+        onSettingsClick = {},
         onDismissEditSheet = {},
         onEditNameChanged = {},
         onSaveName = {},

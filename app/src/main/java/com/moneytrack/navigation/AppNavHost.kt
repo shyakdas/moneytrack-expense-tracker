@@ -17,6 +17,7 @@ import com.moneytrack.onboarding.presentation.OnboardingRoute
 import com.moneytrack.pinauth.presentation.PinAuthRoute
 import com.moneytrack.pinsetup.presentation.PinSetupRoute
 import com.moneytrack.profile.presentation.ProfileRoute
+import com.moneytrack.settings.presentation.SettingsRoute
 import com.moneytrack.transaction.presentation.TransactionRoute
 
 @Composable
@@ -134,6 +135,19 @@ fun AppNavHost(
                     navController.navigate(AppDestination.Expense.route) {
                         launchSingleTop = true
                     }
+                },
+                onSettingsClick = {
+                    navController.navigate(AppDestination.Settings.route) {
+                        launchSingleTop = true
+                    }
+                },
+            )
+        }
+
+        composable(AppDestination.Settings.route) {
+            SettingsRoute(
+                onBackClick = {
+                    navController.popBackStack()
                 },
             )
         }

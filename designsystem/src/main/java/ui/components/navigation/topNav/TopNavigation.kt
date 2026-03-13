@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import ui.theme.AppTheme
 import ui.theme.Dimens
 import ui.theme.MoneyTrackTheme
@@ -24,12 +25,15 @@ fun TopNavigation(
     Surface(
         modifier = modifier.fillMaxWidth(),
         color = containerColor,
-        tonalElevation = Dimens.spacing2
+        tonalElevation = if (containerColor == Color.Transparent) 0.dp else Dimens.spacing2
     ) {
         when (config) {
 
             is TopNavigationConfig.BackWithTitle -> {
-                BackTitleNavigation(config)
+                BackTitleNavigation(
+                    config = config,
+                    containerColor = containerColor,
+                )
             }
 
             is TopNavigationConfig.TitleOnly -> {

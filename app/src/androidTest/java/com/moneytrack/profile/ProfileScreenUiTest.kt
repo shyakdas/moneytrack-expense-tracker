@@ -153,6 +153,7 @@ class ProfileScreenUiTest {
         onConfirmClearData: () -> Unit = {},
     ): ProfileActionCallbacks = ProfileActionCallbacks(
         onEditClick = onEditClick,
+        onSettingsClick = {},
         onDismissEditSheet = onDismissEditSheet,
         onEditNameChanged = onEditNameChanged,
         onSaveName = onSaveName,
