@@ -107,6 +107,26 @@ class CurrencyViewModelTest {
         collectJob.cancel()
     }
 
+    @Test
+    fun clearingSearch_restoresSelectedCurrencyToTop() = runTest {
+        val repository = FakeCurrencyPreferenceRepository(initialCurrencyCode = "GBP")
+        val viewModel = createViewModel(
+            repository = repository,
+            scope = backgroundScope,
+        )
+        val collectJob = launch { viewModel.uiState.collect { } }
+
+        viewModel.onSearchQueryChanged("India")
+        advanceUntilIdle()
+        viewModel.onSearchQueryChanged("")
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertEquals("", state.searchQuery)
+        assertEquals("GBP", state.currencies.first().code)
+        collectJob.cancel()
+    }
+
     private fun createViewModel(
         repository: FakeCurrencyPreferenceRepository,
         scope: CoroutineScope,
