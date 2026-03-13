@@ -53,14 +53,23 @@ import ui.components.navigation.button.LargeButton
 import ui.components.form.input.InputField
 import ui.theme.AppTheme
 import ui.theme.Dimens
+import ui.theme.Green100
 import ui.theme.MoneyTrackTheme
+import ui.theme.Red100
 
 private const val ROUTE_HOME = "home"
 private const val ROUTE_TRANSACTION = "transaction"
 private const val ROUTE_BUDGET = "budget"
 private const val ROUTE_PROFILE = "profile"
 
+private enum class ProfileActionType {
+    SETTINGS,
+    EXPORT_DATA,
+    CLEAR_DATA,
+}
+
 private data class ProfileActionItem(
+    val type: ProfileActionType,
     val titleRes: Int,
     val iconRes: Int,
     val iconBackground: Color,
@@ -72,9 +81,17 @@ fun ProfileRoute(
     onHomeClick: () -> Unit,
     onTransactionClick: () -> Unit,
     onAddExpenseClick: () -> Unit,
+    onClearDataCompleted: () -> Unit,
 ) {
     val viewModel: ProfileViewModel = hiltViewModel()
     val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
+
+    androidx.compose.runtime.LaunchedEffect(uiState.clearDataCompleted) {
+        if (uiState.clearDataCompleted) {
+            onClearDataCompleted()
+            viewModel.onClearDataHandled()
+        }
+    }
 
     ProfileScreen(
         uiState = uiState,
@@ -90,6 +107,9 @@ fun ProfileRoute(
         onDismissEditSheet = viewModel::hideEditSheet,
         onEditNameChanged = viewModel::onNameChanged,
         onSaveName = viewModel::saveName,
+        onClearDataClick = viewModel::showClearDataSheet,
+        onDismissClearDataSheet = viewModel::hideClearDataSheet,
+        onConfirmClearData = viewModel::clearLocalData,
     )
 }
 
@@ -102,6 +122,9 @@ fun ProfileScreen(
     onDismissEditSheet: () -> Unit,
     onEditNameChanged: (String) -> Unit,
     onSaveName: () -> Unit,
+    onClearDataClick: () -> Unit,
+    onDismissClearDataSheet: () -> Unit,
+    onConfirmClearData: () -> Unit,
 ) {
     val bottomItems = remember {
         listOf(
@@ -113,18 +136,21 @@ fun ProfileScreen(
     }
     val actionItems = listOf(
         ProfileActionItem(
+            type = ProfileActionType.SETTINGS,
             titleRes = R.string.profile_action_settings,
             iconRes = DsR.drawable.settings,
             iconBackground = AppTheme.colors.primary.copy(alpha = 0.14f),
             iconTint = AppTheme.colors.primary,
         ),
         ProfileActionItem(
+            type = ProfileActionType.EXPORT_DATA,
             titleRes = R.string.profile_action_export,
             iconRes = DsR.drawable.variant_export_data,
             iconBackground = AppTheme.colors.primary.copy(alpha = 0.14f),
             iconTint = AppTheme.colors.primary,
         ),
         ProfileActionItem(
+            type = ProfileActionType.CLEAR_DATA,
             titleRes = R.string.profile_action_logout,
             iconRes = DsR.drawable.logout,
             iconBackground = AppTheme.colors.error.copy(alpha = 0.14f),
@@ -150,6 +176,14 @@ fun ProfileScreen(
             innerPadding = innerPadding,
             actionItems = actionItems,
             onEditClick = onEditClick,
+            onActionClick = { actionType ->
+                when (actionType) {
+                    ProfileActionType.CLEAR_DATA -> onClearDataClick()
+                    ProfileActionType.SETTINGS,
+                    ProfileActionType.EXPORT_DATA,
+                    -> Unit
+                }
+            },
         )
     }
 
@@ -162,6 +196,13 @@ fun ProfileScreen(
             isSaveEnabled = uiState.isSaveEnabled,
         )
     }
+
+    if (uiState.isClearDataSheetVisible) {
+        ClearDataBottomSheet(
+            onDismiss = onDismissClearDataSheet,
+            onConfirm = onConfirmClearData,
+        )
+    }
 }
 
 @Composable
@@ -170,6 +211,7 @@ private fun ProfileContent(
     innerPadding: PaddingValues,
     actionItems: List<ProfileActionItem>,
     onEditClick: () -> Unit,
+    onActionClick: (ProfileActionType) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -186,7 +228,10 @@ private fun ProfileContent(
             onEditClick = onEditClick,
         )
         Spacer(modifier = Modifier.height(Dimens.spacing32))
-        ProfileActionsCard(actionItems = actionItems)
+        ProfileActionsCard(
+            actionItems = actionItems,
+            onActionClick = onActionClick,
+        )
         Spacer(modifier = Modifier.height(Dimens.spacing24))
     }
 }
@@ -310,6 +355,7 @@ private fun EditProfileNameBottomSheet(
 @Composable
 private fun ProfileActionsCard(
     actionItems: List<ProfileActionItem>,
+    onActionClick: (ProfileActionType) -> Unit,
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -318,7 +364,10 @@ private fun ProfileActionsCard(
     ) {
         Column {
             actionItems.forEachIndexed { index, item ->
-                ProfileActionRow(item = item)
+                ProfileActionRow(
+                    item = item,
+                    onClick = { onActionClick(item.type) },
+                )
                 if (index != actionItems.lastIndex) {
                     HorizontalDivider(
                         color = AppTheme.colors.outline.copy(alpha = 0.22f),
@@ -333,11 +382,12 @@ private fun ProfileActionsCard(
 @Composable
 private fun ProfileActionRow(
     item: ProfileActionItem,
+    onClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { }
+            .clickable(onClick = onClick)
             .padding(horizontal = Dimens.spacing20, vertical = Dimens.spacing20),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -366,6 +416,95 @@ private fun ProfileActionRow(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ClearDataBottomSheet(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = AppTheme.colors.surface,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Dimens.spacing24)
+                .padding(bottom = Dimens.spacing24),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(Dimens.spacing16),
+        ) {
+            Text(
+                text = stringResource(id = R.string.profile_clear_data_title),
+                style = AppTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                color = AppTheme.colors.onBackground,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            )
+
+            Text(
+                text = stringResource(id = R.string.profile_clear_data_desc),
+                style = AppTheme.typography.bodyMedium,
+                color = AppTheme.colors.onSurfaceVariant,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            )
+
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(Dimens.radius16),
+                color = AppTheme.colors.surfaceVariant,
+            ) {
+                Text(
+                    text = stringResource(id = R.string.profile_clear_data_export_hint),
+                    modifier = Modifier.padding(Dimens.spacing16),
+                    style = AppTheme.typography.bodySmall,
+                    color = AppTheme.colors.onSurface,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                )
+            }
+
+            ClearDataActionButton(
+                text = stringResource(id = R.string.profile_clear_data_no),
+                onClick = onDismiss,
+                backgroundColor = Green100,
+            )
+
+            ClearDataActionButton(
+                text = stringResource(id = R.string.profile_clear_data_yes),
+                onClick = onConfirm,
+                backgroundColor = Red100,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ClearDataActionButton(
+    text: String,
+    onClick: () -> Unit,
+    backgroundColor: Color,
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(Dimens.buttonLargeHeight)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(Dimens.spacing16),
+        color = backgroundColor,
+        contentColor = AppTheme.colors.onPrimary,
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = text,
+                style = AppTheme.typography.titleMedium,
+                color = AppTheme.colors.onPrimary,
+            )
+        }
+    }
+}
+
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 private fun ProfileScreenPreview() {
@@ -375,6 +514,8 @@ private fun ProfileScreenPreview() {
                 name = "Saver",
                 editName = "Saver",
                 isEditSheetVisible = false,
+                isClearDataSheetVisible = false,
+                clearDataCompleted = false,
                 isSaveEnabled = true,
             ),
             onBottomRouteClick = {},
@@ -383,6 +524,9 @@ private fun ProfileScreenPreview() {
             onDismissEditSheet = {},
             onEditNameChanged = {},
             onSaveName = {},
+            onClearDataClick = {},
+            onDismissClearDataSheet = {},
+            onConfirmClearData = {},
         )
     }
 }

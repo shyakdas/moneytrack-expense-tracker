@@ -85,7 +85,12 @@
     <string name="profile_edit_save">Save</string>
     <string name="profile_action_settings">Settings</string>
     <string name="profile_action_export">Export Data</string>
-    <string name="profile_action_logout">Clear local data</string>
+    <string name="profile_action_logout">Clear Data</string>
+    <string name="profile_clear_data_title">Clear all local data?</string>
+    <string name="profile_clear_data_desc">Are you sure you want to delete all your local data? If you delete it, we cannot restore it again.</string>
+    <string name="profile_clear_data_export_hint">Before clearing your data, export it first if you want to keep a backup.</string>
+    <string name="profile_clear_data_yes">Yes</string>
+    <string name="profile_clear_data_no">No</string>
 
     <plurals name="pin_mismatch_error_with_attempts">
         <item quantity="one">PIN didn\'t match. %1$d attempt left.</item>

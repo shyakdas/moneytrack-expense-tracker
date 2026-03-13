@@ -4,6 +4,7 @@ package com.moneytrack.profile.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.moneytrack.profile.domain.usecase.ClearLocalDataUseCase
 import com.moneytrack.profile.domain.usecase.ObserveProfileDisplayNameUseCase
 import com.moneytrack.profile.domain.usecase.SaveProfileDisplayNameUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,22 +22,29 @@ import kotlinx.coroutines.launch
 class ProfileViewModel @Inject constructor(
     observeProfileDisplayNameUseCase: ObserveProfileDisplayNameUseCase,
     private val saveProfileDisplayNameUseCase: SaveProfileDisplayNameUseCase,
+    private val clearLocalDataUseCase: ClearLocalDataUseCase,
 ) : ViewModel() {
 
     private val _draftName = MutableStateFlow("")
     private val _isEditSheetVisible = MutableStateFlow(false)
+    private val _isClearDataSheetVisible = MutableStateFlow(false)
+    private val _clearDataCompleted = MutableStateFlow(false)
 
     val uiState: StateFlow<ProfileUiState> = combine(
         observeProfileDisplayNameUseCase(),
         _draftName,
         _isEditSheetVisible,
-    ) { displayName, draftName, isEditSheetVisible ->
+        _isClearDataSheetVisible,
+        _clearDataCompleted,
+    ) { displayName, draftName, isEditSheetVisible, isClearDataSheetVisible, clearDataCompleted ->
         val resolvedName = displayName.ifBlank { DEFAULT_PROFILE_NAME }
         val resolvedDraft = if (isEditSheetVisible) draftName else resolvedName
         ProfileUiState(
             name = resolvedName,
             editName = resolvedDraft,
             isEditSheetVisible = isEditSheetVisible,
+            isClearDataSheetVisible = isClearDataSheetVisible,
+            clearDataCompleted = clearDataCompleted,
             isSaveEnabled = resolvedDraft.trim().isNotEmpty(),
         )
     }.stateIn(
@@ -46,6 +54,8 @@ class ProfileViewModel @Inject constructor(
             name = DEFAULT_PROFILE_NAME,
             editName = "",
             isEditSheetVisible = false,
+            isClearDataSheetVisible = false,
+            clearDataCompleted = false,
             isSaveEnabled = false,
         ),
     )
@@ -62,6 +72,26 @@ class ProfileViewModel @Inject constructor(
 
     fun onNameChanged(name: String) {
         _draftName.update { name.take(MAX_NAME_LENGTH) }
+    }
+
+    fun showClearDataSheet() {
+        _isClearDataSheetVisible.update { true }
+    }
+
+    fun hideClearDataSheet() {
+        _isClearDataSheetVisible.update { false }
+    }
+
+    fun clearLocalData() {
+        viewModelScope.launch {
+            clearLocalDataUseCase()
+            _isClearDataSheetVisible.update { false }
+            _clearDataCompleted.update { true }
+        }
+    }
+
+    fun onClearDataHandled() {
+        _clearDataCompleted.update { false }
     }
 
     fun saveName() {
@@ -86,5 +116,7 @@ data class ProfileUiState(
     val name: String,
     val editName: String,
     val isEditSheetVisible: Boolean,
+    val isClearDataSheetVisible: Boolean,
+    val clearDataCompleted: Boolean,
     val isSaveEnabled: Boolean,
 )
