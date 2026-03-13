@@ -163,6 +163,10 @@ class PinSetupViewModelTest {
             savedPinHash = pinHash
         }
 
+        override suspend fun clearPinHash() {
+            savedPinHash = ""
+        }
+
         override suspend fun getPinHash(): String? = savedPinHash.ifBlank { null }
     }
 }

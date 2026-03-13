@@ -17,6 +17,8 @@ class AppDestinationTest {
         assertEquals("settings", AppDestination.Settings.route)
         assertEquals("currency", AppDestination.Currency.route)
         assertEquals("theme", AppDestination.Theme.route)
+        assertEquals("security", AppDestination.Security.route)
+        assertEquals("security_pin_setup", AppDestination.SecurityPinSetup.route)
         assertEquals("expense", AppDestination.Expense.route)
     }
 }

@@ -116,6 +116,7 @@ class PinSetupScreenUiTest {
             override suspend fun setPinSetupStatus(status: PinSetupStatus) = Unit
             override suspend fun savePinHash(pinHash: String) = Unit
             override suspend fun getPinHash(): String? = null
+            override suspend fun clearPinHash() = Unit
         }
         return PinSetupViewModel(
             completePinSetupWithPinUseCase = CompletePinSetupWithPinUseCase(repository),

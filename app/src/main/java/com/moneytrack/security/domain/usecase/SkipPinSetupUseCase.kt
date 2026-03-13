@@ -10,6 +10,7 @@ class SkipPinSetupUseCase @Inject constructor(
     private val repository: SecurityRepository,
 ) {
     suspend operator fun invoke() {
+        repository.clearPinHash()
         repository.setPinSetupStatus(PinSetupStatus.SKIPPED)
     }
 }

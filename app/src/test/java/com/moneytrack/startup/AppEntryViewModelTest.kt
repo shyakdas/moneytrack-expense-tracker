@@ -143,6 +143,7 @@ class AppEntryViewModelTest {
                     override fun observePinSetupStatus(): Flow<PinSetupStatus> = pinSetupStatusFlow
                     override suspend fun setPinSetupStatus(status: PinSetupStatus) = Unit
                     override suspend fun savePinHash(pinHash: String) = Unit
+                    override suspend fun clearPinHash() = Unit
                     override suspend fun getPinHash(): String? = null
                 },
             )

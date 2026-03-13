@@ -44,6 +44,7 @@ import ui.theme.MoneyTrackTheme
 private enum class SettingsAction {
     CURRENCY,
     THEME,
+    SECURITY,
     NONE,
 }
 
@@ -58,6 +59,7 @@ fun SettingsRoute(
     onBackClick: () -> Unit,
     onCurrencyClick: () -> Unit,
     onThemeClick: () -> Unit,
+    onSecurityClick: () -> Unit,
 ) {
     val viewModel: SettingsViewModel = hiltViewModel()
     val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
@@ -67,6 +69,7 @@ fun SettingsRoute(
         onBackClick = onBackClick,
         onCurrencyClick = onCurrencyClick,
         onThemeClick = onThemeClick,
+        onSecurityClick = onSecurityClick,
     )
 }
 
@@ -76,6 +79,7 @@ fun SettingsScreen(
     onBackClick: () -> Unit,
     onCurrencyClick: () -> Unit,
     onThemeClick: () -> Unit,
+    onSecurityClick: () -> Unit,
 ) {
     Scaffold(
         containerColor = AppTheme.colors.background,
@@ -105,11 +109,13 @@ fun SettingsScreen(
                     items = primarySettingsItems(uiState = uiState),
                     onCurrencyClick = onCurrencyClick,
                     onThemeClick = onThemeClick,
+                    onSecurityClick = onSecurityClick,
                 )
                 SettingsCard(
                     items = secondarySettingsItems(),
                     onCurrencyClick = onCurrencyClick,
                     onThemeClick = onThemeClick,
+                    onSecurityClick = onSecurityClick,
                 )
             }
         }
@@ -137,6 +143,7 @@ private fun primarySettingsItems(
     SettingsItemUiModel(
         title = stringResource(id = R.string.settings_security),
         value = uiState.securityLabel(),
+        action = SettingsAction.SECURITY,
     ),
     SettingsItemUiModel(
         title = stringResource(id = R.string.settings_notification),
@@ -163,6 +170,7 @@ private fun SettingsCard(
     items: List<SettingsItemUiModel>,
     onCurrencyClick: () -> Unit,
     onThemeClick: () -> Unit,
+    onSecurityClick: () -> Unit,
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -178,6 +186,8 @@ private fun SettingsCard(
                             onCurrencyClick()
                         } else if (item.action == SettingsAction.THEME) {
                             onThemeClick()
+                        } else if (item.action == SettingsAction.SECURITY) {
+                            onSecurityClick()
                         }
                     },
                 )
@@ -258,7 +268,7 @@ private fun SettingsUiState.securityLabel(): String =
     when (securityType) {
         SettingsSecurityType.PIN -> stringResource(id = R.string.settings_security_pin)
         SettingsSecurityType.BIOMETRIC -> stringResource(id = R.string.settings_security_biometric)
-        SettingsSecurityType.NOT_SET -> stringResource(id = R.string.settings_security_not_set)
+        SettingsSecurityType.NOT_SET -> stringResource(id = R.string.settings_security_none)
     }
 
 @Suppress("UnusedPrivateMember")
@@ -277,6 +287,7 @@ private fun SettingsScreenPreview() {
             onBackClick = {},
             onCurrencyClick = {},
             onThemeClick = {},
+            onSecurityClick = {},
         )
     }
 }
