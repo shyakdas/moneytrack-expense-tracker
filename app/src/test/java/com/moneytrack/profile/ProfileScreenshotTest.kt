@@ -4,6 +4,8 @@ package com.moneytrack.profile
 
 import app.cash.paparazzi.DeviceConfig
 import app.cash.paparazzi.Paparazzi
+import com.moneytrack.profile.presentation.ProfileActionCallbacks
+import com.moneytrack.profile.presentation.ProfileNavigationCallbacks
 import com.moneytrack.profile.presentation.ProfileScreen
 import com.moneytrack.profile.presentation.ProfileUiState
 import org.junit.Rule
@@ -21,15 +23,8 @@ class ProfileScreenshotTest {
             MoneyTrackTheme(darkTheme = false) {
                 ProfileScreen(
                     uiState = baseState(),
-                    onBottomRouteClick = {},
-                    onAddExpenseClick = {},
-                    onEditClick = {},
-                    onDismissEditSheet = {},
-                    onEditNameChanged = {},
-                    onSaveName = {},
-                    onClearDataClick = {},
-                    onDismissClearDataSheet = {},
-                    onConfirmClearData = {},
+                    navigationCallbacks = previewNavigationCallbacks(),
+                    actionCallbacks = previewActionCallbacks(),
                 )
             }
         }
@@ -40,34 +35,35 @@ class ProfileScreenshotTest {
         paparazzi.snapshot {
             MoneyTrackTheme(darkTheme = true) {
                 ProfileScreen(
-                    uiState = baseState(isClearDataSheetVisible = true),
-                    onBottomRouteClick = {},
-                    onAddExpenseClick = {},
-                    onEditClick = {},
-                    onDismissEditSheet = {},
-                    onEditNameChanged = {},
-                    onSaveName = {},
-                    onClearDataClick = {},
-                    onDismissClearDataSheet = {},
-                    onConfirmClearData = {},
+                    uiState = baseState().copy(isClearDataSheetVisible = true),
+                    navigationCallbacks = previewNavigationCallbacks(),
+                    actionCallbacks = previewActionCallbacks(),
                 )
             }
         }
     }
 
-    private fun baseState(
-        name: String = "Saver",
-        editName: String = "",
-        isEditSheetVisible: Boolean = false,
-        isClearDataSheetVisible: Boolean = false,
-        clearDataCompleted: Boolean = false,
-        isSaveEnabled: Boolean = false,
-    ): ProfileUiState = ProfileUiState(
-        name = name,
-        editName = editName,
-        isEditSheetVisible = isEditSheetVisible,
-        isClearDataSheetVisible = isClearDataSheetVisible,
-        clearDataCompleted = clearDataCompleted,
-        isSaveEnabled = isSaveEnabled,
+    private fun baseState(): ProfileUiState = ProfileUiState(
+        name = "Saver",
+        editName = "",
+        isEditSheetVisible = false,
+        isClearDataSheetVisible = false,
+        clearDataCompleted = false,
+        isSaveEnabled = false,
+    )
+
+    private fun previewNavigationCallbacks(): ProfileNavigationCallbacks = ProfileNavigationCallbacks(
+        onBottomRouteClick = {},
+        onAddExpenseClick = {},
+    )
+
+    private fun previewActionCallbacks(): ProfileActionCallbacks = ProfileActionCallbacks(
+        onEditClick = {},
+        onDismissEditSheet = {},
+        onEditNameChanged = {},
+        onSaveName = {},
+        onClearDataClick = {},
+        onDismissClearDataSheet = {},
+        onConfirmClearData = {},
     )
 }

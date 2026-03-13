@@ -20,13 +20,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -37,15 +35,12 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.moneytrack.R
-import com.moneytrack.common.ui.LottieAnimationView
 import com.moneytrack.designsystem.R as DsR
 import ui.components.navigation.bottomNav.BottomNavItem
 import ui.components.navigation.bottomNav.PrimaryBottomNavigation
@@ -54,7 +49,6 @@ import ui.components.form.input.InputField
 import ui.theme.AppTheme
 import ui.theme.Dimens
 import ui.theme.Green100
-import ui.theme.MoneyTrackTheme
 import ui.theme.Red100
 
 private const val ROUTE_HOME = "home"
@@ -76,6 +70,21 @@ private data class ProfileActionItem(
     val iconTint: Color,
 )
 
+data class ProfileNavigationCallbacks(
+    val onBottomRouteClick: (String) -> Unit,
+    val onAddExpenseClick: () -> Unit,
+)
+
+data class ProfileActionCallbacks(
+    val onEditClick: () -> Unit,
+    val onDismissEditSheet: () -> Unit,
+    val onEditNameChanged: (String) -> Unit,
+    val onSaveName: () -> Unit,
+    val onClearDataClick: () -> Unit,
+    val onDismissClearDataSheet: () -> Unit,
+    val onConfirmClearData: () -> Unit,
+)
+
 @Composable
 fun ProfileRoute(
     onHomeClick: () -> Unit,
@@ -93,36 +102,33 @@ fun ProfileRoute(
 
     ProfileScreen(
         uiState = uiState,
-        onBottomRouteClick = { route ->
-            when (route) {
-                ROUTE_HOME -> onHomeClick()
-                ROUTE_TRANSACTION -> onTransactionClick()
-                else -> Unit
-            }
-        },
-        onAddExpenseClick = onAddExpenseClick,
-        onEditClick = viewModel::showEditSheet,
-        onDismissEditSheet = viewModel::hideEditSheet,
-        onEditNameChanged = viewModel::onNameChanged,
-        onSaveName = viewModel::saveName,
-        onClearDataClick = viewModel::showClearDataSheet,
-        onDismissClearDataSheet = viewModel::hideClearDataSheet,
-        onConfirmClearData = viewModel::clearLocalData,
+        navigationCallbacks = ProfileNavigationCallbacks(
+            onBottomRouteClick = { route ->
+                when (route) {
+                    ROUTE_HOME -> onHomeClick()
+                    ROUTE_TRANSACTION -> onTransactionClick()
+                    else -> Unit
+                }
+            },
+            onAddExpenseClick = onAddExpenseClick,
+        ),
+        actionCallbacks = ProfileActionCallbacks(
+            onEditClick = viewModel::showEditSheet,
+            onDismissEditSheet = viewModel::hideEditSheet,
+            onEditNameChanged = viewModel::onNameChanged,
+            onSaveName = viewModel::saveName,
+            onClearDataClick = viewModel::showClearDataSheet,
+            onDismissClearDataSheet = viewModel::hideClearDataSheet,
+            onConfirmClearData = viewModel::clearLocalData,
+        ),
     )
 }
 
 @Composable
 fun ProfileScreen(
     uiState: ProfileUiState,
-    onBottomRouteClick: (String) -> Unit,
-    onAddExpenseClick: () -> Unit,
-    onEditClick: () -> Unit,
-    onDismissEditSheet: () -> Unit,
-    onEditNameChanged: (String) -> Unit,
-    onSaveName: () -> Unit,
-    onClearDataClick: () -> Unit,
-    onDismissClearDataSheet: () -> Unit,
-    onConfirmClearData: () -> Unit,
+    navigationCallbacks: ProfileNavigationCallbacks,
+    actionCallbacks: ProfileActionCallbacks,
 ) {
     val bottomItems = remember {
         listOf(
@@ -132,29 +138,6 @@ fun ProfileScreen(
             BottomNavItem(ROUTE_PROFILE, DsR.drawable.user, "Profile"),
         )
     }
-    val actionItems = listOf(
-        ProfileActionItem(
-            type = ProfileActionType.SETTINGS,
-            titleRes = R.string.profile_action_settings,
-            iconRes = DsR.drawable.settings,
-            iconBackground = AppTheme.colors.primary.copy(alpha = 0.14f),
-            iconTint = AppTheme.colors.primary,
-        ),
-        ProfileActionItem(
-            type = ProfileActionType.EXPORT_DATA,
-            titleRes = R.string.profile_action_export,
-            iconRes = DsR.drawable.variant_export_data,
-            iconBackground = AppTheme.colors.primary.copy(alpha = 0.14f),
-            iconTint = AppTheme.colors.primary,
-        ),
-        ProfileActionItem(
-            type = ProfileActionType.CLEAR_DATA,
-            titleRes = R.string.profile_action_logout,
-            iconRes = DsR.drawable.logout,
-            iconBackground = AppTheme.colors.error.copy(alpha = 0.14f),
-            iconTint = AppTheme.colors.error,
-        ),
-    )
 
     Scaffold(
         containerColor = AppTheme.colors.background,
@@ -163,8 +146,8 @@ fun ProfileScreen(
                 PrimaryBottomNavigation(
                     items = bottomItems,
                     selectedRoute = ROUTE_PROFILE,
-                    onItemClick = { item -> onBottomRouteClick(item.route) },
-                    onFabClick = onAddExpenseClick,
+                    onItemClick = { item -> navigationCallbacks.onBottomRouteClick(item.route) },
+                    onFabClick = navigationCallbacks.onAddExpenseClick,
                 )
             }
         },
@@ -172,11 +155,11 @@ fun ProfileScreen(
         ProfileContent(
             uiState = uiState,
             innerPadding = innerPadding,
-            actionItems = actionItems,
-            onEditClick = onEditClick,
+            actionItems = profileActionItems(),
+            onEditClick = actionCallbacks.onEditClick,
             onActionClick = { actionType ->
                 when (actionType) {
-                    ProfileActionType.CLEAR_DATA -> onClearDataClick()
+                    ProfileActionType.CLEAR_DATA -> actionCallbacks.onClearDataClick()
                     ProfileActionType.SETTINGS,
                     ProfileActionType.EXPORT_DATA,
                     -> Unit
@@ -188,20 +171,45 @@ fun ProfileScreen(
     if (uiState.isEditSheetVisible) {
         EditProfileNameBottomSheet(
             value = uiState.editName,
-            onValueChange = onEditNameChanged,
-            onDismiss = onDismissEditSheet,
-            onSave = onSaveName,
+            onValueChange = actionCallbacks.onEditNameChanged,
+            onDismiss = actionCallbacks.onDismissEditSheet,
+            onSave = actionCallbacks.onSaveName,
             isSaveEnabled = uiState.isSaveEnabled,
         )
     }
 
     if (uiState.isClearDataSheetVisible) {
         ClearDataBottomSheet(
-            onDismiss = onDismissClearDataSheet,
-            onConfirm = onConfirmClearData,
+            onDismiss = actionCallbacks.onDismissClearDataSheet,
+            onConfirm = actionCallbacks.onConfirmClearData,
         )
     }
 }
+
+@Composable
+private fun profileActionItems(): List<ProfileActionItem> = listOf(
+    ProfileActionItem(
+        type = ProfileActionType.SETTINGS,
+        titleRes = R.string.profile_action_settings,
+        iconRes = DsR.drawable.settings,
+        iconBackground = AppTheme.colors.primary.copy(alpha = 0.14f),
+        iconTint = AppTheme.colors.primary,
+    ),
+    ProfileActionItem(
+        type = ProfileActionType.EXPORT_DATA,
+        titleRes = R.string.profile_action_export,
+        iconRes = DsR.drawable.variant_export_data,
+        iconBackground = AppTheme.colors.primary.copy(alpha = 0.14f),
+        iconTint = AppTheme.colors.primary,
+    ),
+    ProfileActionItem(
+        type = ProfileActionType.CLEAR_DATA,
+        titleRes = R.string.profile_action_logout,
+        iconRes = DsR.drawable.logout,
+        iconBackground = AppTheme.colors.error.copy(alpha = 0.14f),
+        iconTint = AppTheme.colors.error,
+    ),
+)
 
 @Composable
 private fun ProfileContent(
@@ -243,33 +251,7 @@ private fun ProfileHeader(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
-            modifier = Modifier
-                .size(Dimens.profileAvatarSize)
-                .border(
-                    width = Dimens.borderThick,
-                    color = AppTheme.colors.primary,
-                    shape = CircleShape,
-                )
-                .padding(Dimens.spacing4),
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(CircleShape)
-                    .background(
-                        color = AppTheme.colors.surfaceVariant,
-                        shape = CircleShape,
-                    ),
-                contentAlignment = Alignment.Center,
-            ) {
-                LottieAnimationView(
-                    rawRes = R.raw.lottie_profile_people,
-                    modifier = Modifier.fillMaxSize(),
-                    speed = 1.2f,
-                )
-            }
-        }
+        ProfileAvatar()
         Spacer(modifier = Modifier.width(Dimens.spacing16))
         Column(
             modifier = Modifier.weight(1f),
@@ -281,21 +263,7 @@ private fun ProfileHeader(
                 color = AppTheme.colors.onBackground,
             )
         }
-        IconButton(
-            onClick = onEditClick,
-            modifier = Modifier
-                .size(Dimens.iconContainerSize)
-                .background(
-                    color = AppTheme.colors.surfaceVariant,
-                    shape = RoundedCornerShape(Dimens.radius16),
-                ),
-        ) {
-            Icon(
-                painter = painterResource(id = DsR.drawable.edit),
-                contentDescription = stringResource(id = R.string.profile_edit_content_desc),
-                tint = AppTheme.colors.onBackground,
-            )
-        }
+        ProfileEditButton(onClick = onEditClick)
     }
 }
 
@@ -472,59 +440,5 @@ private fun ClearDataBottomSheet(
                 backgroundColor = Red100,
             )
         }
-    }
-}
-
-@Composable
-private fun ClearDataActionButton(
-    text: String,
-    onClick: () -> Unit,
-    backgroundColor: Color,
-) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(Dimens.buttonLargeHeight)
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(Dimens.spacing16),
-        color = backgroundColor,
-        contentColor = AppTheme.colors.onPrimary,
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = text,
-                style = AppTheme.typography.titleMedium,
-                color = AppTheme.colors.onPrimary,
-            )
-        }
-    }
-}
-
-@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
-@Composable
-private fun ProfileScreenPreview() {
-    MoneyTrackTheme(darkTheme = false) {
-        ProfileScreen(
-            uiState = ProfileUiState(
-                name = "Saver",
-                editName = "Saver",
-                isEditSheetVisible = false,
-                isClearDataSheetVisible = false,
-                clearDataCompleted = false,
-                isSaveEnabled = true,
-            ),
-            onBottomRouteClick = {},
-            onAddExpenseClick = {},
-            onEditClick = {},
-            onDismissEditSheet = {},
-            onEditNameChanged = {},
-            onSaveName = {},
-            onClearDataClick = {},
-            onDismissClearDataSheet = {},
-            onConfirmClearData = {},
-        )
     }
 }

@@ -8,6 +8,8 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.moneytrack.profile.presentation.ProfileActionCallbacks
+import com.moneytrack.profile.presentation.ProfileNavigationCallbacks
 import com.moneytrack.profile.presentation.ProfileScreen
 import com.moneytrack.profile.presentation.ProfileUiState
 import org.junit.Assert.assertEquals
@@ -28,15 +30,8 @@ class ProfileScreenUiTest {
             MoneyTrackTheme {
                 ProfileScreen(
                     uiState = baseState(),
-                    onBottomRouteClick = {},
-                    onAddExpenseClick = {},
-                    onEditClick = {},
-                    onDismissEditSheet = {},
-                    onEditNameChanged = {},
-                    onSaveName = {},
-                    onClearDataClick = {},
-                    onDismissClearDataSheet = {},
-                    onConfirmClearData = {},
+                    navigationCallbacks = baseNavigationCallbacks(),
+                    actionCallbacks = baseActionCallbacks(),
                 )
             }
         }
@@ -54,15 +49,10 @@ class ProfileScreenUiTest {
             MoneyTrackTheme {
                 ProfileScreen(
                     uiState = baseState(),
-                    onBottomRouteClick = {},
-                    onAddExpenseClick = {},
-                    onEditClick = { editClicks++ },
-                    onDismissEditSheet = {},
-                    onEditNameChanged = {},
-                    onSaveName = {},
-                    onClearDataClick = {},
-                    onDismissClearDataSheet = {},
-                    onConfirmClearData = {},
+                    navigationCallbacks = baseNavigationCallbacks(),
+                    actionCallbacks = baseActionCallbacks(
+                        onEditClick = { editClicks++ },
+                    ),
                 )
             }
         }
@@ -77,20 +67,13 @@ class ProfileScreenUiTest {
         composeRule.setContent {
             MoneyTrackTheme {
                 ProfileScreen(
-                    uiState = baseState(
+                    uiState = baseState().copy(
                         isEditSheetVisible = true,
                         editName = "Nova",
                         isSaveEnabled = true,
                     ),
-                    onBottomRouteClick = {},
-                    onAddExpenseClick = {},
-                    onEditClick = {},
-                    onDismissEditSheet = {},
-                    onEditNameChanged = {},
-                    onSaveName = {},
-                    onClearDataClick = {},
-                    onDismissClearDataSheet = {},
-                    onConfirmClearData = {},
+                    navigationCallbacks = baseNavigationCallbacks(),
+                    actionCallbacks = baseActionCallbacks(),
                 )
             }
         }
@@ -108,15 +91,10 @@ class ProfileScreenUiTest {
             MoneyTrackTheme {
                 ProfileScreen(
                     uiState = baseState(),
-                    onBottomRouteClick = {},
-                    onAddExpenseClick = {},
-                    onEditClick = {},
-                    onDismissEditSheet = {},
-                    onEditNameChanged = {},
-                    onSaveName = {},
-                    onClearDataClick = { clearDataClicks++ },
-                    onDismissClearDataSheet = {},
-                    onConfirmClearData = {},
+                    navigationCallbacks = baseNavigationCallbacks(),
+                    actionCallbacks = baseActionCallbacks(
+                        onClearDataClick = { clearDataClicks++ },
+                    ),
                 )
             }
         }
@@ -133,16 +111,12 @@ class ProfileScreenUiTest {
         composeRule.setContent {
             MoneyTrackTheme {
                 ProfileScreen(
-                    uiState = baseState(isClearDataSheetVisible = true),
-                    onBottomRouteClick = {},
-                    onAddExpenseClick = {},
-                    onEditClick = {},
-                    onDismissEditSheet = {},
-                    onEditNameChanged = {},
-                    onSaveName = {},
-                    onClearDataClick = {},
-                    onDismissClearDataSheet = { dismissClicks++ },
-                    onConfirmClearData = { confirmClicks++ },
+                    uiState = baseState().copy(isClearDataSheetVisible = true),
+                    navigationCallbacks = baseNavigationCallbacks(),
+                    actionCallbacks = baseActionCallbacks(
+                        onDismissClearDataSheet = { dismissClicks++ },
+                        onConfirmClearData = { confirmClicks++ },
+                    ),
                 )
             }
         }
@@ -155,19 +129,35 @@ class ProfileScreenUiTest {
         assertEquals(1, confirmClicks)
     }
 
-    private fun baseState(
-        name: String = "Saver",
-        editName: String = "",
-        isEditSheetVisible: Boolean = false,
-        isClearDataSheetVisible: Boolean = false,
-        clearDataCompleted: Boolean = false,
-        isSaveEnabled: Boolean = false,
-    ): ProfileUiState = ProfileUiState(
-        name = name,
-        editName = editName,
-        isEditSheetVisible = isEditSheetVisible,
-        isClearDataSheetVisible = isClearDataSheetVisible,
-        clearDataCompleted = clearDataCompleted,
-        isSaveEnabled = isSaveEnabled,
+    private fun baseState(): ProfileUiState = ProfileUiState(
+        name = "Saver",
+        editName = "",
+        isEditSheetVisible = false,
+        isClearDataSheetVisible = false,
+        clearDataCompleted = false,
+        isSaveEnabled = false,
+    )
+
+    private fun baseNavigationCallbacks(): ProfileNavigationCallbacks = ProfileNavigationCallbacks(
+        onBottomRouteClick = {},
+        onAddExpenseClick = {},
+    )
+
+    private fun baseActionCallbacks(
+        onEditClick: () -> Unit = {},
+        onDismissEditSheet: () -> Unit = {},
+        onEditNameChanged: (String) -> Unit = {},
+        onSaveName: () -> Unit = {},
+        onClearDataClick: () -> Unit = {},
+        onDismissClearDataSheet: () -> Unit = {},
+        onConfirmClearData: () -> Unit = {},
+    ): ProfileActionCallbacks = ProfileActionCallbacks(
+        onEditClick = onEditClick,
+        onDismissEditSheet = onDismissEditSheet,
+        onEditNameChanged = onEditNameChanged,
+        onSaveName = onSaveName,
+        onClearDataClick = onClearDataClick,
+        onDismissClearDataSheet = onDismissClearDataSheet,
+        onConfirmClearData = onConfirmClearData,
     )
 }

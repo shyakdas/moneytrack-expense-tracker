@@ -4,11 +4,13 @@ package com.moneytrack.startup
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import com.moneytrack.navigation.AppDestination
@@ -97,6 +99,29 @@ class AppEntryViewModelTest {
         advanceUntilIdle()
 
         assertEquals(AppDestination.Onboarding.route, viewModel.uiState.value.startDestination)
+    }
+
+    @Test
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun initialState_staysLoading_untilStartupSourcesEmit() = runTest {
+        val onboardingFlow = MutableSharedFlow<Boolean>(replay = 0)
+        val pinStatusFlow = MutableSharedFlow<PinSetupStatus>(replay = 0)
+        val viewModel = createViewModel(
+            onboardingCompletedFlow = onboardingFlow,
+            pinSetupStatusFlow = pinStatusFlow,
+        )
+
+        assertTrue(viewModel.uiState.value.isLoading)
+
+        onboardingFlow.emit(true)
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.isLoading)
+
+        pinStatusFlow.emit(PinSetupStatus.SKIPPED)
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.isLoading)
+        assertEquals(AppDestination.Home.route, viewModel.uiState.value.startDestination)
     }
 
     private fun createViewModel(
