@@ -34,6 +34,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.moneytrack.R
 import com.moneytrack.designsystem.R as DsR
+import com.moneytrack.settings.domain.model.AppThemeMode
 import ui.components.navigation.topNav.TopNavigation
 import ui.components.navigation.topNav.TopNavigationConfig
 import ui.theme.AppTheme
@@ -42,6 +43,7 @@ import ui.theme.MoneyTrackTheme
 
 private enum class SettingsAction {
     CURRENCY,
+    THEME,
     NONE,
 }
 
@@ -55,6 +57,7 @@ private data class SettingsItemUiModel(
 fun SettingsRoute(
     onBackClick: () -> Unit,
     onCurrencyClick: () -> Unit,
+    onThemeClick: () -> Unit,
 ) {
     val viewModel: SettingsViewModel = hiltViewModel()
     val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
@@ -63,6 +66,7 @@ fun SettingsRoute(
         uiState = uiState,
         onBackClick = onBackClick,
         onCurrencyClick = onCurrencyClick,
+        onThemeClick = onThemeClick,
     )
 }
 
@@ -71,6 +75,7 @@ fun SettingsScreen(
     uiState: SettingsUiState,
     onBackClick: () -> Unit,
     onCurrencyClick: () -> Unit,
+    onThemeClick: () -> Unit,
 ) {
     Scaffold(
         containerColor = AppTheme.colors.background,
@@ -99,10 +104,12 @@ fun SettingsScreen(
                 SettingsCard(
                     items = primarySettingsItems(uiState = uiState),
                     onCurrencyClick = onCurrencyClick,
+                    onThemeClick = onThemeClick,
                 )
                 SettingsCard(
                     items = secondarySettingsItems(),
                     onCurrencyClick = onCurrencyClick,
+                    onThemeClick = onThemeClick,
                 )
             }
         }
@@ -125,6 +132,7 @@ private fun primarySettingsItems(
     SettingsItemUiModel(
         title = stringResource(id = R.string.settings_theme),
         value = uiState.themeLabel(),
+        action = SettingsAction.THEME,
     ),
     SettingsItemUiModel(
         title = stringResource(id = R.string.settings_security),
@@ -154,6 +162,7 @@ private fun secondarySettingsItems(): List<SettingsItemUiModel> = listOf(
 private fun SettingsCard(
     items: List<SettingsItemUiModel>,
     onCurrencyClick: () -> Unit,
+    onThemeClick: () -> Unit,
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -167,6 +176,8 @@ private fun SettingsCard(
                     onClick = {
                         if (item.action == SettingsAction.CURRENCY) {
                             onCurrencyClick()
+                        } else if (item.action == SettingsAction.THEME) {
+                            onThemeClick()
                         }
                     },
                 )
@@ -237,7 +248,9 @@ private fun SettingsRowTrailing(
 @Composable
 private fun SettingsUiState.themeLabel(): String =
     when (themeMode) {
-        SettingsThemeMode.SYSTEM -> stringResource(id = R.string.settings_theme_system)
+        AppThemeMode.SYSTEM -> stringResource(id = R.string.settings_theme_system)
+        AppThemeMode.LIGHT -> stringResource(id = R.string.settings_theme_light)
+        AppThemeMode.DARK -> stringResource(id = R.string.settings_theme_dark)
     }
 
 @Composable
@@ -257,12 +270,13 @@ private fun SettingsScreenPreview() {
             uiState = SettingsUiState(
                 currencySymbol = "₹",
                 language = "English",
-                themeMode = SettingsThemeMode.SYSTEM,
+                themeMode = AppThemeMode.SYSTEM,
                 securityType = SettingsSecurityType.BIOMETRIC,
                 notificationsPerDay = 3,
             ),
             onBackClick = {},
             onCurrencyClick = {},
+            onThemeClick = {},
         )
     }
 }

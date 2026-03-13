@@ -7,14 +7,17 @@ import android.graphics.Color
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
 import androidx.compose.runtime.key
+import androidx.activity.viewModels
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.fragment.app.FragmentActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import com.moneytrack.applock.AppLockViewModel
 import com.moneytrack.navigation.AppNavHost
+import com.moneytrack.settings.domain.model.AppThemeMode
+import com.moneytrack.settings.presentation.AppThemeViewModel
 import com.moneytrack.startup.AppEntryViewModel
 import ui.theme.MoneyTrackTheme
 
@@ -22,6 +25,7 @@ import ui.theme.MoneyTrackTheme
 class MainActivity : FragmentActivity() {
     private val appEntryViewModel: AppEntryViewModel by viewModels()
     private val appLockViewModel: AppLockViewModel by viewModels()
+    private val appThemeViewModel: AppThemeViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
@@ -42,7 +46,15 @@ class MainActivity : FragmentActivity() {
         setContent {
             val uiState = appEntryViewModel.uiState.collectAsStateWithLifecycle().value
             val appLockUiState = appLockViewModel.uiState.collectAsStateWithLifecycle().value
-            MoneyTrackTheme {
+            val appThemeMode = appThemeViewModel.appThemeMode.collectAsStateWithLifecycle().value
+            val isSystemDarkTheme = isSystemInDarkTheme()
+            MoneyTrackTheme(
+                darkTheme = when (appThemeMode) {
+                    AppThemeMode.DARK -> true
+                    AppThemeMode.LIGHT -> false
+                    AppThemeMode.SYSTEM -> isSystemDarkTheme
+                },
+            ) {
                 if (!uiState.isLoading) {
                     key(uiState.startDestination) {
                         AppNavHost(
