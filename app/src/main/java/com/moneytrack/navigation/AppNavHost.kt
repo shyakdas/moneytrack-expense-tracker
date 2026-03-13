@@ -19,6 +19,7 @@ import com.moneytrack.pinsetup.presentation.PinSetupRoute
 import com.moneytrack.profile.presentation.ProfileRoute
 import com.moneytrack.settings.presentation.CurrencyRoute
 import com.moneytrack.settings.presentation.SettingsRoute
+import com.moneytrack.settings.presentation.ThemeRoute
 import com.moneytrack.transaction.presentation.TransactionRoute
 
 @Composable
@@ -155,11 +156,24 @@ fun AppNavHost(
                         launchSingleTop = true
                     }
                 },
+                onThemeClick = {
+                    navController.navigate(AppDestination.Theme.route) {
+                        launchSingleTop = true
+                    }
+                },
             )
         }
 
         composable(AppDestination.Currency.route) {
             CurrencyRoute(
+                onBackClick = {
+                    navController.popBackStack()
+                },
+            )
+        }
+
+        composable(AppDestination.Theme.route) {
+            ThemeRoute(
                 onBackClick = {
                     navController.popBackStack()
                 },

@@ -8,7 +8,9 @@ import com.moneytrack.locale.CurrencyCatalog
 import com.moneytrack.reminder.domain.usecase.ObserveReminderNotificationSettingsUseCase
 import com.moneytrack.security.domain.model.PinSetupStatus
 import com.moneytrack.security.domain.usecase.GetPinSetupStatusUseCase
+import com.moneytrack.settings.domain.model.AppThemeMode
 import com.moneytrack.settings.domain.usecase.ObserveAppCurrencyCodeUseCase
+import com.moneytrack.settings.domain.usecase.ObserveAppThemeModeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.Locale
 import javax.inject.Inject
@@ -22,13 +24,14 @@ class SettingsViewModel @Inject constructor(
     observeReminderNotificationSettingsUseCase: ObserveReminderNotificationSettingsUseCase,
     getPinSetupStatusUseCase: GetPinSetupStatusUseCase,
     observeAppCurrencyCodeUseCase: ObserveAppCurrencyCodeUseCase,
+    observeAppThemeModeUseCase: ObserveAppThemeModeUseCase,
     private val currencyCatalog: CurrencyCatalog,
 ) : ViewModel() {
 
     private val baseState = SettingsUiState(
         currencySymbol = DEFAULT_CURRENCY_SYMBOL,
         language = Locale.getDefault().displayLanguage.replaceFirstCharIfNeeded(),
-        themeMode = SettingsThemeMode.SYSTEM,
+        themeMode = AppThemeMode.SYSTEM,
         notificationsPerDay = DEFAULT_NOTIFICATIONS_PER_DAY,
     )
 
@@ -36,9 +39,11 @@ class SettingsViewModel @Inject constructor(
         observeReminderNotificationSettingsUseCase(),
         getPinSetupStatusUseCase(),
         observeAppCurrencyCodeUseCase(),
-    ) { reminderSettings, pinStatus, currencyCode ->
+        observeAppThemeModeUseCase(),
+    ) { reminderSettings, pinStatus, currencyCode, themeMode ->
         baseState.copy(
             currencySymbol = currencyCatalog.find(currencyCode)?.symbol ?: currencyCode,
+            themeMode = themeMode,
             securityType = pinStatus.toSettingsSecurityType(),
             notificationsPerDay = reminderSettings.notificationsPerDay,
         )
@@ -58,14 +63,10 @@ class SettingsViewModel @Inject constructor(
 data class SettingsUiState(
     val currencySymbol: String,
     val language: String,
-    val themeMode: SettingsThemeMode,
+    val themeMode: AppThemeMode,
     val securityType: SettingsSecurityType = SettingsSecurityType.NOT_SET,
     val notificationsPerDay: Int,
 )
-
-enum class SettingsThemeMode {
-    SYSTEM,
-}
 
 enum class SettingsSecurityType {
     PIN,
