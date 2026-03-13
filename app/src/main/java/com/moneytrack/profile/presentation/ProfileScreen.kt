@@ -26,13 +26,18 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -40,9 +45,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.moneytrack.R
+import com.moneytrack.common.ui.LottieAnimationView
 import com.moneytrack.designsystem.R as DsR
 import ui.components.navigation.bottomNav.BottomNavItem
 import ui.components.navigation.bottomNav.PrimaryBottomNavigation
+import ui.components.navigation.button.LargeButton
+import ui.components.form.input.InputField
 import ui.theme.AppTheme
 import ui.theme.Dimens
 import ui.theme.MoneyTrackTheme
@@ -51,10 +59,6 @@ private const val ROUTE_HOME = "home"
 private const val ROUTE_TRANSACTION = "transaction"
 private const val ROUTE_BUDGET = "budget"
 private const val ROUTE_PROFILE = "profile"
-
-data class ProfileUiState(
-    val name: String,
-)
 
 private data class ProfileActionItem(
     val titleRes: Int,
@@ -69,10 +73,11 @@ fun ProfileRoute(
     onTransactionClick: () -> Unit,
     onAddExpenseClick: () -> Unit,
 ) {
+    val viewModel: ProfileViewModel = hiltViewModel()
+    val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
+
     ProfileScreen(
-        uiState = ProfileUiState(
-            name = stringResource(id = R.string.profile_name_default),
-        ),
+        uiState = uiState,
         onBottomRouteClick = { route ->
             when (route) {
                 ROUTE_HOME -> onHomeClick()
@@ -81,6 +86,10 @@ fun ProfileRoute(
             }
         },
         onAddExpenseClick = onAddExpenseClick,
+        onEditClick = viewModel::showEditSheet,
+        onDismissEditSheet = viewModel::hideEditSheet,
+        onEditNameChanged = viewModel::onNameChanged,
+        onSaveName = viewModel::saveName,
     )
 }
 
@@ -89,6 +98,10 @@ fun ProfileScreen(
     uiState: ProfileUiState,
     onBottomRouteClick: (String) -> Unit,
     onAddExpenseClick: () -> Unit,
+    onEditClick: () -> Unit,
+    onDismissEditSheet: () -> Unit,
+    onEditNameChanged: (String) -> Unit,
+    onSaveName: () -> Unit,
 ) {
     val bottomItems = remember {
         listOf(
@@ -136,6 +149,17 @@ fun ProfileScreen(
             uiState = uiState,
             innerPadding = innerPadding,
             actionItems = actionItems,
+            onEditClick = onEditClick,
+        )
+    }
+
+    if (uiState.isEditSheetVisible) {
+        EditProfileNameBottomSheet(
+            value = uiState.editName,
+            onValueChange = onEditNameChanged,
+            onDismiss = onDismissEditSheet,
+            onSave = onSaveName,
+            isSaveEnabled = uiState.isSaveEnabled,
         )
     }
 }
@@ -145,6 +169,7 @@ private fun ProfileContent(
     uiState: ProfileUiState,
     innerPadding: PaddingValues,
     actionItems: List<ProfileActionItem>,
+    onEditClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -158,6 +183,7 @@ private fun ProfileContent(
         Spacer(modifier = Modifier.height(Dimens.spacing8))
         ProfileHeader(
             name = uiState.name,
+            onEditClick = onEditClick,
         )
         Spacer(modifier = Modifier.height(Dimens.spacing32))
         ProfileActionsCard(actionItems = actionItems)
@@ -168,6 +194,7 @@ private fun ProfileContent(
 @Composable
 private fun ProfileHeader(
     name: String,
+    onEditClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -186,17 +213,17 @@ private fun ProfileHeader(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
+                    .clip(CircleShape)
                     .background(
                         color = AppTheme.colors.surfaceVariant,
                         shape = CircleShape,
                     ),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(
-                    painter = painterResource(id = DsR.drawable.user),
-                    contentDescription = null,
-                    tint = AppTheme.colors.primary,
-                    modifier = Modifier.size(Dimens.profileAvatarIconSize),
+                LottieAnimationView(
+                    rawRes = R.raw.lottie_profile_people,
+                    modifier = Modifier.fillMaxSize(),
+                    speed = 1.2f,
                 )
             }
         }
@@ -212,7 +239,7 @@ private fun ProfileHeader(
             )
         }
         IconButton(
-            onClick = {},
+            onClick = onEditClick,
             modifier = Modifier
                 .size(Dimens.iconContainerSize)
                 .background(
@@ -224,6 +251,57 @@ private fun ProfileHeader(
                 painter = painterResource(id = DsR.drawable.edit),
                 contentDescription = stringResource(id = R.string.profile_edit_content_desc),
                 tint = AppTheme.colors.onBackground,
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EditProfileNameBottomSheet(
+    value: String,
+    onValueChange: (String) -> Unit,
+    onDismiss: () -> Unit,
+    onSave: () -> Unit,
+    isSaveEnabled: Boolean,
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = AppTheme.colors.surface,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Dimens.spacing24)
+                .padding(bottom = Dimens.spacing24),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(Dimens.spacing16),
+        ) {
+            Text(
+                text = stringResource(id = R.string.profile_edit_sheet_title),
+                style = AppTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                color = AppTheme.colors.onBackground,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            )
+
+            Text(
+                text = stringResource(id = R.string.profile_edit_sheet_desc),
+                style = AppTheme.typography.bodyMedium,
+                color = AppTheme.colors.onSurfaceVariant,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            )
+
+            InputField(
+                value = value,
+                onValueChange = onValueChange,
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = stringResource(id = R.string.profile_edit_name_placeholder),
+            )
+
+            LargeButton(
+                text = stringResource(id = R.string.profile_edit_save),
+                onClick = onSave,
+                enabled = isSaveEnabled,
             )
         }
     }
@@ -294,10 +372,17 @@ private fun ProfileScreenPreview() {
     MoneyTrackTheme(darkTheme = false) {
         ProfileScreen(
             uiState = ProfileUiState(
-                name = "Budget Maverick",
+                name = "Saver",
+                editName = "Saver",
+                isEditSheetVisible = false,
+                isSaveEnabled = true,
             ),
             onBottomRouteClick = {},
             onAddExpenseClick = {},
+            onEditClick = {},
+            onDismissEditSheet = {},
+            onEditNameChanged = {},
+            onSaveName = {},
         )
     }
 }

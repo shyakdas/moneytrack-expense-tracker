@@ -59,6 +59,7 @@ internal fun ProfileSelectorNavigation(
 
             ProfileAvatar(
                 painter = config.profileImage,
+                avatarContent = config.profileAvatarContent,
                 onClick = { /* profile click */ }
             )
 
@@ -88,6 +89,7 @@ internal fun ProfileSelectorNavigation(
 @Composable
 private fun ProfileAvatar(
     painter: Painter,
+    avatarContent: (@Composable () -> Unit)?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -104,12 +106,16 @@ private fun ProfileAvatar(
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
-        Image(
-            painter = painter,
-            contentDescription = "Profile",
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
+        if (avatarContent != null) {
+            avatarContent()
+        } else {
+            Image(
+                painter = painter,
+                contentDescription = "Profile",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+        }
     }
 }
 

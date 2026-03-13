@@ -295,6 +295,13 @@ private fun HomeContent(
         TopNavigation(
             config = TopNavigationConfig.ProfileWithSelector(
                 profileImage = ColorPainter(AppTheme.colors.surfaceVariant),
+                profileAvatarContent = {
+                    LottieAnimationView(
+                        rawRes = AppR.raw.lottie_profile_people,
+                        modifier = Modifier.fillMaxSize(),
+                        speed = 1.2f,
+                    )
+                },
                 selectedMonth = "October",
                 onMonthClick = {},
                 onActionClick = {},
