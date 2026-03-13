@@ -4,12 +4,12 @@ package com.moneytrack.settings.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.moneytrack.locale.CountryProvider
+import com.moneytrack.locale.CurrencyCatalog
 import com.moneytrack.reminder.domain.usecase.ObserveReminderNotificationSettingsUseCase
 import com.moneytrack.security.domain.model.PinSetupStatus
 import com.moneytrack.security.domain.usecase.GetPinSetupStatusUseCase
+import com.moneytrack.settings.domain.usecase.ObserveAppCurrencyCodeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.util.Currency
 import java.util.Locale
 import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
@@ -21,11 +21,12 @@ import kotlinx.coroutines.flow.stateIn
 class SettingsViewModel @Inject constructor(
     observeReminderNotificationSettingsUseCase: ObserveReminderNotificationSettingsUseCase,
     getPinSetupStatusUseCase: GetPinSetupStatusUseCase,
-    countryProvider: CountryProvider,
+    observeAppCurrencyCodeUseCase: ObserveAppCurrencyCodeUseCase,
+    private val currencyCatalog: CurrencyCatalog,
 ) : ViewModel() {
 
     private val baseState = SettingsUiState(
-        currencyCode = countryProvider.currencyCode(),
+        currencySymbol = DEFAULT_CURRENCY_SYMBOL,
         language = Locale.getDefault().displayLanguage.replaceFirstCharIfNeeded(),
         themeMode = SettingsThemeMode.SYSTEM,
         notificationsPerDay = DEFAULT_NOTIFICATIONS_PER_DAY,
@@ -34,8 +35,10 @@ class SettingsViewModel @Inject constructor(
     val uiState: StateFlow<SettingsUiState> = combine(
         observeReminderNotificationSettingsUseCase(),
         getPinSetupStatusUseCase(),
-    ) { reminderSettings, pinStatus ->
+        observeAppCurrencyCodeUseCase(),
+    ) { reminderSettings, pinStatus, currencyCode ->
         baseState.copy(
+            currencySymbol = currencyCatalog.find(currencyCode)?.symbol ?: currencyCode,
             securityType = pinStatus.toSettingsSecurityType(),
             notificationsPerDay = reminderSettings.notificationsPerDay,
         )
@@ -46,13 +49,14 @@ class SettingsViewModel @Inject constructor(
     )
 
     private companion object {
+        private const val DEFAULT_CURRENCY_SYMBOL = "$"
         private const val WHILE_SUBSCRIBED_TIMEOUT_MS = 5_000L
         private const val DEFAULT_NOTIFICATIONS_PER_DAY = 3
     }
 }
 
 data class SettingsUiState(
-    val currencyCode: String,
+    val currencySymbol: String,
     val language: String,
     val themeMode: SettingsThemeMode,
     val securityType: SettingsSecurityType = SettingsSecurityType.NOT_SET,
@@ -67,16 +71,6 @@ enum class SettingsSecurityType {
     PIN,
     BIOMETRIC,
     NOT_SET,
-}
-
-private fun CountryProvider.currencyCode(): String {
-    val locale = Locale.Builder()
-        .setLanguage("en")
-        .setRegion(getCountryCode())
-        .build()
-    return runCatching {
-        Currency.getInstance(locale).currencyCode
-    }.getOrDefault(getCountryCode())
 }
 
 private fun PinSetupStatus.toSettingsSecurityType(): SettingsSecurityType =

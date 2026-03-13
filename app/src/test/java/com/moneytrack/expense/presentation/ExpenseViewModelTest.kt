@@ -12,8 +12,14 @@ import com.moneytrack.expense.domain.repository.ExpenseRepository
 import com.moneytrack.expense.domain.usecase.EnsureDefaultCategoriesUseCase
 import com.moneytrack.expense.domain.usecase.ObserveCategoriesUseCase
 import com.moneytrack.expense.domain.usecase.SubmitExpenseUseCase
+import com.moneytrack.locale.AppCurrencyManager
 import com.moneytrack.locale.CountryProvider
+import com.moneytrack.locale.CurrencyCatalog
 import com.moneytrack.locale.CurrencyFormatter
+import com.moneytrack.settings.domain.repository.CurrencyPreferenceRepository
+import com.moneytrack.settings.domain.usecase.ObserveAppCurrencyCodeUseCase
+import com.moneytrack.settings.domain.usecase.ObserveSelectedCurrencyCodeUseCase
+import com.moneytrack.settings.domain.usecase.SaveSelectedCurrencyCodeUseCase
 import com.moneytrack.testutil.MainDispatcherRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -166,11 +172,28 @@ class ExpenseViewModelTest {
         expenseRepository: FakeExpenseRepository,
         categoryRepository: FakeCategoryRepository = FakeCategoryRepository(),
     ): ExpenseViewModel {
+        val countryProvider = FakeCountryProvider()
+        val currencyCatalog = CurrencyCatalog()
+        val currencyPreferenceRepository = FakeCurrencyPreferenceRepository()
+        val appCurrencyManager = AppCurrencyManager(
+            observeSelectedCurrencyCodeUseCase = ObserveSelectedCurrencyCodeUseCase(
+                currencyPreferenceRepository = currencyPreferenceRepository,
+            ),
+            saveSelectedCurrencyCodeUseCase = SaveSelectedCurrencyCodeUseCase(
+                currencyPreferenceRepository = currencyPreferenceRepository,
+            ),
+            countryProvider = countryProvider,
+            currencyCatalog = currencyCatalog,
+        )
         return ExpenseViewModel(
             observeCategoriesUseCase = ObserveCategoriesUseCase(categoryRepository),
             ensureDefaultCategoriesUseCase = EnsureDefaultCategoriesUseCase(categoryRepository),
             submitExpenseUseCase = SubmitExpenseUseCase(expenseRepository),
-            currencyFormatter = CurrencyFormatter(FakeCountryProvider()),
+            observeAppCurrencyCodeUseCase = ObserveAppCurrencyCodeUseCase(appCurrencyManager),
+            currencyFormatter = CurrencyFormatter(
+                appCurrencyManager = appCurrencyManager,
+                currencyCatalog = currencyCatalog,
+            ),
         )
     }
 
@@ -213,5 +236,15 @@ class ExpenseViewModelTest {
         override fun getCountryCode(): String = "US"
 
         override fun getCurrencySymbol(): String = "$"
+    }
+
+    private class FakeCurrencyPreferenceRepository : CurrencyPreferenceRepository {
+        private val selectedCurrencyCode = MutableStateFlow<String?>(null)
+
+        override fun observeSelectedCurrencyCode(): Flow<String?> = selectedCurrencyCode.asStateFlow()
+
+        override suspend fun saveSelectedCurrencyCode(currencyCode: String) {
+            selectedCurrencyCode.value = currencyCode
+        }
     }
 }

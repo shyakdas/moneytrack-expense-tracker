@@ -8,7 +8,8 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.moneytrack.data.local.appDataStore
-import com.moneytrack.locale.CountryProvider
+import com.moneytrack.locale.AppCurrencyManager
+import com.moneytrack.locale.CurrencyCatalog
 import com.moneytrack.reminder.domain.model.ReminderNotificationSettings
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -19,7 +20,8 @@ import kotlinx.coroutines.flow.map
 @Singleton
 class ReminderPreferencesDataSource @Inject constructor(
     @param:ApplicationContext private val context: Context,
-    private val countryProvider: CountryProvider,
+    private val appCurrencyManager: AppCurrencyManager,
+    private val currencyCatalog: CurrencyCatalog,
 ) {
     private companion object {
         val PERMISSION_PROMPT_HANDLED_KEY = booleanPreferencesKey("notification_permission_prompt_handled")
@@ -28,9 +30,6 @@ class ReminderPreferencesDataSource @Inject constructor(
         const val DEFAULT_NOTIFICATIONS_PER_DAY = 3
     }
 
-    private val defaultReminderMessage =
-        "Add your expenses in MoneyTrack to stay on top of your ${countryProvider.getCurrencySymbol()} budget."
-
     val permissionPromptHandledFlow: Flow<Boolean> =
         context.appDataStore.data.map { preferences ->
             preferences[PERMISSION_PROMPT_HANDLED_KEY] ?: false
@@ -38,6 +37,10 @@ class ReminderPreferencesDataSource @Inject constructor(
 
     val reminderSettingsFlow: Flow<ReminderNotificationSettings> =
         context.appDataStore.data.map { preferences ->
+            val defaultReminderMessage = defaultReminderMessage(
+                currencyCode = appCurrencyManager.currentCurrencyCode(),
+                currencyCatalog = currencyCatalog,
+            )
             ReminderNotificationSettings(
                 notificationsPerDay = preferences[REMINDER_NOTIFICATIONS_PER_DAY_KEY]
                     ?: DEFAULT_NOTIFICATIONS_PER_DAY,
@@ -60,4 +63,12 @@ class ReminderPreferencesDataSource @Inject constructor(
             preferences[REMINDER_MESSAGE_KEY] = reminderMessage
         }
     }
+}
+
+private fun defaultReminderMessage(
+    currencyCode: String,
+    currencyCatalog: CurrencyCatalog,
+): String {
+    val currencySymbol = currencyCatalog.find(currencyCode)?.symbol ?: currencyCode
+    return "Add your expenses in MoneyTrack to stay on top of your $currencySymbol budget."
 }

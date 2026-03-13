@@ -13,6 +13,7 @@ import com.moneytrack.expense.domain.usecase.EnsureDefaultCategoriesUseCase
 import com.moneytrack.expense.domain.usecase.ObserveCategoriesUseCase
 import com.moneytrack.expense.domain.usecase.SubmitExpenseUseCase
 import com.moneytrack.locale.CurrencyFormatter
+import com.moneytrack.settings.domain.usecase.ObserveAppCurrencyCodeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
@@ -28,6 +29,7 @@ class ExpenseViewModel @Inject constructor(
     private val observeCategoriesUseCase: ObserveCategoriesUseCase,
     private val ensureDefaultCategoriesUseCase: EnsureDefaultCategoriesUseCase,
     private val submitExpenseUseCase: SubmitExpenseUseCase,
+    observeAppCurrencyCodeUseCase: ObserveAppCurrencyCodeUseCase,
     private val currencyFormatter: CurrencyFormatter,
 ) : ViewModel() {
 
@@ -37,6 +39,7 @@ class ExpenseViewModel @Inject constructor(
             isSubmitEnabled = false,
         ),
     )
+    private val selectedCurrencyCode = MutableStateFlow(currencyFormatter.currentCurrencyCode())
     val uiState: StateFlow<ExpenseUiState> = _uiState.asStateFlow()
     private val _events = Channel<ExpenseEvent>(capacity = Channel.BUFFERED)
     val events = _events.receiveAsFlow()
@@ -60,6 +63,21 @@ class ExpenseViewModel @Inject constructor(
                         selectedCategory = categories.firstOrNull { category ->
                             category.id == selectedCategoryId
                         },
+                    )
+                }
+            }
+        }
+
+        viewModelScope.launch {
+            observeAppCurrencyCodeUseCase().collect { currencyCode ->
+                selectedCurrencyCode.update { currencyCode }
+                _uiState.update { state ->
+                    val amountValue = state.amountInput.toDoubleOrNull() ?: DEFAULT_AMOUNT_VALUE
+                    state.copy(
+                        amountText = currencyFormatter.format(
+                            value = amountValue,
+                            currencyCode = currencyCode,
+                        ),
                     )
                 }
             }
@@ -131,7 +149,10 @@ class ExpenseViewModel @Inject constructor(
         _uiState.update { state ->
             state.copy(
                 amountInput = digitsOnly,
-                amountText = currencyFormatter.format(amountValue),
+                amountText = currencyFormatter.format(
+                    value = amountValue,
+                    currencyCode = selectedCurrencyCode.value,
+                ),
                 isSubmitEnabled = amountValue > DEFAULT_AMOUNT_VALUE,
             )
         }

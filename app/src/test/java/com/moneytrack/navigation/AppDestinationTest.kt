@@ -15,6 +15,7 @@ class AppDestinationTest {
         assertEquals("transaction", AppDestination.Transaction.route)
         assertEquals("profile", AppDestination.Profile.route)
         assertEquals("settings", AppDestination.Settings.route)
+        assertEquals("currency", AppDestination.Currency.route)
         assertEquals("expense", AppDestination.Expense.route)
     }
 }

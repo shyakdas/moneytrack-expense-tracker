@@ -10,6 +10,7 @@ import com.moneytrack.home.domain.usecase.UpsertBudgetUseCase
 import com.moneytrack.locale.CurrencyFormatter
 import com.moneytrack.transaction.domain.model.TransactionRecord
 import com.moneytrack.transaction.domain.model.TransactionRecordType
+import com.moneytrack.settings.domain.usecase.ObserveAppCurrencyCodeUseCase
 import com.moneytrack.transaction.domain.usecase.ObserveTransactionsUseCase
 import com.moneytrack.transaction.domain.usecase.ObserveRecentTransactionsUseCase
 import com.moneytrack.transaction.presentation.toTransactionIconRes
@@ -33,6 +34,7 @@ class HomeViewModel @Inject constructor(
     observeBudgetUseCase: ObserveBudgetUseCase,
     observeTransactionsUseCase: ObserveTransactionsUseCase,
     observeRecentTransactionsUseCase: ObserveRecentTransactionsUseCase,
+    observeAppCurrencyCodeUseCase: ObserveAppCurrencyCodeUseCase,
     private val upsertBudgetUseCase: UpsertBudgetUseCase,
     private val currencyFormatter: CurrencyFormatter,
 ) : ViewModel() {
@@ -42,10 +44,11 @@ class HomeViewModel @Inject constructor(
     private val _isBudgetLoaded = MutableStateFlow(false)
     val isBudgetLoaded: StateFlow<Boolean> = _isBudgetLoaded.asStateFlow()
     private val _transactions = MutableStateFlow<List<TransactionRecord>>(emptyList())
-    private val _recentTransactions = MutableStateFlow<List<HomeTransaction>>(emptyList())
+    private val _recentTransactions = MutableStateFlow<List<TransactionRecord>>(emptyList())
     private val _monthlyExpenses = MutableStateFlow(0.0)
     private val _selectedBottomRoute = MutableStateFlow(DEFAULT_BOTTOM_ROUTE)
     private val _selectedRange = MutableStateFlow(DEFAULT_TIME_RANGE)
+    private val _selectedCurrencyCode = MutableStateFlow(currencyFormatter.currentCurrencyCode())
 
     private val homeSummaryInputs = combine(
         _budget,
@@ -66,7 +69,8 @@ class HomeViewModel @Inject constructor(
     val uiState: StateFlow<HomeUiState> = combine(
         homeSummaryInputs,
         _selectedRange,
-    ) { inputs, selectedRange ->
+        _selectedCurrencyCode,
+    ) { inputs, selectedRange, selectedCurrencyCode ->
         val budgetState = inputs.budget
         val transactions = inputs.transactions
         val recentTransactions = inputs.recentTransactions
@@ -75,15 +79,22 @@ class HomeViewModel @Inject constructor(
         val accountBalance = (budgetState?.amount ?: 0.0) - monthlyExpenses
         val spendFrequencyPoints = transactions.toSpendFrequencyPoints(selectedRange)
         HomeUiState(
-            accountBalanceText = formatCurrency(accountBalance),
+            accountBalanceText = formatCurrency(accountBalance, selectedCurrencyCode),
             hasBudget = budgetState != null,
             budgetAmount = budgetState?.amount,
-            budgetText = budgetState?.amount?.let(::formatCurrency),
+            budgetText = budgetState?.amount?.let { amount ->
+                formatCurrency(amount, selectedCurrencyCode)
+            },
             hasExpenses = monthlyExpenses > 0.0,
-            expensesText = formatCurrency(monthlyExpenses),
+            expensesText = formatCurrency(monthlyExpenses, selectedCurrencyCode),
             spendFrequencyPoints = spendFrequencyPoints,
             hasSpendFrequencyData = spendFrequencyPoints.any { point -> point > 0f },
-            transactions = recentTransactions,
+            transactions = recentTransactions.map { transaction ->
+                transaction.toHomeTransaction(
+                    selectedCurrencyCode = selectedCurrencyCode,
+                    currencyFormatter = currencyFormatter,
+                )
+            },
             selectedBottomRoute = selectedBottomRoute,
             selectedRange = selectedRange,
         )
@@ -126,26 +137,13 @@ class HomeViewModel @Inject constructor(
 
         viewModelScope.launch {
             observeRecentTransactionsUseCase(HOME_RECENT_TRANSACTION_LIMIT).collect { transactions ->
-                _recentTransactions.update {
-                    transactions.map { transaction ->
-                        val isExpense =
-                            transaction.type == com.moneytrack.transaction.domain.model.TransactionRecordType.EXPENSE
-                        HomeTransaction(
-                            icon = transaction.category.toTransactionIconRes(),
-                            title = transaction.title,
-                            subtitle = transaction.note?.trim()?.takeIf(String::isNotEmpty),
-                            amount = currencyFormatter.format(
-                                if (isExpense) -transaction.amount else transaction.amount,
-                            ),
-                            time = formatTransactionTime(transaction.occurredAtEpochMillis),
-                            type = if (isExpense) {
-                                ui.components.card.transaction.TransactionType.EXPENSE
-                            } else {
-                                ui.components.card.transaction.TransactionType.INCOME
-                            },
-                        )
-                    }
-                }
+                _recentTransactions.update { transactions }
+            }
+        }
+
+        viewModelScope.launch {
+            observeAppCurrencyCodeUseCase().collect { currencyCode ->
+                _selectedCurrencyCode.update { currencyCode }
             }
         }
     }
@@ -171,8 +169,13 @@ class HomeViewModel @Inject constructor(
     }
 
     fun formatCurrency(value: Double): String {
-        return currencyFormatter.format(value)
+        return formatCurrency(value, _selectedCurrencyCode.value)
     }
+
+    private fun formatCurrency(
+        value: Double,
+        currencyCode: String,
+    ): String = currencyFormatter.format(value = value, currencyCode = currencyCode)
 
     private companion object {
         private const val DEFAULT_BOTTOM_ROUTE = "home"
@@ -188,10 +191,32 @@ private fun formatTransactionTime(epochMillis: Long): String =
 private data class HomeSummaryInputs(
     val budget: Budget?,
     val transactions: List<TransactionRecord>,
-    val recentTransactions: List<HomeTransaction>,
+    val recentTransactions: List<TransactionRecord>,
     val monthlyExpenses: Double,
     val selectedBottomRoute: String,
 )
+
+private fun TransactionRecord.toHomeTransaction(
+    selectedCurrencyCode: String,
+    currencyFormatter: CurrencyFormatter,
+): HomeTransaction {
+    val isExpense = type == TransactionRecordType.EXPENSE
+    return HomeTransaction(
+        icon = category.toTransactionIconRes(),
+        title = title,
+        subtitle = note?.trim()?.takeIf(String::isNotEmpty),
+        amount = currencyFormatter.format(
+            value = if (isExpense) -amount else amount,
+            currencyCode = selectedCurrencyCode,
+        ),
+        time = formatTransactionTime(occurredAtEpochMillis),
+        type = if (isExpense) {
+            ui.components.card.transaction.TransactionType.EXPENSE
+        } else {
+            ui.components.card.transaction.TransactionType.INCOME
+        },
+    )
+}
 
 private fun List<TransactionRecord>.toSpendFrequencyPoints(selectedRange: String): List<Float> {
     val expenseTransactions = filter { transaction ->

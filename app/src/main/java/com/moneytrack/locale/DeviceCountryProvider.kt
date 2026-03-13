@@ -24,7 +24,8 @@ class DeviceCountryProvider @Inject constructor(
             localeCountry,
             telephonyCountryCode { it.networkCountryIso },
             telephonyCountryCode { it.simCountryIso },
-        ).firstOrNull { it.isNotEmpty() }
+        ).map(::validCountryCodeOrEmpty)
+            .firstOrNull { it.isNotEmpty() }
         return resolved ?: DEFAULT_COUNTRY_CODE
     }
 
@@ -52,7 +53,15 @@ class DeviceCountryProvider @Inject constructor(
         return locale.country.orEmpty().uppercase(Locale.US)
     }
 
+    private fun validCountryCodeOrEmpty(rawCountryCode: String): String {
+        return rawCountryCode.takeIf { countryCode ->
+            countryCode.length == COUNTRY_CODE_LENGTH &&
+                countryCode.all { char -> char.isLetter() }
+        }.orEmpty()
+    }
+
     private companion object {
+        private const val COUNTRY_CODE_LENGTH = 2
         const val DEFAULT_COUNTRY_CODE = "US"
         const val DEFAULT_CURRENCY_SYMBOL = "$"
     }

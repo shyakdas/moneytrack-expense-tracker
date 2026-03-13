@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
@@ -37,14 +38,21 @@ import ui.components.navigation.topNav.TopNavigationConfig
 import ui.theme.AppTheme
 import ui.theme.Dimens
 
+private enum class SettingsAction {
+    CURRENCY,
+    NONE,
+}
+
 private data class SettingsItemUiModel(
     val title: String,
     val value: String? = null,
+    val action: SettingsAction = SettingsAction.NONE,
 )
 
 @Composable
 fun SettingsRoute(
     onBackClick: () -> Unit,
+    onCurrencyClick: () -> Unit,
 ) {
     val viewModel: SettingsViewModel = hiltViewModel()
     val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
@@ -52,6 +60,7 @@ fun SettingsRoute(
     SettingsScreen(
         uiState = uiState,
         onBackClick = onBackClick,
+        onCurrencyClick = onCurrencyClick,
     )
 }
 
@@ -59,6 +68,7 @@ fun SettingsRoute(
 fun SettingsScreen(
     uiState: SettingsUiState,
     onBackClick: () -> Unit,
+    onCurrencyClick: () -> Unit,
 ) {
     Scaffold(
         containerColor = AppTheme.colors.background,
@@ -84,8 +94,14 @@ fun SettingsScreen(
                 verticalArrangement = Arrangement.spacedBy(Dimens.spacing20),
             ) {
                 Spacer(modifier = Modifier.height(Dimens.spacing12))
-                SettingsCard(items = primarySettingsItems(uiState = uiState))
-                SettingsCard(items = secondarySettingsItems())
+                SettingsCard(
+                    items = primarySettingsItems(uiState = uiState),
+                    onCurrencyClick = onCurrencyClick,
+                )
+                SettingsCard(
+                    items = secondarySettingsItems(),
+                    onCurrencyClick = onCurrencyClick,
+                )
             }
         }
     }
@@ -97,7 +113,8 @@ private fun primarySettingsItems(
 ): List<SettingsItemUiModel> = listOf(
     SettingsItemUiModel(
         title = stringResource(id = R.string.settings_currency),
-        value = uiState.currencyCode,
+        value = uiState.currencySymbol,
+        action = SettingsAction.CURRENCY,
     ),
     SettingsItemUiModel(
         title = stringResource(id = R.string.settings_language),
@@ -113,8 +130,9 @@ private fun primarySettingsItems(
     ),
     SettingsItemUiModel(
         title = stringResource(id = R.string.settings_notification),
-        value = stringResource(
-            id = R.string.settings_notification_summary,
+        value = pluralStringResource(
+            id = R.plurals.settings_notification_summary,
+            uiState.notificationsPerDay,
             uiState.notificationsPerDay,
         ),
     ),
@@ -133,6 +151,7 @@ private fun secondarySettingsItems(): List<SettingsItemUiModel> = listOf(
 @Composable
 private fun SettingsCard(
     items: List<SettingsItemUiModel>,
+    onCurrencyClick: () -> Unit,
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -141,7 +160,14 @@ private fun SettingsCard(
     ) {
         Column {
             items.forEachIndexed { index, item ->
-                SettingsRow(item = item)
+                SettingsRow(
+                    item = item,
+                    onClick = {
+                        if (item.action == SettingsAction.CURRENCY) {
+                            onCurrencyClick()
+                        }
+                    },
+                )
                 if (index != items.lastIndex) {
                     HorizontalDivider(
                         color = AppTheme.colors.outline.copy(alpha = 0.2f),
@@ -156,11 +182,15 @@ private fun SettingsCard(
 @Composable
 private fun SettingsRow(
     item: SettingsItemUiModel,
+    onClick: () -> Unit,
 ) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(enabled = false, onClick = {})
+            .clickable(
+                enabled = item.action != SettingsAction.NONE,
+                onClick = onClick,
+            )
             .padding(horizontal = Dimens.spacing20, vertical = Dimens.spacing20),
     ) {
         Text(

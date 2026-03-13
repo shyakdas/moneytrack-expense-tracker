@@ -91,6 +91,7 @@
     <string name="profile_clear_data_yes">Yes</string>
     <string name="profile_clear_data_no">No</string>
     <string name="settings_title">Settings</string>
+    <string name="currency_title">Currency</string>
     <string name="settings_currency">Currency</string>
     <string name="settings_language">Language</string>
     <string name="settings_theme">Theme</string>
@@ -102,11 +103,15 @@
     <string name="settings_security_pin">PIN</string>
     <string name="settings_security_biometric">Biometric</string>
     <string name="settings_security_not_set">Not set</string>
-    <string name="settings_notification_summary">%1$d daily</string>
 
     <plurals name="pin_mismatch_error_with_attempts">
         <item quantity="one">PIN didn\'t match. %1$d attempt left.</item>
         <item quantity="other">PIN didn\'t match. %1$d attempts left.</item>
+    </plurals>
+
+    <plurals name="settings_notification_summary">
+        <item quantity="one">%1$d daily</item>
+        <item quantity="other">%1$d daily</item>
     </plurals>
 
     <plurals name="home_notification_sheet_desc">

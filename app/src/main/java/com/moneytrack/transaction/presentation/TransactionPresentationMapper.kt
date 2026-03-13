@@ -11,6 +11,7 @@ import java.util.Locale
 
 fun List<TransactionRecord>.toTransactionSections(
     currencyFormatter: CurrencyFormatter,
+    currencyCode: String,
 ): List<TransactionSectionUiState> {
     return sortedByDescending(TransactionRecord::occurredAtEpochMillis)
         .groupBy { transaction ->
@@ -20,7 +21,10 @@ fun List<TransactionRecord>.toTransactionSections(
             TransactionSectionUiState(
                 title = title,
                 items = items.map { transaction ->
-                    transaction.toTransactionItemUiState(currencyFormatter = currencyFormatter)
+                    transaction.toTransactionItemUiState(
+                        currencyFormatter = currencyFormatter,
+                        currencyCode = currencyCode,
+                    )
                 },
             )
         }
@@ -39,6 +43,7 @@ fun List<TransactionRecord>.filterCurrentMonth(): List<TransactionRecord> {
 
 fun TransactionRecord.toTransactionItemUiState(
     currencyFormatter: CurrencyFormatter,
+    currencyCode: String,
 ): TransactionItemUiState {
     val isExpense = type == TransactionRecordType.EXPENSE
     val signedAmount = if (isExpense) -amount else amount
@@ -47,7 +52,7 @@ fun TransactionRecord.toTransactionItemUiState(
         iconRes = category.toTransactionIconRes(),
         title = title,
         subtitle = note?.trim()?.takeIf(String::isNotEmpty),
-        amount = currencyFormatter.format(signedAmount),
+        amount = currencyFormatter.format(value = signedAmount, currencyCode = currencyCode),
         time = transactionTimeFormatter().format(occurredAtEpochMillis),
         type = if (isExpense) {
             ui.components.card.transaction.TransactionType.EXPENSE
