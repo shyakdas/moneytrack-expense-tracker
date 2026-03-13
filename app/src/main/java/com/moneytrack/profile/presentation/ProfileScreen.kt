@@ -81,14 +81,12 @@ fun ProfileRoute(
     onHomeClick: () -> Unit,
     onTransactionClick: () -> Unit,
     onAddExpenseClick: () -> Unit,
-    onClearDataCompleted: () -> Unit,
 ) {
     val viewModel: ProfileViewModel = hiltViewModel()
     val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
 
     androidx.compose.runtime.LaunchedEffect(uiState.clearDataCompleted) {
         if (uiState.clearDataCompleted) {
-            onClearDataCompleted()
             viewModel.onClearDataHandled()
         }
     }

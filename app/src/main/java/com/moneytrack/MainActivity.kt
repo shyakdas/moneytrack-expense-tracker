@@ -8,6 +8,7 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.runtime.key
 import androidx.fragment.app.FragmentActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -43,12 +44,14 @@ class MainActivity : FragmentActivity() {
             val appLockUiState = appLockViewModel.uiState.collectAsStateWithLifecycle().value
             MoneyTrackTheme {
                 if (!uiState.isLoading) {
-                    AppNavHost(
-                        startDestination = uiState.startDestination,
-                        forcePinAuth = appLockUiState.forcePinAuth,
-                        onForcePinAuthHandled = appLockViewModel::onForcePinAuthHandled,
-                        onPinAuthenticated = appLockViewModel::onPinAuthenticated,
-                    )
+                    key(uiState.startDestination) {
+                        AppNavHost(
+                            startDestination = uiState.startDestination,
+                            forcePinAuth = appLockUiState.forcePinAuth,
+                            onForcePinAuthHandled = appLockViewModel::onForcePinAuthHandled,
+                            onPinAuthenticated = appLockViewModel::onPinAuthenticated,
+                        )
+                    }
                 }
             }
         }

@@ -135,12 +135,6 @@ fun AppNavHost(
                         launchSingleTop = true
                     }
                 },
-                onClearDataCompleted = {
-                    navController.navigate(AppDestination.Onboarding.route) {
-                        popUpTo(navController.graph.id) { inclusive = true }
-                        launchSingleTop = true
-                    }
-                },
             )
         }
     }
