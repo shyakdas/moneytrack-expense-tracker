@@ -11,6 +11,7 @@ import com.moneytrack.data.local.appDataStore
 import com.moneytrack.locale.AppCurrencyManager
 import com.moneytrack.locale.CurrencyCatalog
 import com.moneytrack.reminder.domain.model.ReminderNotificationSettings
+import com.moneytrack.reminder.notification.ReminderSchedule
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -27,7 +28,6 @@ class ReminderPreferencesDataSource @Inject constructor(
         val PERMISSION_PROMPT_HANDLED_KEY = booleanPreferencesKey("notification_permission_prompt_handled")
         val REMINDER_NOTIFICATIONS_PER_DAY_KEY = intPreferencesKey("reminder_notifications_per_day")
         val REMINDER_MESSAGE_KEY = stringPreferencesKey("reminder_message")
-        const val DEFAULT_NOTIFICATIONS_PER_DAY = 3
     }
 
     val permissionPromptHandledFlow: Flow<Boolean> =
@@ -43,7 +43,7 @@ class ReminderPreferencesDataSource @Inject constructor(
             )
             ReminderNotificationSettings(
                 notificationsPerDay = preferences[REMINDER_NOTIFICATIONS_PER_DAY_KEY]
-                    ?: DEFAULT_NOTIFICATIONS_PER_DAY,
+                    ?: ReminderSchedule.DEFAULT_NOTIFICATIONS_PER_DAY,
                 reminderMessage = preferences[REMINDER_MESSAGE_KEY] ?: defaultReminderMessage,
             )
         }
@@ -59,7 +59,8 @@ class ReminderPreferencesDataSource @Inject constructor(
         reminderMessage: String,
     ) {
         context.appDataStore.edit { preferences ->
-            preferences[REMINDER_NOTIFICATIONS_PER_DAY_KEY] = notificationsPerDay
+            preferences[REMINDER_NOTIFICATIONS_PER_DAY_KEY] =
+                ReminderSchedule.normalize(notificationsPerDay)
             preferences[REMINDER_MESSAGE_KEY] = reminderMessage
         }
     }

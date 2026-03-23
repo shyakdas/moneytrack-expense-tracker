@@ -45,6 +45,8 @@ private enum class SettingsAction {
     CURRENCY,
     THEME,
     SECURITY,
+    NOTIFICATION,
+    ABOUT,
     NONE,
 }
 
@@ -56,30 +58,30 @@ private data class SettingsItemUiModel(
 
 @Composable
 fun SettingsRoute(
-    onBackClick: () -> Unit,
-    onCurrencyClick: () -> Unit,
-    onThemeClick: () -> Unit,
-    onSecurityClick: () -> Unit,
+    actions: SettingsScreenActions,
 ) {
     val viewModel: SettingsViewModel = hiltViewModel()
     val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
 
     SettingsScreen(
         uiState = uiState,
-        onBackClick = onBackClick,
-        onCurrencyClick = onCurrencyClick,
-        onThemeClick = onThemeClick,
-        onSecurityClick = onSecurityClick,
+        actions = actions,
     )
 }
+
+data class SettingsScreenActions(
+    val onBackClick: () -> Unit,
+    val onCurrencyClick: () -> Unit,
+    val onThemeClick: () -> Unit,
+    val onSecurityClick: () -> Unit,
+    val onNotificationClick: () -> Unit,
+    val onAboutClick: () -> Unit,
+)
 
 @Composable
 fun SettingsScreen(
     uiState: SettingsUiState,
-    onBackClick: () -> Unit,
-    onCurrencyClick: () -> Unit,
-    onThemeClick: () -> Unit,
-    onSecurityClick: () -> Unit,
+    actions: SettingsScreenActions,
 ) {
     Scaffold(
         containerColor = AppTheme.colors.background,
@@ -93,7 +95,7 @@ fun SettingsScreen(
             TopNavigation(
                 config = TopNavigationConfig.BackWithTitle(
                     title = stringResource(id = R.string.settings_title),
-                    onBackClick = onBackClick,
+                    onBackClick = actions.onBackClick,
                 ),
                 containerColor = Color.Transparent,
             )
@@ -107,15 +109,11 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.height(Dimens.spacing12))
                 SettingsCard(
                     items = primarySettingsItems(uiState = uiState),
-                    onCurrencyClick = onCurrencyClick,
-                    onThemeClick = onThemeClick,
-                    onSecurityClick = onSecurityClick,
+                    actions = actions,
                 )
                 SettingsCard(
                     items = secondarySettingsItems(),
-                    onCurrencyClick = onCurrencyClick,
-                    onThemeClick = onThemeClick,
-                    onSecurityClick = onSecurityClick,
+                    actions = actions,
                 )
             }
         }
@@ -152,6 +150,7 @@ private fun primarySettingsItems(
             uiState.notificationsPerDay,
             uiState.notificationsPerDay,
         ),
+        action = SettingsAction.NOTIFICATION,
     ),
 )
 
@@ -159,6 +158,7 @@ private fun primarySettingsItems(
 private fun secondarySettingsItems(): List<SettingsItemUiModel> = listOf(
     SettingsItemUiModel(
         title = stringResource(id = R.string.settings_about),
+        action = SettingsAction.ABOUT,
     ),
     SettingsItemUiModel(
         title = stringResource(id = R.string.settings_help),
@@ -168,9 +168,7 @@ private fun secondarySettingsItems(): List<SettingsItemUiModel> = listOf(
 @Composable
 private fun SettingsCard(
     items: List<SettingsItemUiModel>,
-    onCurrencyClick: () -> Unit,
-    onThemeClick: () -> Unit,
-    onSecurityClick: () -> Unit,
+    actions: SettingsScreenActions,
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -182,12 +180,13 @@ private fun SettingsCard(
                 SettingsRow(
                     item = item,
                     onClick = {
-                        if (item.action == SettingsAction.CURRENCY) {
-                            onCurrencyClick()
-                        } else if (item.action == SettingsAction.THEME) {
-                            onThemeClick()
-                        } else if (item.action == SettingsAction.SECURITY) {
-                            onSecurityClick()
+                        when (item.action) {
+                            SettingsAction.CURRENCY -> actions.onCurrencyClick()
+                            SettingsAction.THEME -> actions.onThemeClick()
+                            SettingsAction.SECURITY -> actions.onSecurityClick()
+                            SettingsAction.NOTIFICATION -> actions.onNotificationClick()
+                            SettingsAction.ABOUT -> actions.onAboutClick()
+                            SettingsAction.NONE -> Unit
                         }
                     },
                 )
@@ -284,10 +283,14 @@ private fun SettingsScreenPreview() {
                 securityType = SettingsSecurityType.BIOMETRIC,
                 notificationsPerDay = 3,
             ),
-            onBackClick = {},
-            onCurrencyClick = {},
-            onThemeClick = {},
-            onSecurityClick = {},
+            actions = SettingsScreenActions(
+                onBackClick = {},
+                onCurrencyClick = {},
+                onThemeClick = {},
+                onSecurityClick = {},
+                onNotificationClick = {},
+                onAboutClick = {},
+            ),
         )
     }
 }
