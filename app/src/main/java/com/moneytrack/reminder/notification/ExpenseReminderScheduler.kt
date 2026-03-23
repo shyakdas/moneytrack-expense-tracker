@@ -7,28 +7,31 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import androidx.datastore.preferences.core.intPreferencesKey
+import com.moneytrack.data.local.appDataStore
 import java.util.Calendar
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 
 object ExpenseReminderScheduler {
     const val EXTRA_REMINDER_HOUR = "extra_reminder_hour"
     const val EXTRA_REMINDER_MINUTE = "extra_reminder_minute"
-    private const val MORNING_REMINDER_HOUR = 9
-    private const val EVENING_REMINDER_HOUR = 18
-    private const val NIGHT_REMINDER_HOUR = 22
-    private const val TEST_REMINDER_HOUR = 0
-    private const val TEST_REMINDER_MINUTE = 15
 
     private const val REQUEST_CODE_MULTIPLIER = 100
 
-    private val reminderTimes = listOf(
-        ReminderTime(hour = TEST_REMINDER_HOUR, minute = TEST_REMINDER_MINUTE),
-        ReminderTime(hour = MORNING_REMINDER_HOUR, minute = 0),
-        ReminderTime(hour = EVENING_REMINDER_HOUR, minute = 0),
-        ReminderTime(hour = NIGHT_REMINDER_HOUR, minute = 0),
-    )
-
     fun scheduleAll(context: Context) {
-        reminderTimes.forEach { reminderTime ->
+        scheduleConfigured(
+            context = context,
+            notificationsPerDay = currentNotificationsPerDay(context),
+        )
+    }
+
+    fun scheduleConfigured(
+        context: Context,
+        notificationsPerDay: Int,
+    ) {
+        cancelAll(context)
+        ReminderSchedule.timesFor(notificationsPerDay).forEach { reminderTime ->
             schedule(
                 context = context,
                 hourOfDay = reminderTime.hour,
@@ -39,7 +42,7 @@ object ExpenseReminderScheduler {
 
     fun cancelAll(context: Context) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        reminderTimes.forEach { reminderTime ->
+        ReminderSchedule.allSupportedTimes().forEach { reminderTime ->
             alarmManager.cancel(
                 alarmPendingIntent(
                     context = context,
@@ -124,11 +127,13 @@ object ExpenseReminderScheduler {
         )
     }
 
-    private data class ReminderTime(
-        val hour: Int,
-        val minute: Int,
-    )
+    private fun currentNotificationsPerDay(context: Context): Int = runBlocking {
+        val notificationsPerDay = context.appDataStore.data.first()[REMINDER_NOTIFICATIONS_PER_DAY_KEY]
+        ReminderSchedule.normalize(notificationsPerDay ?: ReminderSchedule.DEFAULT_NOTIFICATIONS_PER_DAY)
+    }
 
     private const val PENDING_INTENT_FLAGS =
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+    private val REMINDER_NOTIFICATIONS_PER_DAY_KEY =
+        intPreferencesKey("reminder_notifications_per_day")
 }

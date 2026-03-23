@@ -94,6 +94,8 @@
     <string name="currency_title">Currency</string>
     <string name="theme_title">Theme</string>
     <string name="security_title">Security</string>
+    <string name="notification_title">Notification</string>
+    <string name="about_title">About</string>
     <string name="currency_search_hint">Search by country name</string>
     <string name="settings_currency">Currency</string>
     <string name="settings_language">Language</string>
@@ -102,12 +104,25 @@
     <string name="settings_theme_light">Light mode</string>
     <string name="settings_security">Security</string>
     <string name="settings_notification">Notification</string>
+    <string name="settings_notification_one">1 notification/day</string>
+    <string name="settings_notification_three">3 notifications/day</string>
+    <string name="settings_notification_five">5 notifications/day</string>
+    <string name="settings_notification_note">Note: It will help you to add expenses so that you will not forget.</string>
     <string name="settings_about">About</string>
     <string name="settings_help">Help</string>
     <string name="settings_theme_system">System</string>
     <string name="settings_security_pin">PIN</string>
     <string name="settings_security_biometric">Biometric</string>
     <string name="settings_security_none">None</string>
+    <string name="about_summary">A privacy-first expense tracker for daily logging and clear monthly budgeting.</string>
+    <string name="about_version_title">Version</string>
+    <string name="about_version_desc">You are using MoneyTrack version %1$s.</string>
+    <string name="about_privacy_title">Privacy</string>
+    <string name="about_privacy_desc">MoneyTrack is designed to keep your financial information private and easy to understand.</string>
+    <string name="about_storage_title">Data on your device</string>
+    <string name="about_storage_desc">Your expenses, budget, profile name, and settings stay on your device unless you explicitly export them.</string>
+    <string name="about_reminders_title">Helpful reminders</string>
+    <string name="about_reminders_desc">Optional reminders help you log expenses consistently so your reports and budget stay accurate.</string>
 
     <plurals name="pin_mismatch_error_with_attempts">
         <item quantity="one">PIN didn\'t match. %1$d attempt left.</item>

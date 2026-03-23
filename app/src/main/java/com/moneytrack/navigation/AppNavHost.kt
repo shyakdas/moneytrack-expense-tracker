@@ -17,8 +17,11 @@ import com.moneytrack.onboarding.presentation.OnboardingRoute
 import com.moneytrack.pinauth.presentation.PinAuthRoute
 import com.moneytrack.pinsetup.presentation.PinSetupRoute
 import com.moneytrack.profile.presentation.ProfileRoute
+import com.moneytrack.settings.presentation.AboutRoute
 import com.moneytrack.settings.presentation.CurrencyRoute
+import com.moneytrack.settings.presentation.NotificationRoute
 import com.moneytrack.settings.presentation.SecurityRoute
+import com.moneytrack.settings.presentation.SettingsScreenActions
 import com.moneytrack.settings.presentation.SettingsRoute
 import com.moneytrack.settings.presentation.ThemeRoute
 import com.moneytrack.transaction.presentation.TransactionRoute
@@ -149,24 +152,36 @@ fun AppNavHost(
 
         composable(AppDestination.Settings.route) {
             SettingsRoute(
-                onBackClick = {
-                    navController.popBackStack()
-                },
-                onCurrencyClick = {
-                    navController.navigate(AppDestination.Currency.route) {
-                        launchSingleTop = true
-                    }
-                },
-                onThemeClick = {
-                    navController.navigate(AppDestination.Theme.route) {
-                        launchSingleTop = true
-                    }
-                },
-                onSecurityClick = {
-                    navController.navigate(AppDestination.Security.route) {
-                        launchSingleTop = true
-                    }
-                },
+                actions = SettingsScreenActions(
+                    onBackClick = {
+                        navController.popBackStack()
+                    },
+                    onCurrencyClick = {
+                        navController.navigate(AppDestination.Currency.route) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onThemeClick = {
+                        navController.navigate(AppDestination.Theme.route) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onSecurityClick = {
+                        navController.navigate(AppDestination.Security.route) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onNotificationClick = {
+                        navController.navigate(AppDestination.Notification.route) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onAboutClick = {
+                        navController.navigate(AppDestination.About.route) {
+                            launchSingleTop = true
+                        }
+                    },
+                ),
             )
         }
 
@@ -195,6 +210,22 @@ fun AppNavHost(
                     navController.navigate(AppDestination.SecurityPinSetup.route) {
                         launchSingleTop = true
                     }
+                },
+            )
+        }
+
+        composable(AppDestination.Notification.route) {
+            NotificationRoute(
+                onBackClick = {
+                    navController.popBackStack()
+                },
+            )
+        }
+
+        composable(AppDestination.About.route) {
+            AboutRoute(
+                onBackClick = {
+                    navController.popBackStack()
                 },
             )
         }

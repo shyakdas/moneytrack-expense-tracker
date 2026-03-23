@@ -13,6 +13,8 @@ sealed class AppDestination(val route: String) {
     data object Currency : AppDestination("currency")
     data object Theme : AppDestination("theme")
     data object Security : AppDestination("security")
+    data object Notification : AppDestination("notification")
+    data object About : AppDestination("about")
     data object SecurityPinSetup : AppDestination("security_pin_setup")
     data object Expense : AppDestination("expense")
 }

@@ -27,3 +27,5 @@ moneytrack-release.keystore
 
 # 🔐 Temporary CI helpers (local only)
 *.keystore.base64
+# Local Codex workspace
+.codex/
