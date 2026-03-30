@@ -105,6 +105,26 @@ class ProfileScreenUiTest {
     }
 
     @Test
+    fun exportRow_clickCallsCallback() {
+        var exportClicks = 0
+        composeRule.setContent {
+            MoneyTrackTheme {
+                ProfileScreen(
+                    uiState = baseState(),
+                    navigationCallbacks = baseNavigationCallbacks(),
+                    actionCallbacks = baseActionCallbacks(
+                        onExportClick = { exportClicks++ },
+                    ),
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("Export Data").performClick()
+
+        assertEquals(1, exportClicks)
+    }
+
+    @Test
     fun clearDataSheet_buttonsTriggerCallbacks() {
         var dismissClicks = 0
         var confirmClicks = 0
@@ -145,6 +165,7 @@ class ProfileScreenUiTest {
 
     private fun baseActionCallbacks(
         onEditClick: () -> Unit = {},
+        onExportClick: () -> Unit = {},
         onDismissEditSheet: () -> Unit = {},
         onEditNameChanged: (String) -> Unit = {},
         onSaveName: () -> Unit = {},
@@ -154,6 +175,7 @@ class ProfileScreenUiTest {
     ): ProfileActionCallbacks = ProfileActionCallbacks(
         onEditClick = onEditClick,
         onSettingsClick = {},
+        onExportClick = onExportClick,
         onDismissEditSheet = onDismissEditSheet,
         onEditNameChanged = onEditNameChanged,
         onSaveName = onSaveName,

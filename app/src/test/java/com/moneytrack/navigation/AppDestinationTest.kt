@@ -20,6 +20,7 @@ class AppDestinationTest {
         assertEquals("security", AppDestination.Security.route)
         assertEquals("notification", AppDestination.Notification.route)
         assertEquals("about", AppDestination.About.route)
+        assertEquals("export_data", AppDestination.ExportData.route)
         assertEquals("security_pin_setup", AppDestination.SecurityPinSetup.route)
         assertEquals("expense", AppDestination.Expense.route)
     }

@@ -26,6 +26,7 @@ internal fun ProfileScreenPreview() {
             actionCallbacks = ProfileActionCallbacks(
                 onEditClick = {},
                 onSettingsClick = {},
+                onExportClick = {},
                 onDismissEditSheet = {},
                 onEditNameChanged = {},
                 onSaveName = {},

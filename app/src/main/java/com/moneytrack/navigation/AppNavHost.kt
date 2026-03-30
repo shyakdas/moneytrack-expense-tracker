@@ -15,6 +15,7 @@ import com.moneytrack.expense.presentation.ExpenseRoute
 import com.moneytrack.home.presentation.HomeRoute
 import com.moneytrack.onboarding.presentation.OnboardingRoute
 import com.moneytrack.pinauth.presentation.PinAuthRoute
+import com.moneytrack.profile.presentation.ExportDataRoute
 import com.moneytrack.pinsetup.presentation.PinSetupRoute
 import com.moneytrack.profile.presentation.ProfileRoute
 import com.moneytrack.settings.presentation.AboutRoute
@@ -147,6 +148,11 @@ fun AppNavHost(
                         launchSingleTop = true
                     }
                 },
+                onExportClick = {
+                    navController.navigate(AppDestination.ExportData.route) {
+                        launchSingleTop = true
+                    }
+                },
             )
         }
 
@@ -224,6 +230,14 @@ fun AppNavHost(
 
         composable(AppDestination.About.route) {
             AboutRoute(
+                onBackClick = {
+                    navController.popBackStack()
+                },
+            )
+        }
+
+        composable(AppDestination.ExportData.route) {
+            ExportDataRoute(
                 onBackClick = {
                     navController.popBackStack()
                 },

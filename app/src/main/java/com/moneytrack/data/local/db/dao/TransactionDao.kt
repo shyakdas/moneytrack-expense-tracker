@@ -27,6 +27,13 @@ interface TransactionDao {
     @Query("SELECT * FROM transactions WHERE id = :id LIMIT 1")
     suspend fun getById(id: Long): TransactionEntity?
 
+    @Query(
+        "SELECT * FROM transactions " +
+            "WHERE occurred_at_epoch_millis >= :fromEpochMillis " +
+            "ORDER BY occurred_at_epoch_millis DESC",
+    )
+    suspend fun getTransactionsFrom(fromEpochMillis: Long): List<TransactionEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(transaction: TransactionEntity): Long
 
