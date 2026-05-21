@@ -230,6 +230,9 @@ class TransactionViewModelTest {
         override fun observeRecentTransactions(limit: Int): Flow<List<TransactionRecord>> =
             transactionsFlow.asStateFlow()
 
+        override suspend fun getTransactionsFrom(fromEpochMillis: Long): List<TransactionRecord> =
+            transactionsFlow.value.filter { it.occurredAtEpochMillis >= fromEpochMillis }
+
         fun emitTransactions(transactions: List<TransactionRecord>) {
             transactionsFlow.value = transactions
         }

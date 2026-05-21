@@ -26,6 +26,10 @@ class TransactionRepositoryImpl @Inject constructor(
         transactionDao.observeRecentTransactions(limit = limit).map { transactions ->
             transactions.map(TransactionEntity::toDomain)
         }
+
+    override suspend fun getTransactionsFrom(fromEpochMillis: Long): List<TransactionRecord> =
+        transactionDao.getTransactionsFrom(fromEpochMillis = fromEpochMillis)
+            .map(TransactionEntity::toDomain)
 }
 
 private fun TransactionEntity.toDomain(): TransactionRecord = TransactionRecord(

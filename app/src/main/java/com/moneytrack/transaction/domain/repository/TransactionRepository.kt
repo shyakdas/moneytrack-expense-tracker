@@ -8,4 +8,5 @@ import kotlinx.coroutines.flow.Flow
 interface TransactionRepository {
     fun observeTransactions(): Flow<List<TransactionRecord>>
     fun observeRecentTransactions(limit: Int): Flow<List<TransactionRecord>>
+    suspend fun getTransactionsFrom(fromEpochMillis: Long): List<TransactionRecord>
 }

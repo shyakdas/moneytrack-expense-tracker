@@ -60,6 +60,7 @@ class ProfileScreenshotTest {
     private fun previewActionCallbacks(): ProfileActionCallbacks = ProfileActionCallbacks(
         onEditClick = {},
         onSettingsClick = {},
+        onExportClick = {},
         onDismissEditSheet = {},
         onEditNameChanged = {},
         onSaveName = {},
