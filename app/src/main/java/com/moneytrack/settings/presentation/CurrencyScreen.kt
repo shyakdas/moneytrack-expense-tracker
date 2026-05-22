@@ -43,6 +43,7 @@ import com.moneytrack.settings.domain.model.CurrencyOption
 import com.moneytrack.designsystem.R as DsR
 import ui.components.navigation.topNav.TopNavigation
 import ui.components.navigation.topNav.TopNavigationConfig
+import ui.components.surface.MoneyTrackScreenBackground
 import ui.theme.AppTheme
 import ui.theme.Dimens
 import ui.theme.MoneyTrackTheme
@@ -81,35 +82,36 @@ fun CurrencyScreen(
             )
         },
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(AppTheme.colors.background)
-                .padding(innerPadding),
-        ) {
-            TopNavigation(
-                config = TopNavigationConfig.BackWithTitle(
-                    title = stringResource(id = R.string.currency_title),
-                    onBackClick = onBackClick,
-                ),
-                containerColor = Color.Transparent,
-            )
-
-            LazyColumn(
+        MoneyTrackScreenBackground {
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = Dimens.spacing16)
-                    .padding(top = Dimens.spacing12),
+                    .padding(innerPadding),
             ) {
-                items(
-                    items = uiState.currencies,
-                    key = CurrencyOption::code,
-                ) { currency ->
-                    CurrencyRow(
-                        currency = currency,
-                        isSelected = currency.code == uiState.selectedCurrencyCode,
-                        onClick = { onCurrencySelected(currency.code) },
-                    )
+                TopNavigation(
+                    config = TopNavigationConfig.BackWithTitle(
+                        title = stringResource(id = R.string.currency_title),
+                        onBackClick = onBackClick,
+                    ),
+                    containerColor = Color.Transparent,
+                )
+
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = Dimens.spacing16)
+                        .padding(top = Dimens.spacing12),
+                ) {
+                    items(
+                        items = uiState.currencies,
+                        key = CurrencyOption::code,
+                    ) { currency ->
+                        CurrencyRow(
+                            currency = currency,
+                            isSelected = currency.code == uiState.selectedCurrencyCode,
+                            onClick = { onCurrencySelected(currency.code) },
+                        )
+                    }
                 }
             }
         }

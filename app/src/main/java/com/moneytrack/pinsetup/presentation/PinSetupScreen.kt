@@ -40,6 +40,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.airbnb.lottie.compose.LottieConstants
 import com.moneytrack.R
 import com.moneytrack.common.ui.LottieAnimationView
+import ui.components.navigation.button.ButtonVariant
+import ui.components.navigation.button.LargeButton
+import ui.components.surface.MoneyTrackCard
+import ui.components.surface.MoneyTrackScreenBackground
 import ui.theme.AppTheme
 import ui.theme.Dimens
 import ui.theme.MoneyTrackTheme
@@ -69,26 +73,27 @@ fun PinSetupScreen(
 
 @Composable
 private fun PinSetupSuccessScreen() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(AppTheme.colors.background)
-            .padding(horizontal = Dimens.spacing24),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        LottieAnimationView(
-            rawRes = R.raw.lottie_success_check,
-            modifier = Modifier.size(Dimens.lottieHeroSize),
-            iterations = 1,
-        )
-        Spacer(modifier = Modifier.height(Dimens.spacing24))
-        Text(
-            text = stringResource(R.string.pin_setup_success_title),
-            style = AppTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-            color = AppTheme.colors.onBackground,
-            textAlign = TextAlign.Center,
-        )
+    MoneyTrackScreenBackground {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = Dimens.spacing24),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            LottieAnimationView(
+                rawRes = R.raw.lottie_success_check,
+                modifier = Modifier.size(Dimens.lottieHeroSize),
+                iterations = 1,
+            )
+            Spacer(modifier = Modifier.height(Dimens.spacing24))
+            Text(
+                text = stringResource(R.string.pin_setup_success_title),
+                style = AppTheme.typography.headlineMedium,
+                color = AppTheme.colors.onBackground,
+                textAlign = TextAlign.Center,
+            )
+        }
     }
 }
 
@@ -107,65 +112,66 @@ private fun PinSetupIntroScreen(
         label = "pin_intro_scale",
     )
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(AppTheme.colors.background)
-            .padding(horizontal = Dimens.spacing24),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Spacer(modifier = Modifier.weight(1f))
-
-        LottieAnimationView(
-            rawRes = R.raw.lottie_secure_shield,
+    MoneyTrackScreenBackground {
+        Column(
             modifier = Modifier
-                .size(Dimens.lottieHeroSize)
-                .scale(animatedScale),
-            iterations = LottieConstants.IterateForever,
-        )
+                .fillMaxSize()
+                .padding(horizontal = Dimens.spacing24),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Spacer(modifier = Modifier.weight(1f))
 
-        Spacer(modifier = Modifier.height(Dimens.spacing24))
+            LottieAnimationView(
+                rawRes = R.raw.lottie_secure_shield,
+                modifier = Modifier
+                    .size(Dimens.lottieHeroSize)
+                    .scale(animatedScale),
+                iterations = LottieConstants.IterateForever,
+            )
 
-        Text(
-            text = stringResource(R.string.pin_intro_title),
-            style = AppTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-            color = AppTheme.colors.onBackground,
-            textAlign = TextAlign.Center,
-        )
+            Spacer(modifier = Modifier.height(Dimens.spacing24))
 
-        Spacer(modifier = Modifier.height(Dimens.spacing12))
+            Text(
+                text = stringResource(R.string.pin_intro_title),
+                style = AppTheme.typography.headlineMedium,
+                color = AppTheme.colors.onBackground,
+                textAlign = TextAlign.Center,
+            )
 
-        Text(
-            text = stringResource(R.string.pin_intro_subtitle),
-            style = AppTheme.typography.bodyMedium,
-            color = AppTheme.colors.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-        )
+            Spacer(modifier = Modifier.height(Dimens.spacing12))
 
-        Spacer(modifier = Modifier.height(Dimens.spacing36))
+            Text(
+                text = stringResource(R.string.pin_intro_subtitle),
+                style = AppTheme.typography.bodyMedium,
+                color = AppTheme.colors.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
 
-        PinPrimaryActionButton(
-            text = stringResource(R.string.pin_intro_set_pin),
-            onClick = { onAction(PinSetupAction.SelectPin) },
-        )
+            Spacer(modifier = Modifier.height(Dimens.spacing36))
 
-        Spacer(modifier = Modifier.height(Dimens.spacing16))
+            PinPrimaryActionButton(
+                text = stringResource(R.string.pin_intro_set_pin),
+                onClick = { onAction(PinSetupAction.SelectPin) },
+            )
 
-        PinSecondaryActionButton(
-            text = stringResource(R.string.pin_intro_use_biometric),
-            onClick = { onAction(PinSetupAction.SelectBiometric) },
-        )
+            Spacer(modifier = Modifier.height(Dimens.spacing16))
 
-        Spacer(modifier = Modifier.height(Dimens.spacing24))
+            PinSecondaryActionButton(
+                text = stringResource(R.string.pin_intro_use_biometric),
+                onClick = { onAction(PinSetupAction.SelectBiometric) },
+            )
 
-        Text(
-            text = stringResource(R.string.pin_intro_skip),
-            style = AppTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-            color = AppTheme.colors.primary,
-            modifier = Modifier.clickable { onAction(PinSetupAction.Skip) },
-        )
+            Spacer(modifier = Modifier.height(Dimens.spacing24))
 
-        Spacer(modifier = Modifier.weight(1f))
+            Text(
+                text = stringResource(R.string.pin_intro_skip),
+                style = AppTheme.typography.labelLarge,
+                color = AppTheme.colors.primary,
+                modifier = Modifier.clickable { onAction(PinSetupAction.Skip) },
+            )
+
+            Spacer(modifier = Modifier.weight(1f))
+        }
     }
 }
 
@@ -174,25 +180,25 @@ private fun PinEntryScreen(
     uiState: PinSetupUiState,
     onAction: (PinSetupAction) -> Unit,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(AppTheme.colors.background)
-            .padding(horizontal = Dimens.spacing24),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Spacer(modifier = Modifier.height(Dimens.spacing72))
+    MoneyTrackScreenBackground {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = Dimens.spacing24),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Spacer(modifier = Modifier.height(Dimens.spacing72))
 
-        Text(
-            text = if (uiState.stage == PinSetupStage.CREATE_PIN) {
-                stringResource(R.string.pin_create_title)
-            } else {
-                stringResource(R.string.pin_confirm_title)
-            },
-            style = AppTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-            color = AppTheme.colors.onBackground,
-            textAlign = TextAlign.Center,
-        )
+            Text(
+                text = if (uiState.stage == PinSetupStage.CREATE_PIN) {
+                    stringResource(R.string.pin_create_title)
+                } else {
+                    stringResource(R.string.pin_confirm_title)
+                },
+                style = AppTheme.typography.headlineMedium,
+                color = AppTheme.colors.onBackground,
+                textAlign = TextAlign.Center,
+            )
 
         if (uiState.showPinMismatch) {
             Spacer(modifier = Modifier.height(Dimens.spacing8))
@@ -237,25 +243,22 @@ private fun PinEntryScreen(
             )
         }
 
-        Spacer(modifier = Modifier.height(Dimens.spacing32))
-        PinDots(enteredCount = uiState.enteredPin.length)
-        Spacer(modifier = Modifier.weight(1f))
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    color = AppTheme.colors.surface,
-                    shape = RoundedCornerShape(Dimens.radius24),
-                )
-                .padding(vertical = Dimens.spacing24),
-            contentAlignment = Alignment.Center,
-        ) {
-            PinKeypad(
-                onAction = onAction,
-                enabled = !uiState.isLockedOut,
-            )
+            Spacer(modifier = Modifier.height(Dimens.spacing32))
+            PinDots(enteredCount = uiState.enteredPin.length)
+            Spacer(modifier = Modifier.weight(1f))
+            MoneyTrackCard {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    PinKeypad(
+                        onAction = onAction,
+                        enabled = !uiState.isLockedOut,
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(Dimens.spacing24))
         }
-        Spacer(modifier = Modifier.height(Dimens.spacing24))
     }
 }
 
@@ -271,7 +274,7 @@ private fun PinDots(enteredCount: Int) {
                         color = if (filled) {
                             AppTheme.colors.primary
                         } else {
-                            AppTheme.colors.onSurfaceVariant.copy(alpha = 0.3f)
+                            AppTheme.colors.surfaceVariant
                         },
                         shape = CircleShape,
                     ),
@@ -402,20 +405,10 @@ private fun PinPrimaryActionButton(
     text: String,
     onClick: () -> Unit,
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(Dimens.buttonLargeHeight)
-            .background(color = AppTheme.colors.primary, shape = CircleShape)
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = text,
-            style = AppTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
-            color = AppTheme.colors.onPrimary,
-        )
-    }
+    LargeButton(
+        text = text,
+        onClick = onClick,
+    )
 }
 
 @Composable
@@ -423,23 +416,11 @@ private fun PinSecondaryActionButton(
     text: String,
     onClick: () -> Unit,
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(Dimens.buttonLargeHeight)
-            .background(
-                color = AppTheme.colors.primary.copy(alpha = 0.12f),
-                shape = CircleShape,
-            )
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = text,
-            style = AppTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
-            color = AppTheme.colors.primary,
-        )
-    }
+    LargeButton(
+        text = text,
+        onClick = onClick,
+        variant = ButtonVariant.SECONDARY,
+    )
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)

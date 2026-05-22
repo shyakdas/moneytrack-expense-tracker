@@ -35,6 +35,7 @@ import com.moneytrack.designsystem.R as DsR
 import com.moneytrack.reminder.notification.ExpenseReminderScheduler
 import ui.components.navigation.topNav.TopNavigation
 import ui.components.navigation.topNav.TopNavigationConfig
+import ui.components.surface.MoneyTrackScreenBackground
 import ui.theme.AppTheme
 import ui.theme.Dimens
 import ui.theme.MoneyTrackTheme
@@ -81,39 +82,40 @@ fun NotificationScreen(
     Scaffold(
         containerColor = AppTheme.colors.background,
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(AppTheme.colors.background)
-                .padding(innerPadding),
-        ) {
-            TopNavigation(
-                config = TopNavigationConfig.BackWithTitle(
-                    title = stringResource(id = R.string.notification_title),
-                    onBackClick = onBackClick,
-                ),
-                containerColor = Color.Transparent,
-            )
-
-            LazyColumn(
+        MoneyTrackScreenBackground {
+            Column(
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .padding(horizontal = Dimens.spacing16)
-                    .padding(top = Dimens.spacing12),
+                    .fillMaxSize()
+                    .padding(innerPadding),
             ) {
-                items(options, key = { it.notificationsPerDay }) { notificationOption ->
-                    NotificationRow(
-                        notificationOption = notificationOption,
-                        isSelected =
-                            notificationOption.notificationsPerDay ==
-                                uiState.selectedNotificationsPerDay,
-                        onClick = { onNotificationCountSelected(notificationOption.notificationsPerDay) },
-                    )
-                }
-            }
+                TopNavigation(
+                    config = TopNavigationConfig.BackWithTitle(
+                        title = stringResource(id = R.string.notification_title),
+                        onBackClick = onBackClick,
+                    ),
+                    containerColor = Color.Transparent,
+                )
 
-            NotificationFooterNote()
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .padding(horizontal = Dimens.spacing16)
+                        .padding(top = Dimens.spacing12),
+                ) {
+                    items(options, key = { it.notificationsPerDay }) { notificationOption ->
+                        NotificationRow(
+                            notificationOption = notificationOption,
+                            isSelected =
+                                notificationOption.notificationsPerDay ==
+                                    uiState.selectedNotificationsPerDay,
+                            onClick = { onNotificationCountSelected(notificationOption.notificationsPerDay) },
+                        )
+                    }
+                }
+
+                NotificationFooterNote()
+            }
         }
     }
 }

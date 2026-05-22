@@ -3,6 +3,7 @@
 package ui.components.card.bottomsheet
 
 import androidx.compose.animation.core.animateFloatAsState
+import ui.theme.MotionTokens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,6 +24,7 @@ fun SheetBlurHost(
 ) {
     val blurProgress = animateFloatAsState(
         targetValue = if (isSheetVisible) 1f else 0f,
+        animationSpec = MotionTokens.emphasizedTween(),
         label = "SheetBlurProgress",
     )
 

@@ -8,6 +8,8 @@ import androidx.compose.ui.graphics.Color
 data class AppColors(
     val primary: Color,
     val onPrimary: Color,
+    val primaryContainer: Color,
+    val onPrimaryContainer: Color,
 
     val background: Color,
     val onBackground: Color,
@@ -19,6 +21,12 @@ data class AppColors(
     val onSurfaceVariant: Color,
     val outline: Color,
 
+    val success: Color,
+    val onSuccess: Color,
+    val successContainer: Color,
+    val warning: Color,
+    val onWarning: Color,
+    val warningContainer: Color,
     val error: Color
 )
 

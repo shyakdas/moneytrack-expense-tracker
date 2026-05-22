@@ -4,6 +4,10 @@
 
 package com.moneytrack.transaction.presentation
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -43,6 +47,7 @@ import ui.components.navigation.bottomNav.BottomNavItem
 import ui.components.navigation.bottomNav.PrimaryBottomNavigation
 import ui.components.navigation.topNav.TopNavigation
 import ui.components.navigation.topNav.TopNavigationConfig
+import ui.components.surface.MoneyTrackScreenBackground
 import ui.theme.AppTheme
 import ui.theme.Dimens
 import ui.theme.MoneyTrackTheme
@@ -114,53 +119,63 @@ private fun TransactionContent(
     uiState: TransactionUiState,
     innerPadding: PaddingValues,
 ) {
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(AppTheme.colors.background)
-            .padding(innerPadding)
-            .padding(horizontal = Dimens.spacing16),
-        contentPadding = PaddingValues(bottom = Dimens.spacing24),
-        verticalArrangement = Arrangement.spacedBy(Dimens.spacing16),
-    ) {
-        item {
-            TopNavigation(
-                config = TopNavigationConfig.DropdownWithFilter(
-                    label = uiState.monthLabel,
-                    showBadge = false,
-                    badgeCount = 0,
-                    onDropdownClick = {},
-                    onFilterClick = {},
-                ),
-                containerColor = Color.Transparent,
-            )
-        }
-
-        item {
-            FinancialReportBanner()
-        }
-
-        if (uiState.sections.isEmpty()) {
+    MoneyTrackScreenBackground {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(horizontal = Dimens.spacing16),
+            contentPadding = PaddingValues(bottom = Dimens.spacing24),
+            verticalArrangement = Arrangement.spacedBy(Dimens.spacing16),
+        ) {
             item {
-                EmptyTransactionState()
+                TopNavigation(
+                    config = TopNavigationConfig.DropdownWithFilter(
+                        label = uiState.monthLabel,
+                        showBadge = false,
+                        badgeCount = 0,
+                        onDropdownClick = {},
+                        onFilterClick = {},
+                    ),
+                    containerColor = Color.Transparent,
+                )
             }
-        } else {
-            items(uiState.sections, key = { section -> section.title }) { section ->
-                Column(verticalArrangement = Arrangement.spacedBy(Dimens.spacing12)) {
-                    Text(
-                        text = section.title,
-                        style = AppTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                        color = AppTheme.colors.onBackground,
-                    )
-                    section.items.forEach { transaction ->
-                        TransactionCard(
-                            icon = ImageVector.vectorResource(id = transaction.iconRes),
-                            title = transaction.title,
-                            subtitle = transaction.subtitle,
-                            amount = transaction.amount,
-                            time = transaction.time,
-                            type = transaction.type,
+
+            item {
+                FinancialReportBanner()
+            }
+
+            if (uiState.sections.isEmpty()) {
+                item {
+                    AnimatedVisibility(
+                        visible = true,
+                        enter = fadeIn() + slideInVertically(initialOffsetY = { it / 4 }),
+                        exit = fadeOut(),
+                    ) {
+                        EmptyTransactionState()
+                    }
+                }
+            } else {
+                items(uiState.sections, key = { section -> section.title }) { section ->
+                    Column(
+                        modifier = Modifier.animateItem(),
+                        verticalArrangement = Arrangement.spacedBy(Dimens.spacing12),
+                    ) {
+                        Text(
+                            text = section.title,
+                            style = AppTheme.typography.titleMedium,
+                            color = AppTheme.colors.onBackground,
                         )
+                        section.items.forEach { transaction ->
+                            TransactionCard(
+                                icon = ImageVector.vectorResource(id = transaction.iconRes),
+                                title = transaction.title,
+                                subtitle = transaction.subtitle,
+                                amount = transaction.amount,
+                                time = transaction.time,
+                                type = transaction.type,
+                            )
+                        }
                     }
                 }
             }
@@ -172,8 +187,9 @@ private fun TransactionContent(
 private fun FinancialReportBanner() {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        color = AppTheme.colors.primary.copy(alpha = 0.14f),
-        shape = RoundedCornerShape(Dimens.radius16),
+        color = AppTheme.colors.primaryContainer,
+        shape = RoundedCornerShape(Dimens.radius20),
+        tonalElevation = Dimens.elevation2,
     ) {
         androidx.compose.foundation.layout.Row(
             modifier = Modifier.padding(horizontal = Dimens.spacing16, vertical = Dimens.spacing16),
@@ -183,7 +199,7 @@ private fun FinancialReportBanner() {
                 text = stringResource(id = R.string.transaction_financial_report_cta),
                 modifier = Modifier.weight(1f),
                 style = AppTheme.typography.titleMedium,
-                color = AppTheme.colors.primary,
+                color = AppTheme.colors.onPrimaryContainer,
             )
             Icon(
                 imageVector = ImageVector.vectorResource(id = DsR.drawable.arrow_right_2),

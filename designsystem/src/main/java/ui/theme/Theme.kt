@@ -8,63 +8,80 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
+import androidx.compose.ui.graphics.Color
 
 // --------------------
 // Material Light Scheme (INTERNAL)
 // --------------------
 internal val LightColorScheme = lightColorScheme(
-    primary = Violet100,
+    primary = Teal100,
     onPrimary = Light100,
+    primaryContainer = Teal20,
+    onPrimaryContainer = Teal90,
 
-    secondary = Blue100,
+    secondary = Green100,
     onSecondary = Light100,
+    secondaryContainer = Green20,
+    onSecondaryContainer = Green100,
 
-    tertiary = Green100,
+    tertiary = Blue100,
     onTertiary = Light100,
+    tertiaryContainer = Blue20,
+    onTertiaryContainer = Blue100,
 
-    background = Light100,
-    onBackground = Dark100,
+    background = Light80,
+    onBackground = Slate900,
 
-    surface = Light80,
-    onSurface = Dark100,
+    surface = Light100,
+    onSurface = Slate900,
 
     surfaceVariant = Light60,
-    onSurfaceVariant = Dark75,
+    onSurfaceVariant = Slate500,
 
     outline = Light40,
     outlineVariant = Light40,
 
     error = Red100,
-    onError = Light100
+    onError = Light100,
+    errorContainer = Red20,
+    onErrorContainer = Red100,
 )
 
 // --------------------
 // Material Dark Scheme (INTERNAL)
 // --------------------
 internal val DarkColorScheme = darkColorScheme(
-    primary = Violet100,
-    onPrimary = Light100,
+    primary = Teal40,
+    onPrimary = Dark100,
+    primaryContainer = Teal90,
+    onPrimaryContainer = Teal20,
 
-    secondary = Blue100,
-    onSecondary = Light100,
+    secondary = Green60,
+    onSecondary = Dark100,
+    secondaryContainer = Green100,
+    onSecondaryContainer = Green20,
 
-    tertiary = Green100,
-    onTertiary = Light100,
+    tertiary = Blue60,
+    onTertiary = Dark100,
+    tertiaryContainer = Blue100,
+    onTertiaryContainer = Blue20,
 
     background = Dark100,
-    onBackground = Light100,
+    onBackground = Color(0xFFE6EDF2),
 
     surface = Dark75,
-    onSurface = Light100,
+    onSurface = Color(0xFFE6EDF2),
 
     surfaceVariant = Dark50,
-    onSurfaceVariant = Light60,
+    onSurfaceVariant = Color(0xFF9FB0BC),
 
-    outline = Dark50,
+    outline = Dark25,
     outlineVariant = Dark25,
 
-    error = Red100,
-    onError = Light100
+    error = Red60,
+    onError = Dark100,
+    errorContainer = Color(0xFF7A271A),
+    onErrorContainer = Red20,
 )
 
 
@@ -76,29 +93,45 @@ fun MoneyTrackTheme(
 ) {
     val appColors = if (darkTheme) {
         AppColors(
-            primary = Violet100,
-            onPrimary = Light100,
+            primary = Teal40,
+            onPrimary = Dark100,
+            primaryContainer = Teal90,
+            onPrimaryContainer = Teal20,
             background = Dark100,
-            onBackground = Light100,
+            onBackground = Color(0xFFE6EDF2),
             surface = Dark75,
-            onSurface = Light100,
+            onSurface = Color(0xFFE6EDF2),
             surfaceVariant = Dark50,
-            onSurfaceVariant = Light60,
+            onSurfaceVariant = Color(0xFF9FB0BC),
             outline = Dark25,
-            error = Red100
+            success = Green60,
+            onSuccess = Dark100,
+            successContainer = Color(0xFF064E3B),
+            warning = Yellow60,
+            onWarning = Dark100,
+            warningContainer = Color(0xFF78350F),
+            error = Red60,
         )
     } else {
         AppColors(
-            primary = Violet100,
+            primary = Teal100,
             onPrimary = Light100,
-            background = Light100,
-            onBackground = Dark100,
-            surface = Light80,
-            onSurface = Dark100,
+            primaryContainer = Teal20,
+            onPrimaryContainer = Teal90,
+            background = Light80,
+            onBackground = Slate900,
+            surface = Light100,
+            onSurface = Slate900,
             surfaceVariant = Light60,
-            onSurfaceVariant = Dark75,
+            onSurfaceVariant = Slate500,
             outline = Light40,
-            error = Red100
+            success = Green100,
+            onSuccess = Light100,
+            successContainer = Green20,
+            warning = Yellow100,
+            onWarning = Slate900,
+            warningContainer = Yellow20,
+            error = Red100,
         )
     }
 

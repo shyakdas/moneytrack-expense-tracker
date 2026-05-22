@@ -12,10 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.BottomSheetDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -26,21 +23,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import ui.components.navigation.button.ButtonVariant
 import ui.components.navigation.button.LargeButton
 import ui.components.navigation.common.ChipGroup
+import ui.components.surface.MoneyTrackBottomSheet
 import ui.theme.AppTheme
 import ui.theme.Dimens
 import ui.theme.MoneyTrackTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppBottomSheet(
     sheetContent: BottomSheetContent,
     onDismiss: () -> Unit
 ) {
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        containerColor = AppTheme.colors.surface,
-        dragHandle = { BottomSheetDefaults.DragHandle() }
-    ) {
+    MoneyTrackBottomSheet(onDismissRequest = onDismiss) {
         when (sheetContent) {
             is BottomSheetContent.AttachmentPicker ->
                 AttachmentPickerContent(sheetContent)
@@ -205,7 +198,6 @@ private fun FilterContent(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Preview(name = "BottomSheet – Attachment Picker (Light & Dark)")
 @Composable
 private fun BottomSheetAttachmentPreview() {

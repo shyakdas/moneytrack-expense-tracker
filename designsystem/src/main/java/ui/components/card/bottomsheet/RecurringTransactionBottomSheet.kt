@@ -14,11 +14,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -28,6 +26,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import ui.components.navigation.button.ButtonVariant
 import ui.components.navigation.button.LargeButton
+import ui.components.surface.MoneyTrackBottomSheet
 import ui.theme.AppTheme
 import ui.theme.Dimens
 import ui.theme.MoneyTrackTheme
@@ -41,11 +40,7 @@ fun RecurringTransactionBottomSheet(
     onNext: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        containerColor = AppTheme.colors.surface,
-        dragHandle = { BottomSheetDefaults.DragHandle() }
-    ) {
+    MoneyTrackBottomSheet(onDismissRequest = onDismiss) {
         Column(
             modifier = Modifier
                 .padding(Dimens.spacing24)

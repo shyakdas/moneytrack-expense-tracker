@@ -2,6 +2,8 @@
 
 package ui.components.card.budget
 
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,12 +20,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import ui.theme.AppTheme
 import ui.theme.Dimens
 import ui.theme.MoneyTrackTheme
+import ui.theme.MotionTokens
 
 @Composable
 fun BudgetCard(
@@ -39,9 +43,10 @@ fun BudgetCard(
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .animateContentSize(animationSpec = MotionTokens.standardTween())
             .background(
                 color = AppTheme.colors.surface,
-                shape = RoundedCornerShape(Dimens.radius24)
+                shape = RoundedCornerShape(Dimens.radius16)
             )
             .padding(Dimens.spacing20),
         verticalArrangement = Arrangement.spacedBy(Dimens.spacing12)
@@ -61,7 +66,7 @@ fun BudgetCard(
 
         Text(
             text = "Remaining $remainingAmount",
-            style = AppTheme.typography.headlineSmall,
+            style = AppTheme.typography.titleLarge,
             color = AppTheme.colors.onSurface
         )
 
@@ -72,14 +77,14 @@ fun BudgetCard(
 
         Text(
             text = spentText,
-            style = AppTheme.typography.bodyLarge,
+            style = AppTheme.typography.bodyMedium,
             color = AppTheme.colors.onSurfaceVariant
         )
 
         if (isExceeded) {
             Text(
                 text = "You’ve exceeded the limit!",
-                style = AppTheme.typography.bodyLarge,
+                style = AppTheme.typography.bodyMedium,
                 color = AppTheme.colors.error
             )
         }
@@ -116,7 +121,7 @@ private fun BudgetCategoryPill(
 
         Text(
             text = title,
-            style = AppTheme.typography.bodyLarge,
+            style = AppTheme.typography.labelLarge,
             color = AppTheme.colors.onSurface
         )
     }
@@ -128,9 +133,14 @@ private fun BudgetProgressBar(
     isExceeded: Boolean,
     modifier: Modifier = Modifier
 ) {
+    val animatedProgress by animateFloatAsState(
+        targetValue = progress.coerceIn(0f, 1f),
+        animationSpec = MotionTokens.emphasizedTween(),
+        label = "BudgetProgress",
+    )
     val progressColor =
         if (isExceeded) AppTheme.colors.error
-        else AppTheme.colors.primary
+        else AppTheme.colors.success
 
     Box(
         modifier = modifier
@@ -143,7 +153,7 @@ private fun BudgetProgressBar(
     ) {
         Box(
             modifier = Modifier
-                .fillMaxWidth(progress.coerceIn(0f, 1f))
+                .fillMaxWidth(animatedProgress)
                 .fillMaxHeight()
                 .background(
                     color = progressColor,

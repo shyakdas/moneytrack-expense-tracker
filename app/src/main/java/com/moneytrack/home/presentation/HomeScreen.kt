@@ -8,6 +8,8 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateContentSize
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
@@ -31,9 +33,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -48,6 +48,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
@@ -80,10 +81,11 @@ import ui.components.navigation.common.SeeAllPill
 import ui.components.navigation.tabs.TimeRangeTab
 import ui.components.navigation.topNav.TopNavigation
 import ui.components.navigation.topNav.TopNavigationConfig
+import ui.components.surface.MoneyTrackScreenBackground
+import ui.components.surface.MoneyTrackBottomSheet
 import ui.components.form.input.InputField
 import ui.theme.AppTheme
 import ui.theme.Dimens
-import ui.theme.Green100
 import ui.theme.MoneyTrackTheme
 
 private const val ROUTE_HOME = "home"
@@ -320,15 +322,16 @@ private fun HomeContent(
         return
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(innerPadding)
-            .verticalScroll(rememberScrollState()),
-    ) {
+    MoneyTrackScreenBackground {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .verticalScroll(rememberScrollState()),
+        ) {
         TopNavigation(
             config = TopNavigationConfig.ProfileWithSelector(
-                profileImage = ColorPainter(AppTheme.colors.surfaceVariant),
+                profileImage = ColorPainter(AppTheme.colors.primaryContainer),
                 profileAvatarContent = {
                     LottieAnimationView(
                         rawRes = AppR.raw.lottie_profile_people,
@@ -345,11 +348,11 @@ private fun HomeContent(
         )
         Spacer(modifier = Modifier.height(Dimens.spacing12))
 
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = Dimens.spacing16),
-        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = Dimens.spacing16),
+            ) {
             BalanceSummaryCard(
                 accountBalanceText = uiState.accountBalanceText,
                 hasBudget = uiState.hasBudget,
@@ -362,17 +365,33 @@ private fun HomeContent(
 
             Text(
                 text = "Spend Frequency",
-                style = AppTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                style = AppTheme.typography.titleMedium,
                 color = AppTheme.colors.onBackground,
             )
             Spacer(modifier = Modifier.height(Dimens.spacing16))
             if (uiState.hasSpendFrequencyData) {
-                SpendFrequencyChart(points = uiState.spendFrequencyPoints)
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(Dimens.radius16),
+                    color = AppTheme.colors.surface,
+                    tonalElevation = Dimens.elevation2,
+                ) {
+                    Crossfade(
+                        targetState = uiState.spendFrequencyPoints,
+                        label = "SpendFrequencyData",
+                    ) { points ->
+                        SpendFrequencyChart(
+                            points = points,
+                            modifier = Modifier.padding(Dimens.spacing16),
+                        )
+                    }
+                }
             } else {
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(Dimens.radius16),
-                    color = AppTheme.colors.surfaceVariant,
+                    color = AppTheme.colors.surface,
+                    tonalElevation = Dimens.elevation2,
                 ) {
                     Text(
                         text = stringResource(id = AppR.string.home_spend_frequency_empty),
@@ -398,7 +417,7 @@ private fun HomeContent(
             ) {
                 Text(
                     text = "Recent Transaction",
-                    style = AppTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                    style = AppTheme.typography.titleMedium,
                     color = AppTheme.colors.onBackground,
                 )
                 Spacer(modifier = Modifier.weight(1f))
@@ -425,6 +444,7 @@ private fun HomeContent(
                     Spacer(modifier = Modifier.height(Dimens.spacing12))
                 }
                 Spacer(modifier = Modifier.height(Dimens.spacing12))
+            }
             }
         }
     }
@@ -466,25 +486,35 @@ private fun BalanceSummaryCard(
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(Dimens.radius24),
-        color = AppTheme.colors.surface,
+        shape = RoundedCornerShape(Dimens.radius20),
+        color = Color.Transparent,
+        tonalElevation = Dimens.elevation2,
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .animateContentSize()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            AppTheme.colors.primary,
+                            AppTheme.colors.primary.copy(alpha = 0.86f),
+                        ),
+                    ),
+                )
                 .padding(Dimens.spacing20),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
                 text = "Account Balance",
-                style = AppTheme.typography.titleMedium,
-                color = AppTheme.colors.onSurfaceVariant,
+                style = AppTheme.typography.labelLarge,
+                color = AppTheme.colors.onPrimary.copy(alpha = 0.78f),
             )
             Spacer(modifier = Modifier.height(Dimens.spacing8))
             Text(
                 text = accountBalanceText,
-                style = AppTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold),
-                color = AppTheme.colors.onBackground,
+                style = AppTheme.typography.headlineLarge,
+                color = AppTheme.colors.onPrimary,
             )
             Spacer(modifier = Modifier.height(Dimens.spacing20))
 
@@ -503,7 +533,7 @@ private fun BalanceSummaryCard(
                         label = stringResource(id = AppR.string.home_budget_label),
                         value = budgetText.orEmpty(),
                         icon = R.drawable.line_chart_2,
-                        background = Green100,
+                        background = AppTheme.colors.success,
                         onClick = { onSetBudgetClick(budgetAmount) },
                     )
                 }
@@ -539,7 +569,7 @@ private fun StatCard(
                 }
             },
         color = background,
-        shape = RoundedCornerShape(Dimens.radius24),
+        shape = RoundedCornerShape(Dimens.radius16),
     ) {
         androidx.compose.foundation.layout.BoxWithConstraints(
             modifier = Modifier.fillMaxSize(),
@@ -568,7 +598,7 @@ private fun StatCard(
                         .size(iconSize)
                         .background(
                             color = AppTheme.colors.onPrimary,
-                            shape = RoundedCornerShape(Dimens.radius16),
+                            shape = RoundedCornerShape(Dimens.radius12),
                         ),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -610,10 +640,10 @@ private fun MissingBudgetCard(
             .border(
                 width = Dimens.borderThick,
                 color = AppTheme.colors.primary.copy(alpha = 0.4f),
-                shape = RoundedCornerShape(Dimens.radius24),
+                shape = RoundedCornerShape(Dimens.radius16),
             ),
-        color = AppTheme.colors.surfaceVariant,
-        shape = RoundedCornerShape(Dimens.radius24),
+        color = AppTheme.colors.primaryContainer,
+        shape = RoundedCornerShape(Dimens.radius16),
     ) {
         Column(
             modifier = Modifier
@@ -635,16 +665,14 @@ private fun MissingBudgetCard(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun NotificationPermissionBottomSheet(
     notificationsPerDay: Int,
     onAllowNotifications: () -> Unit,
     onNotNow: () -> Unit,
 ) {
-    ModalBottomSheet(
+    MoneyTrackBottomSheet(
         onDismissRequest = onNotNow,
-        containerColor = AppTheme.colors.surface,
     ) {
         Column(
             modifier = Modifier
@@ -655,7 +683,7 @@ private fun NotificationPermissionBottomSheet(
         ) {
             Text(
                 text = stringResource(id = AppR.string.home_notification_sheet_title),
-                style = AppTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                style = AppTheme.typography.titleMedium,
                 color = AppTheme.colors.onSurface,
             )
             Text(
@@ -679,7 +707,6 @@ private fun NotificationPermissionBottomSheet(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun BudgetSetupBottomSheet(
     onDismiss: () -> Unit,
@@ -704,9 +731,8 @@ private fun BudgetSetupBottomSheet(
         }
     }
 
-    ModalBottomSheet(
+    MoneyTrackBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = AppTheme.colors.surface,
     ) {
         Column(
             modifier = Modifier
@@ -720,7 +746,7 @@ private fun BudgetSetupBottomSheet(
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(Dimens.radius16),
-                        color = AppTheme.colors.surfaceVariant,
+                        color = AppTheme.colors.primaryContainer,
                     ) {
                         Column(
                             modifier = Modifier
@@ -730,7 +756,7 @@ private fun BudgetSetupBottomSheet(
                         ) {
                             Text(
                                 text = stringResource(id = AppR.string.home_budget_privacy_title),
-                                style = AppTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                style = AppTheme.typography.titleMedium,
                                 color = AppTheme.colors.onSurface,
                             )
                             Text(
@@ -740,7 +766,7 @@ private fun BudgetSetupBottomSheet(
                             )
                             Text(
                                 text = stringResource(id = AppR.string.home_budget_need_title),
-                                style = AppTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                style = AppTheme.typography.titleMedium,
                                 color = AppTheme.colors.onSurface,
                             )
                             Text(
@@ -770,13 +796,13 @@ private fun BudgetSetupBottomSheet(
                         ) {
                             Text(
                                 text = stringResource(id = AppR.string.home_budget_sheet_title),
-                                style = AppTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                style = AppTheme.typography.titleMedium,
                                 color = AppTheme.colors.onPrimary,
                             )
                             Spacer(modifier = Modifier.height(Dimens.spacing8))
                             Text(
                                 text = formatAmount(parsedBudget ?: 0.0),
-                                style = AppTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold),
+                                style = AppTheme.typography.headlineLarge,
                                 color = AppTheme.colors.onPrimary,
                             )
                         }
@@ -822,7 +848,7 @@ private fun BudgetSetupBottomSheet(
                         )
                         Text(
                             text = stringResource(id = AppR.string.home_budget_saved_title),
-                            style = AppTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            style = AppTheme.typography.titleMedium,
                             color = AppTheme.colors.onSurface,
                         )
                     }
@@ -833,16 +859,18 @@ private fun BudgetSetupBottomSheet(
 }
 
 @Composable
-private fun SpendFrequencyChart(points: List<Float>) {
+private fun SpendFrequencyChart(
+    points: List<Float>,
+    modifier: Modifier = Modifier,
+) {
     val chartLineColor = AppTheme.colors.primary
     val chartFillColor = AppTheme.colors.primary.copy(alpha = 0.15f)
     val chartGridColor = AppTheme.colors.outline.copy(alpha = 0.15f)
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .height(170.dp)
-            .background(AppTheme.colors.background),
+            .height(170.dp),
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             if (points.isEmpty()) {

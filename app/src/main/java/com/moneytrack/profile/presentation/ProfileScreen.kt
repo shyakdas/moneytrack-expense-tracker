@@ -23,9 +23,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -46,10 +44,11 @@ import ui.components.navigation.bottomNav.BottomNavItem
 import ui.components.navigation.bottomNav.PrimaryBottomNavigation
 import ui.components.navigation.button.LargeButton
 import ui.components.form.input.InputField
+import ui.components.surface.MoneyTrackCard
+import ui.components.surface.MoneyTrackBottomSheet
+import ui.components.surface.MoneyTrackScreenBackground
 import ui.theme.AppTheme
 import ui.theme.Dimens
-import ui.theme.Green100
-import ui.theme.Red100
 
 private const val ROUTE_HOME = "home"
 private const val ROUTE_TRANSACTION = "transaction"
@@ -224,26 +223,27 @@ private fun ProfileContent(
     onEditClick: () -> Unit,
     onActionClick: (ProfileActionType) -> Unit,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(AppTheme.colors.background)
-            .padding(innerPadding)
-            .statusBarsPadding()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = Dimens.spacing16),
-    ) {
-        Spacer(modifier = Modifier.height(Dimens.spacing8))
-        ProfileHeader(
-            name = uiState.name,
-            onEditClick = onEditClick,
-        )
-        Spacer(modifier = Modifier.height(Dimens.spacing32))
-        ProfileActionsCard(
-            actionItems = actionItems,
-            onActionClick = onActionClick,
-        )
-        Spacer(modifier = Modifier.height(Dimens.spacing24))
+    MoneyTrackScreenBackground {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .statusBarsPadding()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = Dimens.spacing16),
+        ) {
+            Spacer(modifier = Modifier.height(Dimens.spacing8))
+            ProfileHeader(
+                name = uiState.name,
+                onEditClick = onEditClick,
+            )
+            Spacer(modifier = Modifier.height(Dimens.spacing24))
+            ProfileActionsCard(
+                actionItems = actionItems,
+                onActionClick = onActionClick,
+            )
+            Spacer(modifier = Modifier.height(Dimens.spacing24))
+        }
     }
 }
 
@@ -252,27 +252,33 @@ private fun ProfileHeader(
     name: String,
     onEditClick: () -> Unit,
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        ProfileAvatar()
-        Spacer(modifier = Modifier.width(Dimens.spacing16))
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.Center,
+    MoneyTrackCard {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                text = name,
-                style = AppTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                color = AppTheme.colors.onBackground,
-            )
+            ProfileAvatar()
+            Spacer(modifier = Modifier.width(Dimens.spacing16))
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.Center,
+            ) {
+                Text(
+                    text = name,
+                    style = AppTheme.typography.headlineSmall,
+                    color = AppTheme.colors.onBackground,
+                )
+                Text(
+                    text = "Personal finance workspace",
+                    style = AppTheme.typography.bodySmall,
+                    color = AppTheme.colors.onSurfaceVariant,
+                )
+            }
+            ProfileEditButton(onClick = onEditClick)
         }
-        ProfileEditButton(onClick = onEditClick)
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun EditProfileNameBottomSheet(
     value: String,
@@ -281,9 +287,8 @@ private fun EditProfileNameBottomSheet(
     onSave: () -> Unit,
     isSaveEnabled: Boolean,
 ) {
-    ModalBottomSheet(
+    MoneyTrackBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = AppTheme.colors.surface,
     ) {
         Column(
             modifier = Modifier
@@ -328,10 +333,8 @@ private fun ProfileActionsCard(
     actionItems: List<ProfileActionItem>,
     onActionClick: (ProfileActionType) -> Unit,
 ) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(Dimens.radius24),
-        color = AppTheme.colors.surface,
+    MoneyTrackCard(
+        contentPadding = PaddingValues(Dimens.spacing4),
     ) {
         Column {
             actionItems.forEachIndexed { index, item ->
@@ -387,15 +390,13 @@ private fun ProfileActionRow(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ClearDataBottomSheet(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit,
 ) {
-    ModalBottomSheet(
+    MoneyTrackBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = AppTheme.colors.surface,
     ) {
         Column(
             modifier = Modifier
@@ -436,13 +437,13 @@ private fun ClearDataBottomSheet(
             ClearDataActionButton(
                 text = stringResource(id = R.string.profile_clear_data_no),
                 onClick = onDismiss,
-                backgroundColor = Green100,
+                    backgroundColor = AppTheme.colors.success,
             )
 
             ClearDataActionButton(
                 text = stringResource(id = R.string.profile_clear_data_yes),
                 onClick = onConfirm,
-                backgroundColor = Red100,
+                    backgroundColor = AppTheme.colors.error,
             )
         }
     }

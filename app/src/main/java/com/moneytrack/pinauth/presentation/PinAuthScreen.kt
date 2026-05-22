@@ -29,6 +29,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.moneytrack.R
+import ui.components.navigation.button.LargeButton
+import ui.components.surface.MoneyTrackCard
+import ui.components.surface.MoneyTrackScreenBackground
 import ui.theme.AppTheme
 import ui.theme.Dimens
 import ui.theme.MoneyTrackTheme
@@ -60,48 +63,45 @@ private fun PinAuthPinScreen(
     uiState: PinAuthUiState,
     onAction: (PinAuthAction) -> Unit,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(AppTheme.colors.background)
-            .padding(horizontal = Dimens.spacing24),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Spacer(modifier = Modifier.height(Dimens.spacing72))
-        Text(
-            text = stringResource(R.string.pin_auth_title),
-            style = AppTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-            color = AppTheme.colors.onBackground,
-            textAlign = TextAlign.Center,
-        )
-
-        if (uiState.showPinError) {
-            Spacer(modifier = Modifier.height(Dimens.spacing8))
+    MoneyTrackScreenBackground {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = Dimens.spacing24),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Spacer(modifier = Modifier.height(Dimens.spacing72))
             Text(
-                text = stringResource(R.string.pin_auth_error),
-                style = AppTheme.typography.bodySmall,
-                color = AppTheme.colors.error,
+                text = stringResource(R.string.pin_auth_title),
+                style = AppTheme.typography.headlineMedium,
+                color = AppTheme.colors.onBackground,
                 textAlign = TextAlign.Center,
             )
-        }
 
-        Spacer(modifier = Modifier.height(Dimens.spacing32))
-        PinDots(enteredCount = uiState.enteredPin.length)
-        Spacer(modifier = Modifier.weight(1f))
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    color = AppTheme.colors.surface,
-                    shape = RoundedCornerShape(Dimens.radius24),
+            if (uiState.showPinError) {
+                Spacer(modifier = Modifier.height(Dimens.spacing8))
+                Text(
+                    text = stringResource(R.string.pin_auth_error),
+                    style = AppTheme.typography.bodySmall,
+                    color = AppTheme.colors.error,
+                    textAlign = TextAlign.Center,
                 )
-                .padding(vertical = Dimens.spacing24),
-            contentAlignment = Alignment.Center,
-        ) {
-            PinKeypad(onAction = onAction)
+            }
+
+            Spacer(modifier = Modifier.height(Dimens.spacing32))
+            PinDots(enteredCount = uiState.enteredPin.length)
+            Spacer(modifier = Modifier.weight(1f))
+
+            MoneyTrackCard {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    PinKeypad(onAction = onAction)
+                }
+            }
+            Spacer(modifier = Modifier.height(Dimens.spacing24))
         }
-        Spacer(modifier = Modifier.height(Dimens.spacing24))
     }
 }
 
@@ -110,62 +110,53 @@ private fun PinAuthBiometricScreen(
     uiState: PinAuthUiState,
     onAction: (PinAuthAction) -> Unit,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(AppTheme.colors.background)
-            .padding(horizontal = Dimens.spacing24),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Box(
+    MoneyTrackScreenBackground {
+        Column(
             modifier = Modifier
-                .size(Dimens.spacing72)
-                .background(AppTheme.colors.primary.copy(alpha = 0.1f), shape = CircleShape),
-            contentAlignment = Alignment.Center,
+                .fillMaxSize()
+                .padding(horizontal = Dimens.spacing24),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
         ) {
-            Icon(
-                painter = painterResource(id = com.moneytrack.designsystem.R.drawable.settings),
-                contentDescription = null,
-                tint = AppTheme.colors.primary,
-            )
-        }
-        Spacer(modifier = Modifier.height(Dimens.spacing24))
-        Text(
-            text = stringResource(R.string.pin_auth_biometric_title),
-            style = AppTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-            color = AppTheme.colors.onBackground,
-            textAlign = TextAlign.Center,
-        )
-        Spacer(modifier = Modifier.height(Dimens.spacing12))
-        Text(
-            text = stringResource(R.string.pin_auth_biometric_subtitle),
-            style = AppTheme.typography.bodyMedium,
-            color = AppTheme.colors.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-        )
-        if (uiState.showBiometricError) {
-            Spacer(modifier = Modifier.height(Dimens.spacing16))
+            Box(
+                modifier = Modifier
+                    .size(Dimens.spacing72)
+                    .background(AppTheme.colors.primaryContainer, shape = CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(id = com.moneytrack.designsystem.R.drawable.settings),
+                    contentDescription = null,
+                    tint = AppTheme.colors.primary,
+                )
+            }
+            Spacer(modifier = Modifier.height(Dimens.spacing24))
             Text(
-                text = stringResource(R.string.pin_auth_biometric_error),
-                style = AppTheme.typography.bodySmall,
-                color = AppTheme.colors.error,
+                text = stringResource(R.string.pin_auth_biometric_title),
+                style = AppTheme.typography.headlineMedium,
+                color = AppTheme.colors.onBackground,
                 textAlign = TextAlign.Center,
             )
-        }
-        Spacer(modifier = Modifier.height(Dimens.spacing24))
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(Dimens.buttonLargeHeight)
-                .background(color = AppTheme.colors.primary, shape = CircleShape)
-                .clickable { onAction(PinAuthAction.RequestBiometricAuth) },
-            contentAlignment = Alignment.Center,
-        ) {
+            Spacer(modifier = Modifier.height(Dimens.spacing12))
             Text(
+                text = stringResource(R.string.pin_auth_biometric_subtitle),
+                style = AppTheme.typography.bodyMedium,
+                color = AppTheme.colors.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+            if (uiState.showBiometricError) {
+                Spacer(modifier = Modifier.height(Dimens.spacing16))
+                Text(
+                    text = stringResource(R.string.pin_auth_biometric_error),
+                    style = AppTheme.typography.bodySmall,
+                    color = AppTheme.colors.error,
+                    textAlign = TextAlign.Center,
+                )
+            }
+            Spacer(modifier = Modifier.height(Dimens.spacing24))
+            LargeButton(
                 text = stringResource(R.string.pin_auth_biometric_retry),
-                style = AppTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
-                color = AppTheme.colors.onPrimary,
+                onClick = { onAction(PinAuthAction.RequestBiometricAuth) },
             )
         }
     }
@@ -183,7 +174,7 @@ private fun PinDots(enteredCount: Int) {
                         color = if (filled) {
                             AppTheme.colors.primary
                         } else {
-                            AppTheme.colors.onSurfaceVariant.copy(alpha = 0.3f)
+                            AppTheme.colors.surfaceVariant
                         },
                         shape = CircleShape,
                     ),
