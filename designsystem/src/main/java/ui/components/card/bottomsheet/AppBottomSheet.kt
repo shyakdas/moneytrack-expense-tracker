@@ -198,7 +198,6 @@ private fun FilterContent(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Preview(name = "BottomSheet – Attachment Picker (Light & Dark)")
 @Composable
 private fun BottomSheetAttachmentPreview() {
