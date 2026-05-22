@@ -70,6 +70,7 @@ android {
                 "AndroidGradlePluginVersion",
                 "GradleDependency",
                 "NewerVersionAvailable",
+                "OldTargetApi",
             )
     }
 
