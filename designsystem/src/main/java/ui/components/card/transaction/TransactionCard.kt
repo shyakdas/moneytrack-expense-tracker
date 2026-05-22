@@ -53,9 +53,9 @@ fun TransactionCard(
 
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(Dimens.radius16),
+        shape = RoundedCornerShape(Dimens.radius12),
         color = AppTheme.colors.surface,
-        tonalElevation = Dimens.elevation2,
+        tonalElevation = Dimens.elevation0,
     ) {
         Row(
             modifier = Modifier.padding(Dimens.spacing16),
@@ -67,7 +67,7 @@ fun TransactionCard(
                     .size(Dimens.iconContainerSize)
                     .background(
                         color = iconContainerColor,
-                        shape = RoundedCornerShape(Dimens.radius16)
+                        shape = RoundedCornerShape(Dimens.radius12)
                     ),
                 contentAlignment = Alignment.Center
             ) {

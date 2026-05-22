@@ -39,7 +39,7 @@ fun TimeRangeTab(
             .height(Dimens.buttonSmallHeight)
             .background(
                 color = AppTheme.colors.surfaceVariant,
-                shape = RoundedCornerShape(Dimens.radius24)
+                shape = RoundedCornerShape(Dimens.radius12)
             )
             .padding(Dimens.spacing4),
         verticalAlignment = Alignment.CenterVertically
@@ -88,7 +88,7 @@ private fun TimeRangeTabItem(
             .padding(horizontal = Dimens.spacing2)
             .background(
                 color = backgroundColor,
-                shape = RoundedCornerShape(Dimens.radius20)
+                shape = RoundedCornerShape(Dimens.radius8)
             )
             .clickable(onClick = onClick)
             .padding(horizontal = if (compact) Dimens.spacing8 else Dimens.spacing12),

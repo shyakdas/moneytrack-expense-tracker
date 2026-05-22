@@ -53,7 +53,7 @@ fun ListItemCard(
             )
             .background(
                 color = AppTheme.colors.surface,
-                shape = RoundedCornerShape(Dimens.radius16)
+                shape = RoundedCornerShape(Dimens.radius12)
             )
             .then(
                 if (onClick != null) {
@@ -114,7 +114,7 @@ fun ListItemCard(
                             .size(Dimens.checkboxSize)
                             .background(
                                 color = AppTheme.colors.primary,
-                                shape = RoundedCornerShape(Dimens.radius12)
+                                shape = RoundedCornerShape(Dimens.radius8)
                             ),
                         contentAlignment = Alignment.Center
                     ) {

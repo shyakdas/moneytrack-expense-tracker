@@ -46,7 +46,7 @@ fun BudgetCard(
             .animateContentSize(animationSpec = MotionTokens.standardTween())
             .background(
                 color = AppTheme.colors.surface,
-                shape = RoundedCornerShape(Dimens.radius16)
+                shape = RoundedCornerShape(Dimens.radius12)
             )
             .padding(Dimens.spacing20),
         verticalArrangement = Arrangement.spacedBy(Dimens.spacing12)
@@ -99,7 +99,7 @@ private fun BudgetCategoryPill(
         modifier = Modifier
             .background(
                 color = AppTheme.colors.surfaceVariant,
-                shape = RoundedCornerShape(Dimens.radius50)
+                shape = RoundedCornerShape(Dimens.radius12)
             )
             .padding(
                 horizontal = Dimens.spacing16,
@@ -170,7 +170,7 @@ private fun BudgetWarningIcon() {
             .size(Dimens.warningIconSize)
             .background(
                 color = AppTheme.colors.error,
-                shape = CircleShape
+                shape = RoundedCornerShape(Dimens.radius12)
             ),
         contentAlignment = Alignment.Center
     ) {

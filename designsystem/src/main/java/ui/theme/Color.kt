@@ -7,32 +7,32 @@ package ui.theme
 import androidx.compose.ui.graphics.Color
 
 // --------------------
-// Trust Teal Scale
+// Brand Blue Scale
 // --------------------
-val Teal100 = Color(0xFF0B5D7A)
-val Teal90 = Color(0xFF0A4A63)
-val Teal80 = Color(0xFF08708F)
-val Teal60 = Color(0xFF23A6C8)
-val Teal40 = Color(0xFF58C7E8)
-val Teal20 = Color(0xFFD8F1F7)
-val Teal10 = Color(0xFFEAF6F8)
+val BlueInk100 = Color(0xFF1D3557)
+val BlueInk90 = Color(0xFF203A5F)
+val BlueInk80 = Color(0xFF2F5F98)
+val BlueInk60 = Color(0xFF4E8DCC)
+val BlueInk40 = Color(0xFF9EC7EA)
+val BlueInk20 = Color(0xFFDCEBFA)
+val BlueInk10 = Color(0xFFF2F7FC)
 
 // --------------------
 // Light Scale
 // --------------------
 val Light100 = Color(0xFFFFFFFF)
-val Light80 = Color(0xFFF7FAFC)
-val Light60 = Color(0xFFEAF0F3)
-val Light40 = Color(0xFFD5DEE5)
-val Light20 = Color(0xFF64748B)
+val Light80 = Color(0xFFF7F8F5)
+val Light60 = Color(0xFFEEF1ED)
+val Light40 = Color(0xFFD9E0DA)
+val Light20 = Color(0xFF667085)
 
 // --------------------
 // Dark Scale
 // --------------------
-val Dark100 = Color(0xFF0B1220)
-val Dark75 = Color(0xFF101820)
-val Dark50 = Color(0xFF17313B)
-val Dark25 = Color(0xFF244653)
+val Dark100 = Color(0xFF101418)
+val Dark75 = Color(0xFF171C21)
+val Dark50 = Color(0xFF242B31)
+val Dark25 = Color(0xFF38424B)
 
 // --------------------
 // Blue Scale
@@ -46,29 +46,29 @@ val Blue20 = Color(0xFFDBEAFE)
 // --------------------
 // Red Scale
 // --------------------
-val Red100 = Color(0xFFB42318)
-val Red80 = Color(0xFFD92D20)
+val Red100 = Color(0xFFC2412D)
+val Red80 = Color(0xFFE05A44)
 val Red60 = Color(0xFFF97066)
 val Red40 = Color(0xFFFDA29B)
-val Red20 = Color(0xFFFEE4E2)
+val Red20 = Color(0xFFFFE7E1)
 
 // --------------------
 // Green Scale
 // --------------------
-val Green100 = Color(0xFF0E7C59)
-val Green80 = Color(0xFF0E9F6E)
+val Green100 = Color(0xFF147A5A)
+val Green80 = Color(0xFF1B9A72)
 val Green60 = Color(0xFF34D399)
 val Green40 = Color(0xFF86EFAC)
-val Green20 = Color(0xFFD1FAE5)
+val Green20 = Color(0xFFDDF7EC)
 
 // --------------------
 // Yellow Scale
 // --------------------
-val Yellow100 = Color(0xFFD97706)
+val Yellow100 = Color(0xFFB7791F)
 val Yellow80 = Color(0xFFF59E0B)
 val Yellow60 = Color(0xFFFBBF24)
 val Yellow40 = Color(0xFFFDE68A)
-val Yellow20 = Color(0xFFFEF3C7)
+val Yellow20 = Color(0xFFFFF1CC)
 
 // --------------------
 // Neutral
