@@ -32,6 +32,7 @@ import com.moneytrack.designsystem.R as DsR
 import com.moneytrack.settings.domain.model.AppThemeMode
 import ui.components.navigation.topNav.TopNavigation
 import ui.components.navigation.topNav.TopNavigationConfig
+import ui.components.surface.MoneyTrackScreenBackground
 import ui.theme.AppTheme
 import ui.theme.Dimens
 import ui.theme.MoneyTrackTheme
@@ -82,32 +83,33 @@ fun ThemeScreen(
     Scaffold(
         containerColor = AppTheme.colors.background,
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(AppTheme.colors.background)
-                .padding(innerPadding),
-        ) {
-            TopNavigation(
-                config = TopNavigationConfig.BackWithTitle(
-                    title = stringResource(id = R.string.theme_title),
-                    onBackClick = onBackClick,
-                ),
-                containerColor = Color.Transparent,
-            )
-
-            LazyColumn(
+        MoneyTrackScreenBackground {
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = Dimens.spacing16)
-                    .padding(top = Dimens.spacing12),
+                    .padding(innerPadding),
             ) {
-                items(themeOptions, key = { it.themeMode.name }) { themeOption ->
-                    ThemeRow(
-                        themeOption = themeOption,
-                        isSelected = themeOption.themeMode == uiState.selectedThemeMode,
-                        onClick = { onThemeModeSelected(themeOption.themeMode) },
-                    )
+                TopNavigation(
+                    config = TopNavigationConfig.BackWithTitle(
+                        title = stringResource(id = R.string.theme_title),
+                        onBackClick = onBackClick,
+                    ),
+                    containerColor = Color.Transparent,
+                )
+
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = Dimens.spacing16)
+                        .padding(top = Dimens.spacing12),
+                ) {
+                    items(themeOptions, key = { it.themeMode.name }) { themeOption ->
+                        ThemeRow(
+                            themeOption = themeOption,
+                            isSelected = themeOption.themeMode == uiState.selectedThemeMode,
+                            onClick = { onThemeModeSelected(themeOption.themeMode) },
+                        )
+                    }
                 }
             }
         }

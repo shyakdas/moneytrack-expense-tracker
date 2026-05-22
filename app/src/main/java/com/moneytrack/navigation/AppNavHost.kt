@@ -2,10 +2,20 @@
 
 package com.moneytrack.navigation
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.NavHost
@@ -25,6 +35,7 @@ import com.moneytrack.settings.presentation.SettingsScreenActions
 import com.moneytrack.settings.presentation.SettingsRoute
 import com.moneytrack.settings.presentation.ThemeRoute
 import com.moneytrack.transaction.presentation.TransactionRoute
+import ui.theme.MotionTokens
 
 @Composable
 @Suppress("LongMethod")
@@ -54,6 +65,11 @@ fun AppNavHost(
         navController = navController,
         startDestination = startDestination,
         modifier = modifier,
+        enterTransition = { appEnterTransition() },
+        exitTransition = { appExitTransition() },
+        popEnterTransition = { appPopEnterTransition() },
+        popExitTransition = { appPopExitTransition() },
+        sizeTransform = { SizeTransform(clip = false) },
     ) {
         composable(AppDestination.Onboarding.route) {
             OnboardingRoute(
@@ -238,6 +254,100 @@ fun AppNavHost(
             )
         }
     }
+}
+
+private val topLevelRoutes = setOf(
+    AppDestination.Home.route,
+    AppDestination.Transaction.route,
+    AppDestination.Profile.route,
+)
+
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.appEnterTransition(): EnterTransition {
+    val targetRoute = targetState.destination.route
+    val initialRoute = initialState.destination.route
+    val isTopLevelSwitch = initialRoute in topLevelRoutes && targetRoute in topLevelRoutes
+
+    return when {
+        isTopLevelSwitch -> fadeIn(
+            animationSpec = MotionTokens.standardTween(MotionTokens.DurationMedium),
+        ) + scaleIn(
+            initialScale = 0.98f,
+            animationSpec = MotionTokens.standardTween(MotionTokens.DurationMedium),
+        )
+
+        targetRoute == AppDestination.Expense.route -> slideIntoContainer(
+            towards = AnimatedContentTransitionScope.SlideDirection.Up,
+            animationSpec = tween(
+                durationMillis = MotionTokens.DurationLong,
+                easing = MotionTokens.EmphasizedEasing,
+            ),
+        ) + fadeIn(animationSpec = MotionTokens.standardTween())
+
+        else -> slideIntoContainer(
+            towards = AnimatedContentTransitionScope.SlideDirection.Left,
+            animationSpec = tween(
+                durationMillis = MotionTokens.DurationLong,
+                easing = MotionTokens.EmphasizedEasing,
+            ),
+        ) + fadeIn(animationSpec = MotionTokens.standardTween())
+    }
+}
+
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.appExitTransition(): ExitTransition {
+    val targetRoute = targetState.destination.route
+    val initialRoute = initialState.destination.route
+    val isTopLevelSwitch = initialRoute in topLevelRoutes && targetRoute in topLevelRoutes
+
+    return when {
+        isTopLevelSwitch -> fadeOut(
+            animationSpec = MotionTokens.standardTween(MotionTokens.DurationShort),
+        ) + scaleOut(
+            targetScale = 1.02f,
+            animationSpec = MotionTokens.standardTween(MotionTokens.DurationShort),
+        )
+
+        initialRoute == AppDestination.Expense.route -> slideOutOfContainer(
+            towards = AnimatedContentTransitionScope.SlideDirection.Down,
+            animationSpec = tween(
+                durationMillis = MotionTokens.DurationMedium,
+                easing = MotionTokens.StandardEasing,
+            ),
+        ) + fadeOut(animationSpec = MotionTokens.standardTween(MotionTokens.DurationShort))
+
+        else -> slideOutOfContainer(
+            towards = AnimatedContentTransitionScope.SlideDirection.Left,
+            animationSpec = tween(
+                durationMillis = MotionTokens.DurationMedium,
+                easing = MotionTokens.StandardEasing,
+            ),
+        ) + fadeOut(animationSpec = MotionTokens.standardTween(MotionTokens.DurationShort))
+    }
+}
+
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.appPopEnterTransition(): EnterTransition =
+    slideIntoContainer(
+        towards = AnimatedContentTransitionScope.SlideDirection.Right,
+        animationSpec = tween(
+            durationMillis = MotionTokens.DurationMedium,
+            easing = MotionTokens.EmphasizedEasing,
+        ),
+    ) + fadeIn(animationSpec = MotionTokens.standardTween())
+
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.appPopExitTransition(): ExitTransition {
+    val initialRoute = initialState.destination.route
+    val direction = if (initialRoute == AppDestination.Expense.route) {
+        AnimatedContentTransitionScope.SlideDirection.Down
+    } else {
+        AnimatedContentTransitionScope.SlideDirection.Right
+    }
+
+    return slideOutOfContainer(
+        towards = direction,
+        animationSpec = tween(
+            durationMillis = MotionTokens.DurationMedium,
+            easing = MotionTokens.StandardEasing,
+        ),
+    ) + fadeOut(animationSpec = MotionTokens.standardTween(MotionTokens.DurationShort))
 }
 
 private fun NavHostController.navigateToTopLevel(route: String) {

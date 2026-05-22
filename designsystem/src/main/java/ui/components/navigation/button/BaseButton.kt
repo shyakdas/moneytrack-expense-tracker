@@ -3,15 +3,19 @@
 package ui.components.navigation.button
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import ui.motion.pressScale
 import ui.theme.AppTheme
 import ui.theme.Dimens
 
@@ -28,6 +32,7 @@ internal fun BaseButton(
 
     val isFullWidth = size == ButtonSize.LARGE
     val buttonColors = buttonStyle(variant = variant, enabled = enabled)
+    val interactionSource = remember { MutableInteractionSource() }
 
     Surface(
         modifier = modifier
@@ -36,11 +41,21 @@ internal fun BaseButton(
                 else Modifier.wrapContentWidth()
             )
             .height(size.height)
-            .clickable(enabled = enabled, onClick = onClick),
-        shape = RoundedCornerShape(Dimens.spacing16),
+            .pressScale(
+                interactionSource = interactionSource,
+                enabled = enabled,
+            )
+            .clickable(
+                enabled = enabled,
+                interactionSource = interactionSource,
+                indication = LocalIndication.current,
+                onClick = onClick,
+            ),
+        shape = RoundedCornerShape(Dimens.radius16),
         color = buttonColors.backgroundColor,
         contentColor = buttonColors.contentColor,
-        border = buttonColors.borderStroke
+        border = buttonColors.borderStroke,
+        tonalElevation = if (variant == ButtonVariant.PRIMARY) Dimens.elevation2 else Dimens.elevation0,
     ) {
         Row(
             modifier = Modifier.padding(horizontal = size.horizontalPadding),
@@ -60,7 +75,7 @@ internal fun BaseButton(
 
             Text(
                 text = text,
-                style = AppTheme.typography.titleMedium,
+                style = AppTheme.typography.labelLarge,
                 color = buttonColors.contentColor
             )
         }
@@ -72,30 +87,39 @@ private fun buttonStyle(
     variant: ButtonVariant,
     enabled: Boolean,
 ): ButtonStyle {
-    // The design language is intentionally unified across variants for now.
-    val resolvedVariant = variant
-    val baseBackgroundColor = AppTheme.colors.background
-    val baseContentColor = AppTheme.colors.onBackground
     val contentAlpha = if (enabled) 1f else 0.48f
-    val borderAlpha = if (enabled) 1f else 0.48f
-    val borderColor = when (resolvedVariant) {
-        ButtonVariant.PRIMARY,
-        ButtonVariant.SECONDARY,
-        ButtonVariant.TERTIARY -> baseContentColor.copy(alpha = borderAlpha)
+    val style = when (variant) {
+        ButtonVariant.PRIMARY -> ButtonStyle(
+            backgroundColor = AppTheme.colors.primary,
+            contentColor = AppTheme.colors.onPrimary,
+            borderStroke = null,
+        )
+
+        ButtonVariant.SECONDARY -> ButtonStyle(
+            backgroundColor = AppTheme.colors.primaryContainer,
+            contentColor = AppTheme.colors.onPrimaryContainer,
+            borderStroke = null,
+        )
+
+        ButtonVariant.TERTIARY -> ButtonStyle(
+            backgroundColor = AppTheme.colors.surface,
+            contentColor = AppTheme.colors.primary,
+            borderStroke = BorderStroke(
+                width = Dimens.borderNormal,
+                color = AppTheme.colors.outline,
+            ),
+        )
     }
 
-    return ButtonStyle(
-        backgroundColor = baseBackgroundColor,
-        contentColor = baseContentColor.copy(alpha = contentAlpha),
-        borderStroke = BorderStroke(
-            width = Dimens.spacing1,
-            color = borderColor,
-        ),
+    return style.copy(
+        backgroundColor = style.backgroundColor.copy(alpha = if (enabled) 1f else 0.48f),
+        contentColor = style.contentColor.copy(alpha = contentAlpha),
+        borderStroke = style.borderStroke,
     )
 }
 
 private data class ButtonStyle(
     val backgroundColor: Color,
     val contentColor: Color,
-    val borderStroke: BorderStroke,
+    val borderStroke: BorderStroke?,
 )

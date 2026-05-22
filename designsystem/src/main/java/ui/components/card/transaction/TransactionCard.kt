@@ -40,13 +40,22 @@ fun TransactionCard(
 ) {
     val amountColor = when (type) {
         TransactionType.EXPENSE -> AppTheme.colors.error
-        TransactionType.INCOME -> AppTheme.colors.primary
+        TransactionType.INCOME -> AppTheme.colors.success
+    }
+    val iconContainerColor = when (type) {
+        TransactionType.EXPENSE -> AppTheme.colors.error.copy(alpha = 0.12f)
+        TransactionType.INCOME -> AppTheme.colors.successContainer
+    }
+    val iconTint = when (type) {
+        TransactionType.EXPENSE -> AppTheme.colors.error
+        TransactionType.INCOME -> AppTheme.colors.success
     }
 
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(Dimens.radius20),
-        color = AppTheme.colors.surface
+        shape = RoundedCornerShape(Dimens.radius16),
+        color = AppTheme.colors.surface,
+        tonalElevation = Dimens.elevation2,
     ) {
         Row(
             modifier = Modifier.padding(Dimens.spacing16),
@@ -57,7 +66,7 @@ fun TransactionCard(
                 modifier = Modifier
                     .size(Dimens.iconContainerSize)
                     .background(
-                        color = AppTheme.colors.surfaceVariant,
+                        color = iconContainerColor,
                         shape = RoundedCornerShape(Dimens.radius16)
                     ),
                 contentAlignment = Alignment.Center
@@ -65,7 +74,7 @@ fun TransactionCard(
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = AppTheme.colors.primary,
+                    tint = iconTint,
                     modifier = Modifier.size(Dimens.icon24)
                 )
             }

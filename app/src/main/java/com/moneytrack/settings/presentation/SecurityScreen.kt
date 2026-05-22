@@ -41,6 +41,7 @@ import kotlin.coroutines.resume
 import kotlinx.coroutines.suspendCancellableCoroutine
 import ui.components.navigation.topNav.TopNavigation
 import ui.components.navigation.topNav.TopNavigationConfig
+import ui.components.surface.MoneyTrackScreenBackground
 import ui.theme.AppTheme
 import ui.theme.Dimens
 import ui.theme.MoneyTrackTheme
@@ -94,32 +95,33 @@ fun SecurityScreen(
     Scaffold(
         containerColor = AppTheme.colors.background,
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(AppTheme.colors.background)
-                .padding(innerPadding),
-        ) {
-            TopNavigation(
-                config = TopNavigationConfig.BackWithTitle(
-                    title = stringResource(id = R.string.security_title),
-                    onBackClick = onBackClick,
-                ),
-                containerColor = Color.Transparent,
-            )
-
-            LazyColumn(
+        MoneyTrackScreenBackground {
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = Dimens.spacing16)
-                    .padding(top = Dimens.spacing12),
+                    .padding(innerPadding),
             ) {
-                items(options, key = { it.option.name }) { securityOption ->
-                    SecurityRow(
-                        securityOption = securityOption,
-                        isSelected = securityOption.option == uiState.selectedOption,
-                        onClick = { onOptionSelected(securityOption.option) },
-                    )
+                TopNavigation(
+                    config = TopNavigationConfig.BackWithTitle(
+                        title = stringResource(id = R.string.security_title),
+                        onBackClick = onBackClick,
+                    ),
+                    containerColor = Color.Transparent,
+                )
+
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = Dimens.spacing16)
+                        .padding(top = Dimens.spacing12),
+                ) {
+                    items(options, key = { it.option.name }) { securityOption ->
+                        SecurityRow(
+                            securityOption = securityOption,
+                            isSelected = securityOption.option == uiState.selectedOption,
+                            onClick = { onOptionSelected(securityOption.option) },
+                        )
+                    }
                 }
             }
         }

@@ -4,6 +4,7 @@ package ui.components.card.list
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,9 +22,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import ui.motion.pressScale
 import ui.theme.AppTheme
 import ui.theme.Dimens
 
@@ -39,15 +42,26 @@ fun ListItemCard(
     onClick: (() -> Unit)? = null,
     onSwitchChange: ((Boolean) -> Unit)? = null,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+
     Row(
         modifier = modifier
             .fillMaxWidth()
+            .pressScale(
+                interactionSource = interactionSource,
+                enabled = onClick != null,
+            )
             .background(
                 color = AppTheme.colors.surface,
                 shape = RoundedCornerShape(Dimens.radius16)
             )
             .then(
-                if (onClick != null) Modifier.clickable { onClick() }
+                if (onClick != null) {
+                    Modifier.clickable(
+                        interactionSource = interactionSource,
+                        indication = androidx.compose.material3.ripple(),
+                    ) { onClick() }
+                }
                 else Modifier
             )
             .padding(Dimens.spacing16),

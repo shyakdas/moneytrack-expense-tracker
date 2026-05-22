@@ -5,6 +5,7 @@ package ui.components.navigation.button
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,6 +24,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.moneytrack.designsystem.R
+import ui.motion.pressScale
 import ui.theme.AppTheme
 import ui.theme.Dimens
 import ui.theme.MoneyTrackTheme
@@ -36,9 +39,12 @@ fun IconActionButton(
     shape: IconButtonShape = IconButtonShape.ROUNDED_RECT,
     iconTint: Color = AppTheme.colors.onSurface
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+
     Box(
         modifier = modifier
             .size(Dimens.buttonSmallHeight)
+            .pressScale(interactionSource = interactionSource)
             .clip(shape.shape)
             .then(
                 when (variant) {
@@ -56,7 +62,11 @@ fun IconActionButton(
                         )
                 }
             )
-            .clickable(onClick = onClick),
+            .clickable(
+                interactionSource = interactionSource,
+                indication = androidx.compose.material3.ripple(),
+                onClick = onClick,
+            ),
         contentAlignment = Alignment.Center
     ) {
         androidx.compose.material3.Icon(

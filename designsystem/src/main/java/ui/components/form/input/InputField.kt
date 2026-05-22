@@ -41,11 +41,11 @@ fun InputField(
             .height(Dimens.inputHeight)
             .fillMaxWidth()
             .background(
-                color = AppTheme.colors.background,
+                color = AppTheme.colors.surface,
                 shape = RoundedCornerShape(Dimens.radius16)
             )
             .border(
-                width = Dimens.spacing1,
+                width = Dimens.borderNormal,
                 color = AppTheme.colors.outline,
                 shape = RoundedCornerShape(Dimens.radius16)
             )
@@ -71,7 +71,7 @@ fun InputField(
                 Text(
                     text = placeholder,
                     style = textStyle,
-                    color = AppTheme.colors.onSurfaceVariant
+                    color = AppTheme.colors.onSurfaceVariant.copy(alpha = 0.72f)
                 )
             }
 

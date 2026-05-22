@@ -3,21 +3,28 @@
 package ui.components.navigation.bottomNav
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.moneytrack.designsystem.R
 import ui.theme.AppTheme
 import ui.theme.Dimens
+import ui.theme.MotionTokens
 
 @Composable
 fun PrimaryBottomNavigation(
@@ -27,6 +34,14 @@ fun PrimaryBottomNavigation(
     onFabClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val fabInteractionSource = remember { MutableInteractionSource() }
+    val isFabPressed by fabInteractionSource.collectIsPressedAsState()
+    val fabScale by animateFloatAsState(
+        targetValue = if (isFabPressed) MotionTokens.PressedScale else 1f,
+        animationSpec = MotionTokens.pressSpring(),
+        label = "BottomBarFabScale",
+    )
+
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -38,10 +53,10 @@ fun PrimaryBottomNavigation(
             tonalElevation = Dimens.spacing6,
             shadowElevation = Dimens.spacing8,
             shape = RoundedCornerShape(
-                topStart = Dimens.radius24,
-                topEnd = Dimens.radius24
+                topStart = Dimens.radius20,
+                topEnd = Dimens.radius20
             ),
-            color = AppTheme.colors.surfaceVariant,
+            color = AppTheme.colors.surface,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
@@ -69,10 +84,15 @@ fun PrimaryBottomNavigation(
             containerColor = AppTheme.colors.primary,
             contentColor = AppTheme.colors.onPrimary,
             shape = CircleShape,
+            interactionSource = fabInteractionSource,
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .offset(y = -Dimens.spacing20)
                 .size(Dimens.fabSize)
+                .graphicsLayer {
+                    scaleX = fabScale
+                    scaleY = fabScale
+                }
                 .shadow(Dimens.spacing8, CircleShape)
                 .testTag("BottomBarFab")
         ) {

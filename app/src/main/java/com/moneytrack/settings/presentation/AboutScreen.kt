@@ -25,6 +25,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.moneytrack.R
 import ui.components.navigation.topNav.TopNavigation
 import ui.components.navigation.topNav.TopNavigationConfig
+import ui.components.surface.MoneyTrackCard
+import ui.components.surface.MoneyTrackScreenBackground
 import ui.theme.AppTheme
 import ui.theme.Dimens
 import ui.theme.MoneyTrackTheme
@@ -70,35 +72,36 @@ fun AboutScreen(
     Scaffold(
         containerColor = AppTheme.colors.background,
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(AppTheme.colors.background)
-                .padding(innerPadding),
-        ) {
-            TopNavigation(
-                config = TopNavigationConfig.BackWithTitle(
-                    title = stringResource(id = R.string.about_title),
-                    onBackClick = onBackClick,
-                ),
-                containerColor = Color.Transparent,
-            )
-
+        MoneyTrackScreenBackground {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = Dimens.spacing16)
-                    .padding(top = Dimens.spacing12, bottom = Dimens.spacing24),
-                verticalArrangement = Arrangement.spacedBy(Dimens.spacing16),
+                    .padding(innerPadding),
             ) {
-                AboutHero(
-                    appName = stringResource(id = R.string.app_name),
-                    summary = stringResource(id = R.string.about_summary),
+                TopNavigation(
+                    config = TopNavigationConfig.BackWithTitle(
+                        title = stringResource(id = R.string.about_title),
+                        onBackClick = onBackClick,
+                    ),
+                    containerColor = Color.Transparent,
                 )
-                AboutVersionCard(versionName = uiState.versionName)
-                sections.forEach { section ->
-                    AboutInfoCard(section = section)
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = Dimens.spacing16)
+                        .padding(top = Dimens.spacing12, bottom = Dimens.spacing24),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.spacing16),
+                ) {
+                    AboutHero(
+                        appName = stringResource(id = R.string.app_name),
+                        summary = stringResource(id = R.string.about_summary),
+                    )
+                    AboutVersionCard(versionName = uiState.versionName)
+                    sections.forEach { section ->
+                        AboutInfoCard(section = section)
+                    }
                 }
             }
         }
@@ -148,27 +151,20 @@ private fun AboutVersionCard(versionName: String) {
 
 @Composable
 private fun AboutInfoCard(section: AboutSectionUiModel) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(Dimens.radius24),
-        color = AppTheme.colors.surface,
+    MoneyTrackCard(
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(Dimens.spacing20),
     ) {
-        Column(
-            modifier = Modifier.padding(Dimens.spacing20),
-            verticalArrangement = Arrangement.spacedBy(Dimens.spacing8),
-        ) {
-            Text(
-                text = section.title,
-                style = AppTheme.typography.headlineSmall,
-                color = AppTheme.colors.onBackground,
-                fontWeight = FontWeight.SemiBold,
-            )
-            Text(
-                text = section.description,
-                style = AppTheme.typography.bodySmall,
-                color = AppTheme.colors.onSurfaceVariant,
-            )
-        }
+        Text(
+            text = section.title,
+            style = AppTheme.typography.headlineSmall,
+            color = AppTheme.colors.onBackground,
+            fontWeight = FontWeight.SemiBold,
+        )
+        Text(
+            text = section.description,
+            style = AppTheme.typography.bodySmall,
+            color = AppTheme.colors.onSurfaceVariant,
+        )
     }
 }
 

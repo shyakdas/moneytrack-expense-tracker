@@ -68,7 +68,7 @@ private fun TimeRangeTabItem(
 ) {
     val backgroundColor by animateColorAsState(
         targetValue = if (isSelected)
-            AppTheme.colors.primary.copy(alpha = 0.12f)
+            AppTheme.colors.surface
         else
             Color.Transparent,
         label = "TabBackground"

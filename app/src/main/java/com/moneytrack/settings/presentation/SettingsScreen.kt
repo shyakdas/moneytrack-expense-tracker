@@ -35,6 +35,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.moneytrack.R
 import com.moneytrack.designsystem.R as DsR
 import com.moneytrack.settings.domain.model.AppThemeMode
+import ui.components.surface.MoneyTrackCard
+import ui.components.surface.MoneyTrackScreenBackground
 import ui.components.navigation.topNav.TopNavigation
 import ui.components.navigation.topNav.TopNavigationConfig
 import ui.theme.AppTheme
@@ -86,35 +88,36 @@ fun SettingsScreen(
     Scaffold(
         containerColor = AppTheme.colors.background,
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(AppTheme.colors.background)
-                .padding(innerPadding),
-        ) {
-            TopNavigation(
-                config = TopNavigationConfig.BackWithTitle(
-                    title = stringResource(id = R.string.settings_title),
-                    onBackClick = actions.onBackClick,
-                ),
-                containerColor = Color.Transparent,
-            )
-
+        MoneyTrackScreenBackground {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = Dimens.spacing16),
-                verticalArrangement = Arrangement.spacedBy(Dimens.spacing20),
+                    .fillMaxSize()
+                    .padding(innerPadding),
             ) {
-                Spacer(modifier = Modifier.height(Dimens.spacing12))
-                SettingsCard(
-                    items = primarySettingsItems(uiState = uiState),
-                    actions = actions,
+                TopNavigation(
+                    config = TopNavigationConfig.BackWithTitle(
+                        title = stringResource(id = R.string.settings_title),
+                        onBackClick = actions.onBackClick,
+                    ),
+                    containerColor = Color.Transparent,
                 )
-                SettingsCard(
-                    items = secondarySettingsItems(),
-                    actions = actions,
-                )
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = Dimens.spacing16),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.spacing20),
+                ) {
+                    Spacer(modifier = Modifier.height(Dimens.spacing12))
+                    SettingsCard(
+                        items = primarySettingsItems(uiState = uiState),
+                        actions = actions,
+                    )
+                    SettingsCard(
+                        items = secondarySettingsItems(),
+                        actions = actions,
+                    )
+                }
             }
         }
     }
@@ -170,10 +173,8 @@ private fun SettingsCard(
     items: List<SettingsItemUiModel>,
     actions: SettingsScreenActions,
 ) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(Dimens.radius24),
-        color = AppTheme.colors.surface,
+    MoneyTrackCard(
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(Dimens.spacing4),
     ) {
         Column {
             items.forEachIndexed { index, item ->
@@ -217,7 +218,7 @@ private fun SettingsRow(
     ) {
         Text(
             text = item.title,
-            style = AppTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+            style = AppTheme.typography.titleMedium,
             color = AppTheme.colors.onBackground,
             modifier = Modifier.align(Alignment.CenterStart),
         )

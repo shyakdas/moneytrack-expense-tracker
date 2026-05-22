@@ -39,10 +39,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.DropdownMenu
@@ -58,6 +56,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -86,12 +85,14 @@ import ui.components.card.bottomsheet.SheetBlurHost
 import ui.components.form.control.PrimarySwitch
 import ui.components.form.input.InputField
 import ui.components.navigation.button.LargeButton
+import ui.components.surface.MoneyTrackBottomSheet
+import ui.components.surface.MoneyTrackCard
 import ui.theme.AppTheme
 import ui.theme.Dimens
 import ui.theme.MoneyTrackTheme
 
 private const val CATEGORY_SHEET_VISIBLE_ROWS = 5
-private const val FALLBACK_CATEGORY_COLOR_HEX = "#7F3DFF"
+private const val FALLBACK_CATEGORY_COLOR_HEX = "#0B5D7A"
 private const val SELECTED_ITEM_ALPHA = 0.12f
 private const val ATTACHMENT_IMAGE_EXTENSION = ".jpg"
 private const val ATTACHMENT_CACHE_DIR = "expense_attachments"
@@ -254,7 +255,15 @@ internal fun ExpenseContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppTheme.colors.error),
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        AppTheme.colors.error,
+                        AppTheme.colors.error.copy(alpha = 0.88f),
+                        AppTheme.colors.primary,
+                    ),
+                ),
+            ),
     ) {
         Column(
             modifier = Modifier
@@ -277,7 +286,7 @@ internal fun ExpenseContent(
                 Text(
                     text = stringResource(id = R.string.expense_title),
                     modifier = Modifier.weight(1f),
-                    style = AppTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                    style = AppTheme.typography.titleMedium,
                     color = AppTheme.colors.onPrimary,
                     textAlign = TextAlign.Center,
                 )
@@ -288,7 +297,7 @@ internal fun ExpenseContent(
             Spacer(modifier = Modifier.height(Dimens.spacing24))
             Text(
                 text = stringResource(id = R.string.expense_amount_prompt),
-                style = AppTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                style = AppTheme.typography.labelLarge,
                 color = AppTheme.colors.onPrimary.copy(alpha = 0.85f),
             )
             Spacer(modifier = Modifier.height(Dimens.spacing8))
@@ -303,7 +312,7 @@ internal fun ExpenseContent(
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = AppTheme.colors.background,
-            shape = RoundedCornerShape(topStart = Dimens.radius40, topEnd = Dimens.radius40),
+            shape = RoundedCornerShape(topStart = Dimens.radius24, topEnd = Dimens.radius24),
         ) {
             Column(
                 modifier = Modifier
@@ -316,60 +325,64 @@ internal fun ExpenseContent(
                         .verticalScroll(rememberScrollState())
                         .padding(horizontal = Dimens.spacing16, vertical = Dimens.spacing24),
                 ) {
-                    CategorySelectorField(
-                        selectedCategory = selectedCategory,
-                        onClick = onCategoryFieldClick,
-                    )
-                    Spacer(modifier = Modifier.height(Dimens.spacing16))
-
-                    InputField(
-                        value = description,
-                        onValueChange = onDescriptionChanged,
-                        placeholder = stringResource(id = R.string.expense_description_placeholder),
-                    )
-                    Spacer(modifier = Modifier.height(Dimens.spacing16))
-
-                    if (attachment == null) {
-                        AttachmentInput(onClick = onAttachmentClick)
-                    } else {
-                        AttachmentPreview(
-                            attachment = attachment,
-                            onRemoveClick = onAttachmentRemoved,
+                    MoneyTrackCard {
+                        CategorySelectorField(
+                            selectedCategory = selectedCategory,
+                            onClick = onCategoryFieldClick,
                         )
-                    }
-                    Spacer(modifier = Modifier.height(Dimens.spacing24))
+                        Spacer(modifier = Modifier.height(Dimens.spacing16))
 
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable(onClick = onRepeatClick),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = stringResource(id = R.string.expense_repeat_title),
-                                style = AppTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                color = AppTheme.colors.onBackground,
+                        InputField(
+                            value = description,
+                            onValueChange = onDescriptionChanged,
+                            placeholder = stringResource(id = R.string.expense_description_placeholder),
+                        )
+                        Spacer(modifier = Modifier.height(Dimens.spacing16))
+
+                        if (attachment == null) {
+                            AttachmentInput(onClick = onAttachmentClick)
+                        } else {
+                            AttachmentPreview(
+                                attachment = attachment,
+                                onRemoveClick = onAttachmentRemoved,
                             )
-                            Text(
-                                text = stringResource(id = R.string.expense_repeat_subtitle),
-                                style = AppTheme.typography.bodySmall,
-                                color = AppTheme.colors.onSurfaceVariant,
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(Dimens.spacing16))
+
+                    MoneyTrackCard {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable(onClick = onRepeatClick),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = stringResource(id = R.string.expense_repeat_title),
+                                    style = AppTheme.typography.titleMedium,
+                                    color = AppTheme.colors.onBackground,
+                                )
+                                Text(
+                                    text = stringResource(id = R.string.expense_repeat_subtitle),
+                                    style = AppTheme.typography.bodySmall,
+                                    color = AppTheme.colors.onSurfaceVariant,
+                                )
+                            }
+
+                            PrimarySwitch(
+                                checked = repeatSchedule != null,
+                                onCheckedChange = onRepeatEnabledChange,
                             )
                         }
 
-                        PrimarySwitch(
-                            checked = repeatSchedule != null,
-                            onCheckedChange = onRepeatEnabledChange,
-                        )
-                    }
-
-                    if (repeatSchedule != null) {
-                        Spacer(modifier = Modifier.height(Dimens.spacing16))
-                        RepeatSummary(
-                            repeatSchedule = repeatSchedule,
-                            onEditClick = onRepeatClick,
-                        )
+                        if (repeatSchedule != null) {
+                            Spacer(modifier = Modifier.height(Dimens.spacing16))
+                            RepeatSummary(
+                                repeatSchedule = repeatSchedule,
+                                onEditClick = onRepeatClick,
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(Dimens.spacing24))
@@ -423,7 +436,7 @@ private fun AmountInputField(
             decorationBox = {
                 Text(
                     text = amountText,
-                    style = AppTheme.typography.displaySmall.copy(fontWeight = FontWeight.Bold),
+                    style = AppTheme.typography.displayLarge,
                     color = AppTheme.colors.onPrimary,
                 )
             },
@@ -442,7 +455,7 @@ private fun CategorySelectorField(
             .height(Dimens.inputHeight)
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(Dimens.radius16),
-        color = AppTheme.colors.background,
+        color = AppTheme.colors.surfaceVariant,
     ) {
         Row(
             modifier = Modifier
@@ -458,7 +471,7 @@ private fun CategorySelectorField(
             if (selectedCategory == null) {
                 Text(
                     text = stringResource(id = R.string.expense_category_placeholder),
-                    style = AppTheme.typography.bodyLarge,
+                    style = AppTheme.typography.bodyMedium,
                     color = AppTheme.colors.onSurfaceVariant,
                 )
             } else {
@@ -479,7 +492,7 @@ private fun CategorySelectorField(
 private fun SelectedCategoryChip(category: ExpenseCategory) {
     Surface(
         shape = RoundedCornerShape(Dimens.radius24),
-        color = AppTheme.colors.surface,
+        color = AppTheme.colors.primaryContainer,
         modifier = Modifier.padding(vertical = Dimens.spacing4),
     ) {
         Row(
@@ -497,23 +510,21 @@ private fun SelectedCategoryChip(category: ExpenseCategory) {
             Spacer(modifier = Modifier.width(Dimens.spacing8))
             Text(
                 text = category.name,
-                style = AppTheme.typography.bodyLarge,
-                color = AppTheme.colors.onSurface,
+                style = AppTheme.typography.labelLarge,
+                color = AppTheme.colors.onPrimaryContainer,
             )
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CategoryPickerBottomSheet(
     uiState: ExpenseUiState,
     onDismiss: () -> Unit,
     onCategorySelected: (Long) -> Unit,
 ) {
-    ModalBottomSheet(
+    MoneyTrackBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = AppTheme.colors.surface,
     ) {
         Column(
             modifier = Modifier
@@ -742,7 +753,6 @@ private fun DocumentAttachmentPreview(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AttachmentPickerBottomSheet(
     onDismiss: () -> Unit,
@@ -750,9 +760,8 @@ private fun AttachmentPickerBottomSheet(
     onImageClick: () -> Unit,
     onDocumentClick: () -> Unit,
 ) {
-    ModalBottomSheet(
+    MoneyTrackBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = AppTheme.colors.surface,
     ) {
         Column(
             modifier = Modifier
@@ -880,7 +889,6 @@ private fun RepeatSummary(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun RepeatConfigurationBottomSheet(
     initialRepeatSchedule: ExpenseRepeatUiState?,
@@ -897,9 +905,8 @@ private fun RepeatConfigurationBottomSheet(
     }
     val hasEndDate = selectedEndDate != 0L
 
-    ModalBottomSheet(
+    MoneyTrackBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = AppTheme.colors.surface,
     ) {
         Column(
             modifier = Modifier

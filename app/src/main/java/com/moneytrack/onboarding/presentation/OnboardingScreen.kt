@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
@@ -40,12 +41,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.CoroutineScope
 import com.moneytrack.R
 import com.moneytrack.common.ui.LottieAnimationView
 import com.moneytrack.onboarding.domain.model.OnboardingPage
 import ui.theme.AppTheme
 import ui.theme.Dimens
 import ui.theme.MoneyTrackTheme
+import ui.components.surface.MoneyTrackScreenBackground
 
 private const val PAGER_WEIGHT = 1f
 private const val DOT_ACTIVE_ALPHA = 1f
@@ -70,58 +73,70 @@ fun OnboardingScreen(
     val isFirstPage = currentPage == 0
     val isLastPage = currentPage == pages.lastIndex
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(AppTheme.colors.background)
-            .padding(horizontal = Dimens.spacing24),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Spacer(modifier = Modifier.height(Dimens.spacing72))
-
-        HorizontalPager(
-            state = pagerState,
+    MoneyTrackScreenBackground {
+        Column(
             modifier = Modifier
-                .weight(PAGER_WEIGHT)
-                .fillMaxWidth(),
-        ) { pageIndex ->
-            OnboardingPageItem(
-                page = pages[pageIndex],
-                pageIndex = pageIndex,
+                .fillMaxSize()
+                .padding(horizontal = Dimens.spacing24),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Spacer(modifier = Modifier.height(Dimens.spacing72))
+
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier
+                    .weight(PAGER_WEIGHT)
+                    .fillMaxWidth(),
+            ) { pageIndex ->
+                OnboardingPageItem(
+                    page = pages[pageIndex],
+                    pageIndex = pageIndex,
+                )
+            }
+
+            PageIndicators(
+                pagesCount = pages.size,
+                currentPage = pagerState.currentPage,
             )
-        }
 
-        PageIndicators(
-            pagesCount = pages.size,
-            currentPage = pagerState.currentPage,
-        )
-
-        OnboardingNavigationRow(
-            isFirstPage = isFirstPage,
-            isLastPage = isLastPage,
-            onPreviousClick = {
-                coroutineScope.launch {
-                    pagerState.animateScrollToPage(
+            OnboardingNavigationRow(
+                isFirstPage = isFirstPage,
+                isLastPage = isLastPage,
+                onPreviousClick = {
+                    navigateToOnboardingPage(
+                        coroutineScope = coroutineScope,
+                        pagerState = pagerState,
                         page = currentPage - 1,
-                        animationSpec = tween(durationMillis = PAGER_ANIMATION_DURATION_MS),
                     )
-                }
-            },
-            onNextClick = {
-                if (isLastPage) {
-                    onFinished()
-                } else {
-                    coroutineScope.launch {
-                        pagerState.animateScrollToPage(
+                },
+                onNextClick = {
+                    if (isLastPage) {
+                        onFinished()
+                    } else {
+                        navigateToOnboardingPage(
+                            coroutineScope = coroutineScope,
+                            pagerState = pagerState,
                             page = currentPage + 1,
-                            animationSpec = tween(durationMillis = PAGER_ANIMATION_DURATION_MS),
                         )
                     }
-                }
-            },
-        )
+                },
+            )
 
-        Spacer(modifier = Modifier.height(Dimens.spacing28))
+            Spacer(modifier = Modifier.height(Dimens.spacing28))
+        }
+    }
+}
+
+private fun navigateToOnboardingPage(
+    coroutineScope: CoroutineScope,
+    pagerState: PagerState,
+    page: Int,
+) {
+    coroutineScope.launch {
+        pagerState.animateScrollToPage(
+            page = page,
+            animationSpec = tween(durationMillis = PAGER_ANIMATION_DURATION_MS),
+        )
     }
 }
 
@@ -205,6 +220,7 @@ private fun OnboardingNavButton(
     Surface(
         shape = CircleShape,
         color = AppTheme.colors.primary,
+        tonalElevation = Dimens.elevation4,
         modifier = Modifier
             .size(Dimens.buttonLargeHeight)
             .scale(scale)
@@ -250,7 +266,7 @@ private fun OnboardingPageItem(
 
         Text(
             text = stringResource(id = page.titleRes),
-            style = AppTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+            style = AppTheme.typography.headlineMedium,
             textAlign = TextAlign.Center,
             color = AppTheme.colors.onBackground,
         )
