@@ -14,10 +14,10 @@ import androidx.compose.ui.graphics.Color
 // Material Light Scheme (INTERNAL)
 // --------------------
 internal val LightColorScheme = lightColorScheme(
-    primary = Teal100,
+    primary = BlueInk100,
     onPrimary = Light100,
-    primaryContainer = Teal20,
-    onPrimaryContainer = Teal90,
+    primaryContainer = BlueInk20,
+    onPrimaryContainer = BlueInk90,
 
     secondary = Green100,
     onSecondary = Light100,
@@ -36,7 +36,7 @@ internal val LightColorScheme = lightColorScheme(
     onSurface = Slate900,
 
     surfaceVariant = Light60,
-    onSurfaceVariant = Slate500,
+    onSurfaceVariant = Light20,
 
     outline = Light40,
     outlineVariant = Light40,
@@ -51,10 +51,10 @@ internal val LightColorScheme = lightColorScheme(
 // Material Dark Scheme (INTERNAL)
 // --------------------
 internal val DarkColorScheme = darkColorScheme(
-    primary = Teal40,
+    primary = BlueInk40,
     onPrimary = Dark100,
-    primaryContainer = Teal90,
-    onPrimaryContainer = Teal20,
+    primaryContainer = BlueInk90,
+    onPrimaryContainer = BlueInk20,
 
     secondary = Green60,
     onSecondary = Dark100,
@@ -93,10 +93,10 @@ fun MoneyTrackTheme(
 ) {
     val appColors = if (darkTheme) {
         AppColors(
-            primary = Teal40,
+            primary = BlueInk40,
             onPrimary = Dark100,
-            primaryContainer = Teal90,
-            onPrimaryContainer = Teal20,
+            primaryContainer = BlueInk90,
+            onPrimaryContainer = BlueInk20,
             background = Dark100,
             onBackground = Color(0xFFE6EDF2),
             surface = Dark75,
@@ -114,10 +114,10 @@ fun MoneyTrackTheme(
         )
     } else {
         AppColors(
-            primary = Teal100,
+            primary = BlueInk100,
             onPrimary = Light100,
-            primaryContainer = Teal20,
-            onPrimaryContainer = Teal90,
+            primaryContainer = BlueInk20,
+            onPrimaryContainer = BlueInk90,
             background = Light80,
             onBackground = Slate900,
             surface = Light100,

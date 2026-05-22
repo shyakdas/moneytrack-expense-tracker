@@ -29,8 +29,8 @@ fun MoneyTrackScreenBackground(
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        AppTheme.colors.primaryContainer.copy(alpha = 0.62f),
-                        AppTheme.colors.background,
+                        AppTheme.colors.primaryContainer.copy(alpha = 0.34f),
+                        AppTheme.colors.warningContainer.copy(alpha = 0.28f),
                         AppTheme.colors.background,
                     ),
                 ),
@@ -52,13 +52,13 @@ fun MoneyTrackCard(
             .fillMaxWidth()
             .border(
                 width = Dimens.borderNormal,
-                color = AppTheme.colors.outline.copy(alpha = 0.28f),
-                shape = RoundedCornerShape(Dimens.radius20),
+                color = AppTheme.colors.outline.copy(alpha = 0.42f),
+                shape = RoundedCornerShape(Dimens.radius16),
             ),
-        shape = RoundedCornerShape(Dimens.radius20),
+        shape = RoundedCornerShape(Dimens.radius16),
         color = color,
-        tonalElevation = Dimens.elevation2,
-        shadowElevation = Dimens.elevation2,
+        tonalElevation = Dimens.elevation0,
+        shadowElevation = Dimens.elevation0,
     ) {
         androidx.compose.foundation.layout.Column(
             modifier = Modifier.padding(contentPadding),

@@ -2,24 +2,17 @@
 
 package ui.components.navigation.bottomNav
 
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.moneytrack.designsystem.R
 import ui.theme.AppTheme
@@ -34,13 +27,9 @@ fun PrimaryBottomNavigation(
     onFabClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val fabInteractionSource = remember { MutableInteractionSource() }
-    val isFabPressed by fabInteractionSource.collectIsPressedAsState()
-    val fabScale by animateFloatAsState(
-        targetValue = if (isFabPressed) MotionTokens.PressedScale else 1f,
-        animationSpec = MotionTokens.pressSpring(),
-        label = "BottomBarFabScale",
-    )
+    val selectedIndex = items.indexOfFirst { it.route == selectedRoute }.coerceAtLeast(0)
+    val selectedSlot = selectedIndex.toRailSlot()
+    val horizontalPadding = Dimens.spacing8
 
     Box(
         modifier = modifier
@@ -49,57 +38,85 @@ fun PrimaryBottomNavigation(
             .testTag("PrimaryBottomNavigation")
     ) {
 
-        Surface(
-            tonalElevation = Dimens.spacing6,
-            shadowElevation = Dimens.spacing8,
-            shape = RoundedCornerShape(
-                topStart = Dimens.radius20,
-                topEnd = Dimens.radius20
-            ),
-            color = AppTheme.colors.surface,
+        BoxWithConstraints(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
+                .padding(horizontal = Dimens.spacing16, vertical = Dimens.spacing8)
                 .height(Dimens.bottomNavHeight)
         ) {
+            val navItems = items.withPlusAction(onFabClick = onFabClick)
+            val contentWidth = maxWidth - (horizontalPadding * 2)
+            val slotWidth = contentWidth / navItems.size
+            val indicatorWidth = slotWidth - Dimens.spacing16
+            val indicatorOffset by animateDpAsState(
+                targetValue = horizontalPadding + (slotWidth * selectedSlot.toFloat()) + ((slotWidth - indicatorWidth) / 2f),
+                animationSpec = MotionTokens.pressSpring(),
+                label = "BottomNavIndicatorOffset",
+            )
+
+            Surface(
+                tonalElevation = Dimens.elevation0,
+                shadowElevation = Dimens.elevation8,
+                shape = RoundedCornerShape(Dimens.radius40),
+                color = AppTheme.colors.surface,
+                border = BorderStroke(
+                    width = Dimens.borderNormal,
+                    color = AppTheme.colors.outline.copy(alpha = 0.55f),
+                ),
+                modifier = Modifier.fillMaxSize(),
+            ) {}
+
+            Box(
+                modifier = Modifier
+                    .offset(x = indicatorOffset, y = Dimens.spacing8)
+                    .width(indicatorWidth)
+                    .height(Dimens.buttonLargeHeight)
+                    .background(
+                        color = AppTheme.colors.primaryContainer.copy(alpha = 0.62f),
+                        shape = RoundedCornerShape(Dimens.radius40),
+                    ),
+            )
+
+            Box(
+                modifier = Modifier
+                    .offset(x = indicatorOffset, y = Dimens.spacing8)
+                    .width(indicatorWidth)
+                    .height(Dimens.buttonLargeHeight)
+                    .background(
+                        color = AppTheme.colors.primary,
+                        shape = RoundedCornerShape(Dimens.radius40),
+                    ),
+            )
+
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = Dimens.spacing32),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                    .padding(horizontal = horizontalPadding),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                items.forEach { item ->
-                    BottomBarItem(
-                        item = item,
-                        isSelected = item.route == selectedRoute,
-                        onClick = { onItemClick(item) }
-                    )
+                navItems.forEach { navItem ->
+                    when (navItem) {
+                        is BottomNavRailItem.Action -> {
+                            BottomBarItem(
+                                item = navItem.item,
+                                isSelected = false,
+                                onClick = navItem.onClick,
+                                modifier = Modifier.width(slotWidth),
+                            )
+                        }
+
+                        is BottomNavRailItem.Destination -> {
+                            BottomBarItem(
+                                item = navItem.item,
+                                isSelected = navItem.item.route == selectedRoute,
+                                onClick = { onItemClick(navItem.item) },
+                                modifier = Modifier.width(slotWidth),
+                            )
+                        }
+                    }
                 }
             }
-        }
-
-        FloatingActionButton(
-            onClick = onFabClick,
-            containerColor = AppTheme.colors.primary,
-            contentColor = AppTheme.colors.onPrimary,
-            shape = CircleShape,
-            interactionSource = fabInteractionSource,
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .offset(y = -Dimens.spacing20)
-                .size(Dimens.fabSize)
-                .graphicsLayer {
-                    scaleX = fabScale
-                    scaleY = fabScale
-                }
-                .shadow(Dimens.spacing8, CircleShape)
-                .testTag("BottomBarFab")
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.add),
-                contentDescription = "Add"
-            )
         }
     }
 }
@@ -110,7 +127,6 @@ private fun PrimaryBottomNavigationPreview() {
     val items = listOf(
         BottomNavItem("home", R.drawable.home, "Home"),
         BottomNavItem("transaction", R.drawable.transaction, "Transaction"),
-        BottomNavItem("budget", R.drawable.line_chart_2, "Budget"),
         BottomNavItem("profile", R.drawable.user, "Profile")
     )
 
@@ -134,3 +150,26 @@ private fun PrimaryBottomNavigationPreview() {
         }
     }
 }
+
+private sealed interface BottomNavRailItem {
+    data class Destination(val item: BottomNavItem) : BottomNavRailItem
+    data class Action(val item: BottomNavItem, val onClick: () -> Unit) : BottomNavRailItem
+}
+
+private fun List<BottomNavItem>.withPlusAction(onFabClick: () -> Unit): List<BottomNavRailItem> =
+    listOf(
+        BottomNavRailItem.Destination(this[0]),
+        BottomNavRailItem.Destination(this[1]),
+        BottomNavRailItem.Action(
+            item = BottomNavItem(
+                route = "add",
+                icon = R.drawable.add,
+                label = "Add",
+            ),
+            onClick = onFabClick,
+        ),
+        BottomNavRailItem.Destination(this[2]),
+    )
+
+private fun Int.toRailSlot(): Int =
+    if (this >= 2) this + 1 else this

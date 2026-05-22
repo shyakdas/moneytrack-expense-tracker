@@ -42,12 +42,12 @@ fun InputField(
             .fillMaxWidth()
             .background(
                 color = AppTheme.colors.surface,
-                shape = RoundedCornerShape(Dimens.radius16)
+                shape = RoundedCornerShape(Dimens.radius12)
             )
             .border(
                 width = Dimens.borderNormal,
-                color = AppTheme.colors.outline,
-                shape = RoundedCornerShape(Dimens.radius16)
+                color = AppTheme.colors.outline.copy(alpha = 0.72f),
+                shape = RoundedCornerShape(Dimens.radius12)
             )
             .padding(horizontal = Dimens.spacing16),
         verticalAlignment = Alignment.CenterVertically

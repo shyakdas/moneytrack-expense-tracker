@@ -54,7 +54,6 @@ import ui.theme.MoneyTrackTheme
 
 private const val ROUTE_HOME = "home"
 private const val ROUTE_TRANSACTION = "transaction"
-private const val ROUTE_BUDGET = "budget"
 private const val ROUTE_PROFILE = "profile"
 
 @Composable
@@ -89,7 +88,6 @@ fun TransactionScreen(
         listOf(
             BottomNavItem(ROUTE_HOME, DsR.drawable.home, "Home"),
             BottomNavItem(ROUTE_TRANSACTION, DsR.drawable.transaction, "Transaction"),
-            BottomNavItem(ROUTE_BUDGET, DsR.drawable.line_chart_2, "Budget"),
             BottomNavItem(ROUTE_PROFILE, DsR.drawable.user, "Profile"),
         )
     }

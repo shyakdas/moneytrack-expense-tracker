@@ -49,6 +49,7 @@ object Dimens {
     val icon16 = 16.dp
     val icon20 = 20.dp
     val icon24 = 24.dp
+    val icon28 = 28.dp
     val icon32 = 32.dp
 
     // --------------------
@@ -78,9 +79,9 @@ object Dimens {
     val elevation8 = 8.dp
 
     // Bottom Navigation
-    val bottomNavContainerHeight = 78.dp
+    val bottomNavContainerHeight = 96.dp
     val filterHeight = 64.dp
-    val bottomNavHeight = 62.dp
+    val bottomNavHeight = 72.dp
     val fabSize = 56.dp
 
     val checkboxSize = 24.dp

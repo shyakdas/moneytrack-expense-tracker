@@ -90,7 +90,6 @@ import ui.theme.MoneyTrackTheme
 
 private const val ROUTE_HOME = "home"
 private const val ROUTE_TRANSACTION = "transaction"
-private const val ROUTE_BUDGET = "budget"
 private const val ROUTE_PROFILE = "profile"
 private const val MAX_BUDGET_INPUT_LENGTH = 8
 private const val BUDGET_SUCCESS_DISMISS_DELAY_MS = 1200L
@@ -267,7 +266,6 @@ fun HomeScreen(
         listOf(
             BottomNavItem(ROUTE_HOME, R.drawable.home, "Home"),
             BottomNavItem(ROUTE_TRANSACTION, R.drawable.transaction, "Transaction"),
-            BottomNavItem(ROUTE_BUDGET, R.drawable.line_chart_2, "Budget"),
             BottomNavItem(ROUTE_PROFILE, R.drawable.user, "Profile"),
         )
     }

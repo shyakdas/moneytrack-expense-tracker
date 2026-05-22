@@ -45,7 +45,7 @@ fun CategoryCard(
             .fillMaxWidth()
             .background(
                 color = AppTheme.colors.surface,
-                shape = RoundedCornerShape(Dimens.radius20)
+                shape = RoundedCornerShape(Dimens.radius12)
             )
             .padding(Dimens.spacing16),
         verticalArrangement = Arrangement.spacedBy(Dimens.spacing16)
@@ -81,7 +81,7 @@ private fun CategoryPill(
         modifier = Modifier
             .background(
                 color = AppTheme.colors.surfaceVariant,
-                shape = RoundedCornerShape(Dimens.radius50)
+                shape = RoundedCornerShape(Dimens.radius12)
             )
             .padding(
                 horizontal = Dimens.spacing16,
@@ -103,7 +103,7 @@ private fun CategoryPill(
 
         Text(
             text = title,
-            style = AppTheme.typography.bodyLarge,
+            style = AppTheme.typography.labelLarge,
             color = AppTheme.colors.onSurface
         )
     }

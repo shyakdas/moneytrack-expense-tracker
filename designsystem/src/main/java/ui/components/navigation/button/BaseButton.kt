@@ -51,11 +51,11 @@ internal fun BaseButton(
                 indication = LocalIndication.current,
                 onClick = onClick,
             ),
-        shape = RoundedCornerShape(Dimens.radius16),
+        shape = RoundedCornerShape(Dimens.radius12),
         color = buttonColors.backgroundColor,
         contentColor = buttonColors.contentColor,
         border = buttonColors.borderStroke,
-        tonalElevation = if (variant == ButtonVariant.PRIMARY) Dimens.elevation2 else Dimens.elevation0,
+        tonalElevation = Dimens.elevation0,
     ) {
         Row(
             modifier = Modifier.padding(horizontal = size.horizontalPadding),
@@ -96,9 +96,12 @@ private fun buttonStyle(
         )
 
         ButtonVariant.SECONDARY -> ButtonStyle(
-            backgroundColor = AppTheme.colors.primaryContainer,
-            contentColor = AppTheme.colors.onPrimaryContainer,
-            borderStroke = null,
+            backgroundColor = AppTheme.colors.surfaceVariant,
+            contentColor = AppTheme.colors.primary,
+            borderStroke = BorderStroke(
+                width = Dimens.borderNormal,
+                color = AppTheme.colors.outline.copy(alpha = 0.72f),
+            ),
         )
 
         ButtonVariant.TERTIARY -> ButtonStyle(

@@ -31,6 +31,23 @@ class ProfileScreenshotTest {
     }
 
     @Test
+    fun profile_editName_light() {
+        paparazzi.snapshot {
+            MoneyTrackTheme(darkTheme = false) {
+                ProfileScreen(
+                    uiState = baseState().copy(
+                        editName = "Saver",
+                        isEditSheetVisible = true,
+                        isSaveEnabled = true,
+                    ),
+                    navigationCallbacks = previewNavigationCallbacks(),
+                    actionCallbacks = previewActionCallbacks(),
+                )
+            }
+        }
+    }
+
+    @Test
     fun profile_clearData_dark() {
         paparazzi.snapshot {
             MoneyTrackTheme(darkTheme = true) {
