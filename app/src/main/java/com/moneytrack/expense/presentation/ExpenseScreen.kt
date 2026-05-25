@@ -54,6 +54,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -151,6 +152,10 @@ fun ExpenseScreen(
     var showRepeatScreen by remember { mutableStateOf(false) }
     var showDescriptionSheet by remember { mutableStateOf(false) }
     var pendingCameraUri by remember { mutableStateOf<Uri?>(null) }
+    val isAnySheetVisible = showCategorySheet ||
+        showAttachmentSheet ||
+        showRepeatScreen ||
+        showDescriptionSheet
     val imageFallbackName = stringResource(id = R.string.expense_attachment_image_fallback_name)
     val documentFallbackName = stringResource(id = R.string.expense_attachment_document_fallback_name)
 
@@ -1190,7 +1195,7 @@ private fun RepeatTransactionScreen(
     var onDateEndAt by remember(initialRepeatSchedule) {
         mutableLongStateOf(initialRepeatSchedule?.endAtEpochMillis ?: initialOccurredAt)
     }
-    var afterMonths by remember { mutableStateOf(DEFAULT_REPEAT_AFTER_MONTHS) }
+    var afterMonths by remember { mutableIntStateOf(DEFAULT_REPEAT_AFTER_MONTHS) }
 
     val onDone = {
         val resolvedEndAt = when {
@@ -1763,7 +1768,3 @@ private fun ExpenseScreenPreview() {
         )
     }
 }
-    val isAnySheetVisible = showCategorySheet ||
-        showAttachmentSheet ||
-        showRepeatScreen ||
-        showDescriptionSheet
