@@ -5,6 +5,7 @@ package com.moneytrack.home.presentation
 import ui.components.card.transaction.TransactionType
 
 data class HomeTransaction(
+    val id: Long,
     val icon: Int,
     val category: String,
     val title: String,

@@ -14,6 +14,7 @@ import com.moneytrack.testutil.MainDispatcherRule
 import com.moneytrack.transaction.domain.model.TransactionRecord
 import com.moneytrack.transaction.domain.model.TransactionRecordType
 import com.moneytrack.transaction.domain.repository.TransactionRepository
+import com.moneytrack.transaction.domain.usecase.DeleteTransactionUseCase
 import com.moneytrack.transaction.domain.usecase.ObserveTransactionsUseCase
 import java.util.Calendar
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -215,6 +216,7 @@ class TransactionViewModelTest {
         return TransactionViewModel(
             observeTransactionsUseCase = ObserveTransactionsUseCase(repository),
             observeAppCurrencyCodeUseCase = ObserveAppCurrencyCodeUseCase(appCurrencyManager),
+            deleteTransactionUseCase = DeleteTransactionUseCase(repository),
             currencyFormatter = CurrencyFormatter(
                 appCurrencyManager = appCurrencyManager,
                 currencyCatalog = currencyCatalog,

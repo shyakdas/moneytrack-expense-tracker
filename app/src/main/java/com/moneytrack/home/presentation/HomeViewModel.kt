@@ -12,6 +12,7 @@ import com.moneytrack.transaction.domain.model.TransactionRecord
 import com.moneytrack.transaction.domain.model.TransactionRecordType
 import com.moneytrack.settings.domain.usecase.ObserveAppCurrencyCodeUseCase
 import com.moneytrack.transaction.domain.usecase.ObserveTransactionsUseCase
+import com.moneytrack.transaction.domain.usecase.DeleteTransactionUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.Calendar
 import javax.inject.Inject
@@ -33,6 +34,7 @@ class HomeViewModel @Inject constructor(
     observeBudgetUseCase: ObserveBudgetUseCase,
     observeTransactionsUseCase: ObserveTransactionsUseCase,
     observeAppCurrencyCodeUseCase: ObserveAppCurrencyCodeUseCase,
+    private val deleteTransactionUseCase: DeleteTransactionUseCase,
     private val upsertBudgetUseCase: UpsertBudgetUseCase,
     private val currencyFormatter: CurrencyFormatter,
 ) : ViewModel() {
@@ -186,6 +188,12 @@ class HomeViewModel @Inject constructor(
     fun onYearSelected(year: Int) {
         _selectedMonth.update { month ->
             month.copy(year = year)
+        }
+    }
+
+    fun deleteTransaction(transactionId: Long) {
+        viewModelScope.launch {
+            deleteTransactionUseCase(transactionId)
         }
     }
 

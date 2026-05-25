@@ -344,7 +344,7 @@ internal fun ExpenseContent(
                 Text(
                     text = "Add Expense",
                     modifier = Modifier.weight(1f),
-                    style = AppTheme.typography.titleSmall,
+                    style = AppTheme.typography.titleMedium,
                     color = ExpensePrimaryText,
                     textAlign = TextAlign.Center,
                 )
@@ -355,7 +355,7 @@ internal fun ExpenseContent(
             Spacer(modifier = Modifier.height(Dimens.spacing24))
             Text(
                 text = "How much did you spend?",
-                style = AppTheme.typography.labelMedium,
+                style = AppTheme.typography.bodySmall,
                 color = ExpenseSecondaryText,
             )
             Spacer(modifier = Modifier.height(Dimens.spacing8))
@@ -440,7 +440,7 @@ internal fun ExpenseContent(
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = "Repeat transaction",
-                            style = AppTheme.typography.titleSmall,
+                            style = AppTheme.typography.titleMedium,
                             color = ExpensePrimaryText,
                         )
                         Text(
@@ -510,7 +510,7 @@ private fun ExpenseRow(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
-                style = AppTheme.typography.titleSmall,
+                style = AppTheme.typography.titleMedium,
                 color = ExpensePrimaryText,
             )
             Text(
@@ -531,7 +531,7 @@ private fun ExpenseRow(
                 ) {
                     Text(
                         text = trailingLabel,
-                        style = AppTheme.typography.titleSmall,
+                        style = AppTheme.typography.titleMedium,
                         color = ExpensePrimaryText,
                     )
                     Spacer(modifier = Modifier.width(Dimens.spacing6))
@@ -588,7 +588,7 @@ private fun DescriptionRow(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = "Description (optional)",
-                style = AppTheme.typography.titleSmall,
+                style = AppTheme.typography.titleMedium,
                 color = ExpensePrimaryText,
             )
             Text(
@@ -1229,7 +1229,7 @@ private fun RepeatTransactionScreen(
                 Text(
                     text = "Repeat transaction",
                     modifier = Modifier.weight(1f),
-                    style = AppTheme.typography.titleSmall,
+                    style = AppTheme.typography.titleMedium,
                     color = ExpensePrimaryText,
                     textAlign = TextAlign.Center,
                 )
@@ -1239,14 +1239,14 @@ private fun RepeatTransactionScreen(
             GlassSectionCard {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("Repeat this transaction", style = AppTheme.typography.titleSmall, color = ExpensePrimaryText)
+                        Text("Repeat this transaction", style = AppTheme.typography.titleMedium, color = ExpensePrimaryText)
                         Text("Make this a recurring expense", style = AppTheme.typography.bodySmall, color = ExpenseSecondaryText)
                     }
                     PrimarySwitch(checked = isEnabled, onCheckedChange = { isEnabled = it })
                 }
             }
             Spacer(modifier = Modifier.height(Dimens.spacing16))
-            Text("FREQUENCY", style = AppTheme.typography.labelMedium, color = ExpenseSecondaryText)
+            Text("FREQUENCY", style = AppTheme.typography.bodySmall, color = ExpenseSecondaryText)
             Spacer(modifier = Modifier.height(Dimens.spacing8))
             GlassSectionCard {
                 RepeatFrequency.entries.forEachIndexed { index, frequency ->
@@ -1259,7 +1259,7 @@ private fun RepeatTransactionScreen(
                 }
             }
             Spacer(modifier = Modifier.height(Dimens.spacing12))
-            Text("START DATE", style = AppTheme.typography.labelMedium, color = ExpenseSecondaryText)
+            Text("START DATE", style = AppTheme.typography.bodySmall, color = ExpenseSecondaryText)
             Spacer(modifier = Modifier.height(Dimens.spacing8))
             GlassSectionCard {
                 ExpenseRow(
@@ -1273,7 +1273,7 @@ private fun RepeatTransactionScreen(
                 )
             }
             Spacer(modifier = Modifier.height(Dimens.spacing12))
-            Text("ENDS", style = AppTheme.typography.labelMedium, color = ExpenseSecondaryText)
+            Text("ENDS", style = AppTheme.typography.bodySmall, color = ExpenseSecondaryText)
             Spacer(modifier = Modifier.height(Dimens.spacing8))
             GlassSectionCard {
                 RepeatOptionRow("Never", selectedEndOption == RepeatEndOption.NEVER) {
@@ -1315,7 +1315,7 @@ private fun RepeatTransactionScreen(
                             Text(
                                 text = afterMonths.toString(),
                                 color = ExpenseAccent,
-                                style = AppTheme.typography.titleSmall,
+                                style = AppTheme.typography.titleMedium,
                                 modifier = Modifier
                                     .background(ExpenseRowCard, RoundedCornerShape(Dimens.radius8))
                                     .padding(horizontal = Dimens.spacing12, vertical = Dimens.spacing4)
@@ -1353,7 +1353,7 @@ private fun RepeatOptionRow(
     ) {
         Text(
             text = title,
-            style = AppTheme.typography.titleSmall,
+            style = AppTheme.typography.titleMedium,
             color = ExpensePrimaryText,
             modifier = Modifier.weight(1f),
         )
@@ -1389,7 +1389,7 @@ private fun RepeatSummary(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = stringResource(id = R.string.expense_repeat_frequency_label),
-                style = AppTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                style = AppTheme.typography.titleMedium,
                 color = AppTheme.colors.onBackground,
             )
             Text(
@@ -1401,7 +1401,7 @@ private fun RepeatSummary(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = stringResource(id = R.string.expense_repeat_end_after_label),
-                style = AppTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                style = AppTheme.typography.titleMedium,
                 color = AppTheme.colors.onBackground,
             )
             Text(
@@ -1418,7 +1418,7 @@ private fun RepeatSummary(
             Text(
                 text = stringResource(id = R.string.expense_repeat_edit),
                 modifier = Modifier.padding(horizontal = Dimens.spacing16, vertical = Dimens.spacing8),
-                style = AppTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                style = AppTheme.typography.titleMedium,
                 color = AppTheme.colors.primary,
             )
         }
@@ -1539,7 +1539,7 @@ private fun RepeatSelectionField(
         ) {
             Text(
                 text = label,
-                style = AppTheme.typography.bodyLarge,
+                style = AppTheme.typography.titleMedium,
                 color = AppTheme.colors.onSurfaceVariant,
                 modifier = Modifier.weight(1f),
             )

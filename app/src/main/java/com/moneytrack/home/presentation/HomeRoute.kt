@@ -157,6 +157,7 @@ private fun HomeScreenWithSheets(
             onTimeRangeSelected = viewModel::onTimeRangeSelected,
             onMonthSelected = viewModel::onMonthSelected,
             onYearSelected = viewModel::onYearSelected,
+            onDeleteTransaction = viewModel::deleteTransaction,
             onSetBudgetClick = onSetBudgetClick,
             onAddExpenseClick = actions.onAddExpenseClick,
         )

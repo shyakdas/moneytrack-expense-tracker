@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.moneytrack.locale.CurrencyFormatter
 import com.moneytrack.settings.domain.usecase.ObserveAppCurrencyCodeUseCase
 import com.moneytrack.transaction.domain.model.TransactionRecord
+import com.moneytrack.transaction.domain.usecase.DeleteTransactionUseCase
 import com.moneytrack.transaction.domain.usecase.ObserveTransactionsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -20,6 +21,7 @@ import kotlinx.coroutines.launch
 class TransactionViewModel @Inject constructor(
     observeTransactionsUseCase: ObserveTransactionsUseCase,
     observeAppCurrencyCodeUseCase: ObserveAppCurrencyCodeUseCase,
+    private val deleteTransactionUseCase: DeleteTransactionUseCase,
     private val currencyFormatter: CurrencyFormatter,
 ) : ViewModel() {
 
@@ -54,6 +56,12 @@ class TransactionViewModel @Inject constructor(
                         currencyCode = _selectedCurrencyCode.value,
                     ),
             )
+        }
+    }
+
+    fun deleteTransaction(transactionId: Long) {
+        viewModelScope.launch {
+            deleteTransactionUseCase(transactionId)
         }
     }
 }

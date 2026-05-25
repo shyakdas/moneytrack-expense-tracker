@@ -88,6 +88,7 @@ private fun ExpenseSnapshotContent(
         onAttachmentRemoved = {},
         onRepeatClick = {},
         onRepeatEnabledChange = {},
+        onDescriptionClick = {},
         onCategoryFieldClick = {},
         occurredAtEpochMillis = uiState.occurredAtEpochMillis,
         onOccurredAtChanged = {},
