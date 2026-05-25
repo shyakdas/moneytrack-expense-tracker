@@ -6,9 +6,11 @@ import ui.components.card.transaction.TransactionType
 
 data class HomeTransaction(
     val icon: Int,
+    val category: String,
     val title: String,
     val subtitle: String?,
     val amount: String,
+    val date: String,
     val time: String,
     val type: TransactionType,
 )

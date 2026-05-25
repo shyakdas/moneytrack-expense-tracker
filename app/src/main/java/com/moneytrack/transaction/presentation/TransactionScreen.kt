@@ -167,9 +167,11 @@ private fun TransactionContent(
                         section.items.forEach { transaction ->
                             TransactionCard(
                                 icon = ImageVector.vectorResource(id = transaction.iconRes),
+                                category = transaction.category,
                                 title = transaction.title,
                                 subtitle = transaction.subtitle,
                                 amount = transaction.amount,
+                                date = transaction.date,
                                 time = transaction.time,
                                 type = transaction.type,
                             )
@@ -243,18 +245,22 @@ private fun TransactionScreenPreview() {
                             TransactionItemUiState(
                                 id = 1L,
                                 iconRes = DsR.drawable.shopping_bag,
+                                category = "Shopping",
                                 title = "Shopping",
                                 subtitle = "Buy some grocery",
                                 amount = "-\u20b9120",
+                                date = "17 May 2025",
                                 time = "10:00 AM",
                                 type = ui.components.card.transaction.TransactionType.EXPENSE,
                             ),
                             TransactionItemUiState(
                                 id = 2L,
                                 iconRes = DsR.drawable.recurring_bill,
+                                category = "Subscription",
                                 title = "Subscription",
                                 subtitle = "Disney+ Annual",
                                 amount = "-\u20b980",
+                                date = "17 May 2025",
                                 time = "03:30 PM",
                                 type = ui.components.card.transaction.TransactionType.EXPENSE,
                             ),
@@ -266,9 +272,11 @@ private fun TransactionScreenPreview() {
                             TransactionItemUiState(
                                 id = 3L,
                                 iconRes = DsR.drawable.salary,
+                                category = "Salary",
                                 title = "Salary",
                                 subtitle = "Salary for July",
                                 amount = "\u20b95,000",
+                                date = "16 May 2025",
                                 time = "04:30 PM",
                                 type = ui.components.card.transaction.TransactionType.INCOME,
                             ),

@@ -70,17 +70,21 @@ class HomeScreenshotTest {
                         transactions = listOf(
                             HomeTransaction(
                                 icon = com.moneytrack.designsystem.R.drawable.shopping_bag,
+                                category = "Shopping",
                                 title = "Shopping",
                                 subtitle = "Buy some grocery",
                                 amount = "-₹120",
+                                date = "17 May 2025",
                                 time = "10:00 AM",
                                 type = TransactionType.EXPENSE,
                             ),
                             HomeTransaction(
                                 icon = com.moneytrack.designsystem.R.drawable.restaurant,
+                                category = "Food",
                                 title = "Food",
                                 subtitle = null,
                                 amount = "-₹32",
+                                date = "17 May 2025",
                                 time = "07:30 PM",
                                 type = TransactionType.EXPENSE,
                             ),

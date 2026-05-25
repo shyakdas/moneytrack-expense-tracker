@@ -71,9 +71,11 @@ data class TransactionSectionUiState(
 data class TransactionItemUiState(
     val id: Long,
     val iconRes: Int,
+    val category: String,
     val title: String,
     val subtitle: String?,
     val amount: String,
+    val date: String,
     val time: String,
     val type: ui.components.card.transaction.TransactionType,
 )
