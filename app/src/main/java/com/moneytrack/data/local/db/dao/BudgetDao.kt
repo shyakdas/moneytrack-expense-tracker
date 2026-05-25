@@ -12,8 +12,11 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface BudgetDao {
 
-    @Query("SELECT * FROM monthly_budget WHERE id = 1 LIMIT 1")
-    fun observeBudget(): Flow<BudgetEntity?>
+    @Query("SELECT * FROM monthly_budget WHERE month = :month AND year = :year LIMIT 1")
+    fun observeBudget(month: Int, year: Int): Flow<BudgetEntity?>
+
+    @Query("SELECT id FROM monthly_budget WHERE month = :month AND year = :year LIMIT 1")
+    suspend fun getBudgetId(month: Int, year: Int): Int?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertBudget(budget: BudgetEntity)

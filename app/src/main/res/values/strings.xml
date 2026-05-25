@@ -47,6 +47,14 @@
     <string name="home_budget_need_title">Why set a budget?</string>
     <string name="home_budget_need_desc">A monthly budget gives you a clear spending target and makes category tracking and alerts meaningful.</string>
     <string name="home_budget_sheet_title">Set your monthly budget</string>
+    <string name="home_budget_sheet_subtitle">Choose a month and set your spending target.</string>
+    <string name="home_budget_sheet_month_label">Month</string>
+    <string name="home_budget_sheet_current_month">Current month</string>
+    <string name="home_budget_sheet_budget_label">MONTHLY BUDGET</string>
+    <string name="home_budget_sheet_budget_subtitle">You’re in control. Plan smart, spend mindfully, and reach your goals.</string>
+    <string name="home_budget_sheet_repeat_title">Repeat every month</string>
+    <string name="home_budget_sheet_repeat_subtitle">We’ll set this as your monthly budget</string>
+    <string name="home_budget_sheet_save">Save Budget</string>
     <string name="home_budget_sheet_next">Next</string>
     <string name="home_budget_sheet_amount_hint">Budget amount</string>
     <string name="home_budget_sheet_continue">Continue</string>

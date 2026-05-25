@@ -10,5 +10,5 @@ import kotlinx.coroutines.flow.Flow
 class ObserveBudgetUseCase @Inject constructor(
     private val budgetRepository: BudgetRepository,
 ) {
-    operator fun invoke(): Flow<Budget?> = budgetRepository.observeBudget()
+    operator fun invoke(month: Int, year: Int): Flow<Budget?> = budgetRepository.observeBudget(month, year)
 }

@@ -8,9 +8,13 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "monthly_budget")
 data class BudgetEntity(
-    @PrimaryKey
+    @ColumnInfo(name = "month")
+    val month: Int,
+    @ColumnInfo(name = "year")
+    val year: Int,
+    @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "id")
-    val id: Int = BUDGET_SINGLETON_ID,
+    val id: Int = 0,
     @ColumnInfo(name = "amount")
     val amount: Double,
     @ColumnInfo(name = "description")
@@ -18,5 +22,3 @@ data class BudgetEntity(
     @ColumnInfo(name = "updated_at_epoch_millis")
     val updatedAtEpochMillis: Long,
 )
-
-const val BUDGET_SINGLETON_ID = 1
