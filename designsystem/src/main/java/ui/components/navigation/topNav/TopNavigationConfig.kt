@@ -24,6 +24,8 @@ sealed class TopNavigationConfig {
         val profileAvatarContent: (@Composable () -> Unit)? = null,
         val selectedMonth: String,
         val onMonthClick: () -> Unit,
+        val selectedYear: String? = null,
+        val onYearClick: (() -> Unit)? = null,
         val onActionClick: () -> Unit,
         val actionIconTint: Color = Color.Unspecified,
     ) : TopNavigationConfig()

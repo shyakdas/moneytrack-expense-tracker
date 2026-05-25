@@ -10,6 +10,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.moneytrack.home.presentation.HomeScreen
+import com.moneytrack.home.presentation.HomeMonthOption
 import com.moneytrack.home.presentation.HomeUiState
 import com.moneytrack.home.presentation.HomeTransaction
 import org.junit.Assert.assertEquals
@@ -197,6 +198,62 @@ class HomeScreenUiTest {
         composeRule.onAllNodesWithText("Set budget now").assertCountEquals(0)
     }
 
+    @Test
+    fun monthSelector_selectsMonthAndClosesMenu() {
+        var selectedMonth: HomeMonthOption? = null
+        composeRule.setContent {
+            MoneyTrackTheme {
+                HomeScreen(
+                    uiState = baseState(
+                        hasExpenses = true,
+                        hasBudget = true,
+                        hasSpendFrequencyData = true,
+                    ),
+                    onBottomRouteSelected = {},
+                    onSeeAllTransactionsClick = {},
+                    onTimeRangeSelected = {},
+                    onMonthSelected = { month -> selectedMonth = month },
+                    onSetBudgetClick = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("May").performClick()
+        composeRule.onNodeWithText("March").assertIsDisplayed()
+        composeRule.onNodeWithText("March").performClick()
+
+        assertEquals("March", selectedMonth?.label)
+        composeRule.onAllNodesWithText("March").assertCountEquals(0)
+    }
+
+    @Test
+    fun yearSelector_selectsYearAndClosesMenu() {
+        var selectedYear: Int? = null
+        composeRule.setContent {
+            MoneyTrackTheme {
+                HomeScreen(
+                    uiState = baseState(
+                        hasExpenses = true,
+                        hasBudget = true,
+                        hasSpendFrequencyData = true,
+                    ),
+                    onBottomRouteSelected = {},
+                    onSeeAllTransactionsClick = {},
+                    onTimeRangeSelected = {},
+                    onYearSelected = { year -> selectedYear = year },
+                    onSetBudgetClick = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("2026").performClick()
+        composeRule.onNodeWithText("2031").assertIsDisplayed()
+        composeRule.onNodeWithText("2031").performClick()
+
+        assertEquals(2031, selectedYear)
+        composeRule.onAllNodesWithText("2031").assertCountEquals(0)
+    }
+
     private fun baseState(
         hasExpenses: Boolean,
         hasBudget: Boolean = false,
@@ -218,6 +275,38 @@ class HomeScreenUiTest {
             transactions = transactions,
             selectedBottomRoute = "home",
             selectedRange = "Today",
+            selectedMonth = HomeMonthOption(
+                monthIndex = 4,
+                year = 2026,
+                label = "May",
+                shortLabel = "May",
+            ),
+            monthOptions = testMonthOptions(),
+            yearOptions = (2026..2031).toList(),
         )
+    }
+
+    private fun testMonthOptions(): List<HomeMonthOption> {
+        return listOf(
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
+        ).mapIndexed { index, label ->
+            HomeMonthOption(
+                monthIndex = index,
+                year = 2026,
+                label = label,
+                shortLabel = label.take(3),
+            )
+        }
     }
 }
