@@ -5,6 +5,7 @@
 package com.moneytrack.expense.presentation
 
 import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
@@ -19,6 +20,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -40,7 +42,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.DropdownMenu
@@ -70,6 +71,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.core.graphics.toColorInt
 import androidx.core.net.toUri
@@ -98,11 +100,26 @@ private const val ATTACHMENT_IMAGE_EXTENSION = ".jpg"
 private const val ATTACHMENT_CACHE_DIR = "expense_attachments"
 private const val ATTACHMENT_FILE_PREFIX = "receipt_"
 private const val DATE_OUTPUT_PATTERN = "dd MMM yyyy"
+private const val TIME_PATTERN = "hh:mm a"
 private const val END_OF_DAY_HOUR = 23
 private const val END_OF_DAY_MINUTE = 59
 private const val END_OF_DAY_SECOND = 59
 private const val END_OF_DAY_MILLISECOND = 999
 private val fallbackCategoryColor = categoryColor(FALLBACK_CATEGORY_COLOR_HEX)
+private val ExpenseTopStart = Color(0xFF0B111A)
+private val ExpenseTopMiddle = Color(0xFF0A1422)
+private val ExpenseTopEnd = Color(0xFF08101D)
+private val ExpenseRowCard = Color(0xCC111A26)
+private val ExpenseRowBorder = Color(0x2E95A7C0)
+private val ExpenseLine = Color(0x26D9E2F1)
+private val ExpenseIconBg = Color(0x2EFF6F6F)
+private val ExpenseAccent = Color(0xFFFF6F6F)
+private val ExpensePillBg = Color(0xCC1A2130)
+private val ExpensePrimaryText = Color(0xFFF3F6FB)
+private val ExpenseSecondaryText = Color(0xFFAAB6C8)
+private val ExpenseContinueStart = Color(0xFFFF7D7D)
+private val ExpenseContinueEnd = Color(0xFFFF6A6A)
+private val ExpenseContinueText = Color(0xFF111622)
 
 @Composable
 fun ExpenseScreen(
@@ -116,6 +133,7 @@ fun ExpenseScreen(
     onRepeatConfigured: (RepeatFrequency, Long) -> Unit,
     onRepeatRemoved: () -> Unit,
     onCategorySelected: (Long) -> Unit,
+    onOccurredAtChanged: (Long) -> Unit,
 ) {
     val context = LocalContext.current
     var showCategorySheet by remember { mutableStateOf(false) }
@@ -190,6 +208,8 @@ fun ExpenseScreen(
                 }
             },
             onCategoryFieldClick = { showCategorySheet = true },
+            occurredAtEpochMillis = uiState.occurredAtEpochMillis,
+            onOccurredAtChanged = onOccurredAtChanged,
         )
     }
 
@@ -251,16 +271,26 @@ internal fun ExpenseContent(
     onRepeatClick: () -> Unit,
     onRepeatEnabledChange: (Boolean) -> Unit,
     onCategoryFieldClick: () -> Unit,
+    occurredAtEpochMillis: Long,
+    onOccurredAtChanged: (Long) -> Unit,
 ) {
+    val dateText = remember(occurredAtEpochMillis) {
+        SimpleDateFormat(DATE_OUTPUT_PATTERN, Locale.getDefault()).format(occurredAtEpochMillis)
+    }
+    val timeText = remember(occurredAtEpochMillis) {
+        SimpleDateFormat(TIME_PATTERN, Locale.getDefault()).format(occurredAtEpochMillis)
+    }
+    val context = LocalContext.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(
-                brush = Brush.verticalGradient(
+                brush = Brush.horizontalGradient(
                     colors = listOf(
-                        AppTheme.colors.error,
-                        AppTheme.colors.error.copy(alpha = 0.88f),
-                        AppTheme.colors.primary,
+                        ExpenseTopStart,
+                        ExpenseTopMiddle,
+                        ExpenseTopEnd,
                     ),
                 ),
             ),
@@ -275,19 +305,28 @@ internal fun ExpenseContent(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                IconButton(onClick = onBackClick) {
+                Surface(
+                    modifier = Modifier
+                        .size(Dimens.iconButtonSize)
+                        .clickable(onClick = onBackClick),
+                    shape = CircleShape,
+                    color = ExpensePillBg,
+                ) {
                     Icon(
-                        imageVector = ImageVector.vectorResource(id = DsR.drawable.arrow_left),
+                        imageVector = ImageVector.vectorResource(id = DsR.drawable.arrow_left_2),
                         contentDescription = stringResource(id = R.string.expense_back_content_desc),
-                        tint = AppTheme.colors.onPrimary,
+                        tint = ExpensePrimaryText,
+                        modifier = Modifier
+                            .padding(Dimens.spacing12)
+                            .size(Dimens.icon20),
                     )
                 }
 
                 Text(
-                    text = stringResource(id = R.string.expense_title),
+                    text = "Add Expense",
                     modifier = Modifier.weight(1f),
-                    style = AppTheme.typography.titleMedium,
-                    color = AppTheme.colors.onPrimary,
+                    style = AppTheme.typography.titleSmall,
+                    color = ExpensePrimaryText,
                     textAlign = TextAlign.Center,
                 )
 
@@ -296,9 +335,9 @@ internal fun ExpenseContent(
 
             Spacer(modifier = Modifier.height(Dimens.spacing24))
             Text(
-                text = stringResource(id = R.string.expense_amount_prompt),
-                style = AppTheme.typography.labelLarge,
-                color = AppTheme.colors.onPrimary.copy(alpha = 0.85f),
+                text = "How much did you spend?",
+                style = AppTheme.typography.labelMedium,
+                color = ExpenseSecondaryText,
             )
             Spacer(modifier = Modifier.height(Dimens.spacing8))
             AmountInputField(
@@ -306,102 +345,305 @@ internal fun ExpenseContent(
                 amountText = amountText,
                 onAmountChanged = onAmountChanged,
             )
-            Spacer(modifier = Modifier.height(Dimens.spacing24))
+            Spacer(modifier = Modifier.height(Dimens.spacing20))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(ExpenseLine),
+            )
+            Spacer(modifier = Modifier.height(Dimens.spacing20))
         }
 
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = AppTheme.colors.background,
-            shape = RoundedCornerShape(topStart = Dimens.radius24, topEnd = Dimens.radius24),
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .imePadding()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = Dimens.spacing16),
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .imePadding(),
-            ) {
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .verticalScroll(rememberScrollState())
-                        .padding(horizontal = Dimens.spacing16, vertical = Dimens.spacing24),
-                ) {
-                    MoneyTrackCard {
-                        CategorySelectorField(
-                            selectedCategory = selectedCategory,
-                            onClick = onCategoryFieldClick,
-                        )
-                        Spacer(modifier = Modifier.height(Dimens.spacing16))
-
-                        InputField(
-                            value = description,
-                            onValueChange = onDescriptionChanged,
-                            placeholder = stringResource(id = R.string.expense_description_placeholder),
-                        )
-                        Spacer(modifier = Modifier.height(Dimens.spacing16))
-
-                        if (attachment == null) {
-                            AttachmentInput(onClick = onAttachmentClick)
-                        } else {
-                            AttachmentPreview(
-                                attachment = attachment,
-                                onRemoveClick = onAttachmentRemoved,
-                            )
+            GlassSectionCard {
+                ExpenseRow(
+                    iconRes = DsR.drawable.sort,
+                    title = "Category",
+                    subtitle = selectedCategory?.name ?: "Select category",
+                    onClick = onCategoryFieldClick,
+                )
+                GlassDivider()
+                DescriptionRow(
+                    value = description,
+                    onValueChange = onDescriptionChanged,
+                )
+                GlassDivider()
+                ExpenseRow(
+                    iconRes = DsR.drawable.transaction,
+                    title = "Date",
+                    subtitle = dateText,
+                    trailingLabel = "Today",
+                    onTrailingClick = {
+                        context.showExpenseDatePicker(occurredAtEpochMillis) { updatedAt ->
+                            onOccurredAtChanged(updatedAt)
                         }
-                    }
-                    Spacer(modifier = Modifier.height(Dimens.spacing16))
-
-                    MoneyTrackCard {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable(onClick = onRepeatClick),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = stringResource(id = R.string.expense_repeat_title),
-                                    style = AppTheme.typography.titleMedium,
-                                    color = AppTheme.colors.onBackground,
-                                )
-                                Text(
-                                    text = stringResource(id = R.string.expense_repeat_subtitle),
-                                    style = AppTheme.typography.bodySmall,
-                                    color = AppTheme.colors.onSurfaceVariant,
-                                )
-                            }
-
-                            PrimarySwitch(
-                                checked = repeatSchedule != null,
-                                onCheckedChange = onRepeatEnabledChange,
-                            )
+                    },
+                )
+                GlassDivider()
+                ExpenseRow(
+                    iconRes = DsR.drawable.notifiaction,
+                    title = "Time",
+                    subtitle = timeText,
+                    trailingLabel = "Now",
+                    onTrailingClick = {
+                        context.showExpenseTimePicker(occurredAtEpochMillis) { updatedAt ->
+                            onOccurredAtChanged(updatedAt)
                         }
+                    },
+                )
+                GlassDivider()
+                ExpenseRow(
+                    iconRes = DsR.drawable.attachment,
+                    title = "Attachment (optional)",
+                    subtitle = if (attachment == null) "Upload receipt or note" else attachment.name,
+                    onClick = onAttachmentClick,
+                    showArrow = true,
+                )
+            }
+            Spacer(modifier = Modifier.height(Dimens.spacing16))
 
-                        if (repeatSchedule != null) {
-                            Spacer(modifier = Modifier.height(Dimens.spacing16))
-                            RepeatSummary(
-                                repeatSchedule = repeatSchedule,
-                                onEditClick = onRepeatClick,
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(Dimens.spacing24))
-                }
-
-                Column(
+            GlassSectionCard {
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = Dimens.spacing16)
-                        .padding(bottom = Dimens.spacing8),
+                        .clickable(onClick = onRepeatClick),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    LargeButton(
-                        text = stringResource(id = R.string.expense_continue),
-                        onClick = onContinueClick,
-                        enabled = isSubmitEnabled,
+                    LeadingIcon(iconRes = DsR.drawable.recurring_bill)
+                    Spacer(modifier = Modifier.width(Dimens.spacing12))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Repeat transaction",
+                            style = AppTheme.typography.titleSmall,
+                            color = ExpensePrimaryText,
+                        )
+                        Text(
+                            text = "Make this a recurring expense",
+                            style = AppTheme.typography.bodySmall,
+                            color = ExpenseSecondaryText,
+                        )
+                    }
+                    PrimarySwitch(
+                        checked = repeatSchedule != null,
+                        onCheckedChange = onRepeatEnabledChange,
                     )
-                    Spacer(modifier = Modifier.navigationBarsPadding())
                 }
             }
+
+            Spacer(modifier = Modifier.height(Dimens.spacing20))
+            CoralButton(
+                enabled = isSubmitEnabled,
+                onClick = onContinueClick,
+            )
+            Spacer(modifier = Modifier.height(Dimens.spacing12))
+            Spacer(modifier = Modifier.navigationBarsPadding())
+        }
+    }
+}
+
+@Composable
+private fun GlassSectionCard(content: @Composable ColumnScope.() -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(Dimens.radius20),
+        color = ExpenseRowCard,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(
+                    width = Dimens.borderNormal,
+                    color = ExpenseRowBorder,
+                    shape = RoundedCornerShape(Dimens.radius20),
+                )
+                .padding(Dimens.spacing12),
+            content = content,
+        )
+    }
+}
+
+@Composable
+private fun ExpenseRow(
+    iconRes: Int,
+    title: String,
+    subtitle: String,
+    trailingLabel: String? = null,
+    showArrow: Boolean = false,
+    onClick: (() -> Unit)? = null,
+    onTrailingClick: (() -> Unit)? = null,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = onClick != null) { onClick?.invoke() }
+            .padding(vertical = Dimens.spacing8),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        LeadingIcon(iconRes = iconRes)
+        Spacer(modifier = Modifier.width(Dimens.spacing12))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = AppTheme.typography.titleSmall,
+                color = ExpensePrimaryText,
+            )
+            Text(
+                text = subtitle,
+                style = AppTheme.typography.bodySmall,
+                color = ExpenseSecondaryText,
+            )
+        }
+        if (trailingLabel != null) {
+            Surface(
+                shape = RoundedCornerShape(Dimens.radius16),
+                color = ExpensePillBg,
+                modifier = Modifier.clickable { onTrailingClick?.invoke() },
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = Dimens.spacing12, vertical = Dimens.spacing8),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = trailingLabel,
+                        style = AppTheme.typography.titleSmall,
+                        color = ExpensePrimaryText,
+                    )
+                    Spacer(modifier = Modifier.width(Dimens.spacing6))
+                    Icon(
+                        imageVector = ImageVector.vectorResource(id = DsR.drawable.arrow_down_2),
+                        contentDescription = null,
+                        tint = ExpensePrimaryText,
+                    )
+                }
+            }
+        } else if (showArrow) {
+            Icon(
+                imageVector = ImageVector.vectorResource(id = DsR.drawable.arrow_right_2),
+                contentDescription = null,
+                tint = ExpenseSecondaryText,
+            )
+        }
+    }
+}
+
+@Composable
+private fun LeadingIcon(iconRes: Int) {
+    Box(
+        modifier = Modifier
+            .size(Dimens.spacing48)
+            .background(
+                color = ExpenseIconBg,
+                shape = RoundedCornerShape(Dimens.radius16),
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = ImageVector.vectorResource(id = iconRes),
+            contentDescription = null,
+            tint = ExpenseAccent,
+        )
+    }
+}
+
+@Composable
+private fun DescriptionRow(
+    value: String,
+    onValueChange: (String) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = Dimens.spacing8),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        LeadingIcon(iconRes = DsR.drawable.edit)
+        Spacer(modifier = Modifier.width(Dimens.spacing12))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "Description (optional)",
+                style = AppTheme.typography.titleSmall,
+                color = ExpensePrimaryText,
+            )
+            BasicTextField(
+                value = value,
+                onValueChange = onValueChange,
+                singleLine = true,
+                textStyle = AppTheme.typography.bodySmall.copy(color = ExpenseSecondaryText),
+                cursorBrush = SolidColor(ExpenseAccent),
+                decorationBox = { inner ->
+                    if (value.isBlank()) {
+                        Text(
+                            text = "Add a note",
+                            style = AppTheme.typography.bodySmall,
+                            color = ExpenseSecondaryText.copy(alpha = 0.8f),
+                        )
+                    }
+                    inner()
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun GlassDivider() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(1.dp)
+            .background(ExpenseLine),
+    )
+}
+
+@Composable
+private fun CoralButton(
+    enabled: Boolean,
+    onClick: () -> Unit,
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = enabled, onClick = onClick),
+        shape = RoundedCornerShape(Dimens.radius16),
+        color = Color.Transparent,
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    brush = Brush.linearGradient(
+                        colors = if (enabled) {
+                            listOf(ExpenseContinueStart, ExpenseContinueEnd)
+                        } else {
+                            listOf(
+                                AppTheme.colors.onSurfaceVariant.copy(alpha = 0.35f),
+                                AppTheme.colors.onSurfaceVariant.copy(alpha = 0.35f),
+                            )
+                        },
+                    ),
+                )
+                .padding(horizontal = Dimens.spacing20, vertical = Dimens.spacing12),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Spacer(modifier = Modifier.weight(1f))
+            Text(
+                text = stringResource(id = R.string.expense_continue),
+                style = AppTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = ExpenseContinueText,
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Icon(
+                imageVector = ImageVector.vectorResource(id = DsR.drawable.arrow_right_2),
+                contentDescription = null,
+                tint = ExpenseContinueText,
+            )
         }
     }
 }
@@ -436,8 +678,8 @@ private fun AmountInputField(
             decorationBox = {
                 Text(
                     text = amountText,
-                    style = AppTheme.typography.displayLarge,
-                    color = AppTheme.colors.onPrimary,
+                    style = AppTheme.typography.displayMedium,
+                    color = ExpensePrimaryText,
                 )
             },
         )
@@ -1105,6 +1347,53 @@ private fun Context.showRepeatEndDatePicker(
     ).show()
 }
 
+private fun Context.showExpenseDatePicker(
+    currentEpochMillis: Long,
+    onDateSelected: (Long) -> Unit,
+) {
+    val initialCalendar = Calendar.getInstance().apply {
+        timeInMillis = currentEpochMillis
+    }
+    DatePickerDialog(
+        this,
+        { _, year, month, dayOfMonth ->
+            val updated = Calendar.getInstance().apply {
+                timeInMillis = currentEpochMillis
+                set(Calendar.YEAR, year)
+                set(Calendar.MONTH, month)
+                set(Calendar.DAY_OF_MONTH, dayOfMonth)
+            }
+            onDateSelected(updated.timeInMillis)
+        },
+        initialCalendar.get(Calendar.YEAR),
+        initialCalendar.get(Calendar.MONTH),
+        initialCalendar.get(Calendar.DAY_OF_MONTH),
+    ).show()
+}
+
+private fun Context.showExpenseTimePicker(
+    currentEpochMillis: Long,
+    onTimeSelected: (Long) -> Unit,
+) {
+    val initialCalendar = Calendar.getInstance().apply {
+        timeInMillis = currentEpochMillis
+    }
+    TimePickerDialog(
+        this,
+        { _, hourOfDay, minute ->
+            val updated = Calendar.getInstance().apply {
+                timeInMillis = currentEpochMillis
+                set(Calendar.HOUR_OF_DAY, hourOfDay)
+                set(Calendar.MINUTE, minute)
+            }
+            onTimeSelected(updated.timeInMillis)
+        },
+        initialCalendar.get(Calendar.HOUR_OF_DAY),
+        initialCalendar.get(Calendar.MINUTE),
+        false,
+    ).show()
+}
+
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 private fun ExpenseScreenPreview() {
@@ -1156,6 +1445,7 @@ private fun ExpenseScreenPreview() {
             onRepeatConfigured = { _, _ -> },
             onRepeatRemoved = {},
             onCategorySelected = {},
+            onOccurredAtChanged = {},
         )
     }
 }

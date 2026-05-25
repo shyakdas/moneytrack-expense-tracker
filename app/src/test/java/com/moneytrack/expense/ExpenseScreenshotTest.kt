@@ -89,5 +89,7 @@ private fun ExpenseSnapshotContent(
         onRepeatClick = {},
         onRepeatEnabledChange = {},
         onCategoryFieldClick = {},
+        occurredAtEpochMillis = uiState.occurredAtEpochMillis,
+        onOccurredAtChanged = {},
     )
 }

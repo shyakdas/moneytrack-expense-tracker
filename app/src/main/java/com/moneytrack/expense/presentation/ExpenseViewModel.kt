@@ -15,6 +15,7 @@ import com.moneytrack.expense.domain.usecase.SubmitExpenseUseCase
 import com.moneytrack.locale.CurrencyFormatter
 import com.moneytrack.settings.domain.usecase.ObserveAppCurrencyCodeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.util.Calendar
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -166,6 +167,12 @@ class ExpenseViewModel @Inject constructor(
             _events.send(ExpenseEvent.Saved(result))
         }
     }
+
+    fun onOccurredAtChanged(occurredAtEpochMillis: Long) {
+        _uiState.update { state ->
+            state.copy(occurredAtEpochMillis = occurredAtEpochMillis)
+        }
+    }
 }
 
 data class ExpenseUiState(
@@ -178,6 +185,7 @@ data class ExpenseUiState(
     val isSubmitEnabled: Boolean = false,
     val attachment: ExpenseAttachmentUiState? = null,
     val repeatSchedule: ExpenseRepeatUiState? = null,
+    val occurredAtEpochMillis: Long = Calendar.getInstance().timeInMillis,
 )
 
 private const val DEFAULT_AMOUNT_VALUE = 0.0
@@ -219,7 +227,7 @@ private fun ExpenseUiState.toSubmitExpenseRequest(): SubmitExpenseRequest? {
             amount = amount,
             description = description,
             category = categoryName,
-            occurredAtEpochMillis = System.currentTimeMillis(),
+            occurredAtEpochMillis = occurredAtEpochMillis,
             repeatSchedule = repeatSchedule?.toDomain(),
         )
     } else {
