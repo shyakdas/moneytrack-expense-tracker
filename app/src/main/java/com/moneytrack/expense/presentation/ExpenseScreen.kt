@@ -138,7 +138,8 @@ fun ExpenseScreen(
     val context = LocalContext.current
     var showCategorySheet by remember { mutableStateOf(false) }
     var showAttachmentSheet by remember { mutableStateOf(false) }
-    var showRepeatSheet by remember { mutableStateOf(false) }
+    var showRepeatScreen by remember { mutableStateOf(false) }
+    var showDescriptionSheet by remember { mutableStateOf(false) }
     var pendingCameraUri by remember { mutableStateOf<Uri?>(null) }
     val imageFallbackName = stringResource(id = R.string.expense_attachment_image_fallback_name)
     val documentFallbackName = stringResource(id = R.string.expense_attachment_document_fallback_name)
@@ -184,7 +185,7 @@ fun ExpenseScreen(
         showAttachmentSheet = false
     }
 
-    SheetBlurHost(isSheetVisible = showCategorySheet || showAttachmentSheet || showRepeatSheet) {
+    SheetBlurHost(isSheetVisible = showCategorySheet || showAttachmentSheet || showRepeatScreen || showDescriptionSheet) {
         ExpenseContent(
             amountInput = uiState.amountInput,
             amountText = uiState.amountText,
@@ -197,12 +198,13 @@ fun ExpenseScreen(
             onContinueClick = onContinueClick,
             onAmountChanged = onAmountChanged,
             onDescriptionChanged = onDescriptionChanged,
+            onDescriptionClick = { showDescriptionSheet = true },
             onAttachmentClick = { showAttachmentSheet = true },
             onAttachmentRemoved = onAttachmentRemoved,
-            onRepeatClick = { showRepeatSheet = true },
+            onRepeatClick = { showRepeatScreen = true },
             onRepeatEnabledChange = { isEnabled ->
                 if (isEnabled) {
-                    showRepeatSheet = true
+                    showRepeatScreen = true
                 } else {
                     onRepeatRemoved()
                 }
@@ -241,13 +243,29 @@ fun ExpenseScreen(
         )
     }
 
-    if (showRepeatSheet) {
-        RepeatConfigurationBottomSheet(
+    if (showRepeatScreen) {
+        RepeatTransactionScreen(
             initialRepeatSchedule = uiState.repeatSchedule,
-            onDismiss = { showRepeatSheet = false },
-            onSave = { frequency, endAtEpochMillis ->
-                onRepeatConfigured(frequency, endAtEpochMillis)
-                showRepeatSheet = false
+            initialOccurredAt = uiState.occurredAtEpochMillis,
+            onBackClick = { showRepeatScreen = false },
+            onDoneClick = { isEnabled, frequency, endAtEpochMillis ->
+                if (isEnabled && frequency != null && endAtEpochMillis != null) {
+                    onRepeatConfigured(frequency, endAtEpochMillis)
+                } else {
+                    onRepeatRemoved()
+                }
+                showRepeatScreen = false
+            },
+        )
+    }
+
+    if (showDescriptionSheet) {
+        DescriptionBottomSheet(
+            initialDescription = uiState.description,
+            onDismiss = { showDescriptionSheet = false },
+            onSave = { descriptionText ->
+                onDescriptionChanged(descriptionText)
+                showDescriptionSheet = false
             },
         )
     }
@@ -266,6 +284,7 @@ internal fun ExpenseContent(
     onContinueClick: () -> Unit,
     onAmountChanged: (String) -> Unit,
     onDescriptionChanged: (String) -> Unit,
+    onDescriptionClick: () -> Unit,
     onAttachmentClick: () -> Unit,
     onAttachmentRemoved: () -> Unit,
     onRepeatClick: () -> Unit,
@@ -313,7 +332,7 @@ internal fun ExpenseContent(
                     color = ExpensePillBg,
                 ) {
                     Icon(
-                        imageVector = ImageVector.vectorResource(id = DsR.drawable.arrow_left_2),
+                        imageVector = ImageVector.vectorResource(id = DsR.drawable.arrow_left),
                         contentDescription = stringResource(id = R.string.expense_back_content_desc),
                         tint = ExpensePrimaryText,
                         modifier = Modifier
@@ -372,7 +391,7 @@ internal fun ExpenseContent(
                 GlassDivider()
                 DescriptionRow(
                     value = description,
-                    onValueChange = onDescriptionChanged,
+                    onClick = onDescriptionClick,
                 )
                 GlassDivider()
                 ExpenseRow(
@@ -555,11 +574,12 @@ private fun LeadingIcon(iconRes: Int) {
 @Composable
 private fun DescriptionRow(
     value: String,
-    onValueChange: (String) -> Unit,
+    onClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable(onClick = onClick)
             .padding(vertical = Dimens.spacing8),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -571,22 +591,74 @@ private fun DescriptionRow(
                 style = AppTheme.typography.titleSmall,
                 color = ExpensePrimaryText,
             )
-            BasicTextField(
-                value = value,
-                onValueChange = onValueChange,
-                singleLine = true,
-                textStyle = AppTheme.typography.bodySmall.copy(color = ExpenseSecondaryText),
-                cursorBrush = SolidColor(ExpenseAccent),
-                decorationBox = { inner ->
-                    if (value.isBlank()) {
-                        Text(
-                            text = "Add a note",
-                            style = AppTheme.typography.bodySmall,
-                            color = ExpenseSecondaryText.copy(alpha = 0.8f),
-                        )
-                    }
-                    inner()
-                },
+            Text(
+                text = value.ifBlank { "Add a note" },
+                style = AppTheme.typography.bodySmall,
+                color = ExpenseSecondaryText.copy(alpha = 0.85f),
+            )
+        }
+        Icon(
+            imageVector = ImageVector.vectorResource(id = DsR.drawable.arrow_right_2),
+            contentDescription = null,
+            tint = ExpenseSecondaryText,
+        )
+    }
+}
+
+@Composable
+private fun DescriptionBottomSheet(
+    initialDescription: String,
+    onDismiss: () -> Unit,
+    onSave: (String) -> Unit,
+) {
+    var draft by remember(initialDescription) { mutableStateOf(initialDescription) }
+    MoneyTrackBottomSheet(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Dimens.spacing16)
+                .padding(bottom = Dimens.spacing24),
+            verticalArrangement = Arrangement.spacedBy(Dimens.spacing12),
+        ) {
+            Text(
+                text = "Description",
+                style = AppTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = AppTheme.colors.onSurface,
+            )
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(
+                        width = Dimens.borderNormal,
+                        color = AppTheme.colors.outline,
+                        shape = RoundedCornerShape(Dimens.radius12),
+                    ),
+                shape = RoundedCornerShape(Dimens.radius12),
+                color = AppTheme.colors.surface,
+            ) {
+                BasicTextField(
+                    value = draft,
+                    onValueChange = { draft = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(Dimens.spacing12),
+                    textStyle = AppTheme.typography.bodyMedium.copy(color = AppTheme.colors.onSurface),
+                    cursorBrush = SolidColor(AppTheme.colors.primary),
+                    decorationBox = { inner ->
+                        if (draft.isBlank()) {
+                            Text(
+                                text = "Add a note",
+                                style = AppTheme.typography.bodyMedium,
+                                color = AppTheme.colors.onSurfaceVariant,
+                            )
+                        }
+                        inner()
+                    },
+                )
+            }
+            LargeButton(
+                text = "Save",
+                onClick = { onSave(draft.trim()) },
             )
         }
     }
@@ -1079,6 +1151,228 @@ private fun AttachmentOptionCard(
                 style = AppTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
                 color = AppTheme.colors.primary,
             )
+        }
+    }
+}
+
+private enum class RepeatEndOption {
+    NEVER,
+    ON_DATE,
+    AFTER_MONTHS,
+}
+
+@Composable
+private fun RepeatTransactionScreen(
+    initialRepeatSchedule: ExpenseRepeatUiState?,
+    initialOccurredAt: Long,
+    onBackClick: () -> Unit,
+    onDoneClick: (Boolean, RepeatFrequency?, Long?) -> Unit,
+) {
+    val context = LocalContext.current
+    var isEnabled by remember(initialRepeatSchedule) { mutableStateOf(initialRepeatSchedule != null) }
+    var selectedFrequency by remember(initialRepeatSchedule) {
+        mutableStateOf(initialRepeatSchedule?.frequency ?: RepeatFrequency.MONTHLY)
+    }
+    var startAt by remember(initialOccurredAt) { mutableLongStateOf(initialOccurredAt) }
+    var selectedEndOption by remember(initialRepeatSchedule) {
+        mutableStateOf(if (initialRepeatSchedule == null) RepeatEndOption.NEVER else RepeatEndOption.ON_DATE)
+    }
+    var onDateEndAt by remember(initialRepeatSchedule) {
+        mutableLongStateOf(initialRepeatSchedule?.endAtEpochMillis ?: initialOccurredAt)
+    }
+    var afterMonths by remember { mutableStateOf(4) }
+
+    val onDone = {
+        val resolvedEndAt = when {
+            !isEnabled -> null
+            selectedEndOption == RepeatEndOption.NEVER -> Long.MAX_VALUE
+            selectedEndOption == RepeatEndOption.ON_DATE -> onDateEndAt
+            else -> Calendar.getInstance().apply {
+                timeInMillis = startAt
+                add(Calendar.MONTH, afterMonths.coerceAtLeast(1))
+            }.timeInMillis
+        }
+        onDoneClick(isEnabled, selectedFrequency, resolvedEndAt)
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Brush.horizontalGradient(listOf(ExpenseTopStart, ExpenseTopMiddle, ExpenseTopEnd))),
+    ) {
+        Column(
+            modifier = Modifier
+                .statusBarsPadding()
+                .padding(horizontal = Dimens.spacing16),
+        ) {
+            Spacer(modifier = Modifier.height(Dimens.spacing16))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Surface(
+                    modifier = Modifier
+                        .size(Dimens.iconButtonSize)
+                        .clickable(onClick = onBackClick),
+                    shape = CircleShape,
+                    color = ExpensePillBg,
+                ) {
+                    Icon(
+                        imageVector = ImageVector.vectorResource(id = DsR.drawable.arrow_left),
+                        contentDescription = null,
+                        tint = ExpensePrimaryText,
+                        modifier = Modifier
+                            .padding(Dimens.spacing12)
+                            .size(Dimens.icon20),
+                    )
+                }
+                Text(
+                    text = "Repeat transaction",
+                    modifier = Modifier.weight(1f),
+                    style = AppTheme.typography.titleSmall,
+                    color = ExpensePrimaryText,
+                    textAlign = TextAlign.Center,
+                )
+                Spacer(modifier = Modifier.width(Dimens.spacing48))
+            }
+            Spacer(modifier = Modifier.height(Dimens.spacing20))
+            GlassSectionCard {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Repeat this transaction", style = AppTheme.typography.titleSmall, color = ExpensePrimaryText)
+                        Text("Make this a recurring expense", style = AppTheme.typography.bodySmall, color = ExpenseSecondaryText)
+                    }
+                    PrimarySwitch(checked = isEnabled, onCheckedChange = { isEnabled = it })
+                }
+            }
+            Spacer(modifier = Modifier.height(Dimens.spacing16))
+            Text("FREQUENCY", style = AppTheme.typography.labelMedium, color = ExpenseSecondaryText)
+            Spacer(modifier = Modifier.height(Dimens.spacing8))
+            GlassSectionCard {
+                RepeatFrequency.entries.forEachIndexed { index, frequency ->
+                    RepeatOptionRow(
+                        title = frequency.displayName(),
+                        selected = selectedFrequency == frequency,
+                        onClick = { selectedFrequency = frequency },
+                    )
+                    if (index < RepeatFrequency.entries.lastIndex) GlassDivider()
+                }
+            }
+            Spacer(modifier = Modifier.height(Dimens.spacing12))
+            Text("START DATE", style = AppTheme.typography.labelMedium, color = ExpenseSecondaryText)
+            Spacer(modifier = Modifier.height(Dimens.spacing8))
+            GlassSectionCard {
+                ExpenseRow(
+                    iconRes = DsR.drawable.transaction,
+                    title = formatDate(startAt),
+                    subtitle = "",
+                    trailingLabel = "Today",
+                    onTrailingClick = {
+                        context.showExpenseDatePicker(startAt) { updated -> startAt = updated }
+                    },
+                )
+            }
+            Spacer(modifier = Modifier.height(Dimens.spacing12))
+            Text("ENDS", style = AppTheme.typography.labelMedium, color = ExpenseSecondaryText)
+            Spacer(modifier = Modifier.height(Dimens.spacing8))
+            GlassSectionCard {
+                RepeatOptionRow("Never", selectedEndOption == RepeatEndOption.NEVER) {
+                    selectedEndOption = RepeatEndOption.NEVER
+                }
+                GlassDivider()
+                RepeatOptionRow("On date", selectedEndOption == RepeatEndOption.ON_DATE) {
+                    selectedEndOption = RepeatEndOption.ON_DATE
+                }
+                if (selectedEndOption == RepeatEndOption.ON_DATE) {
+                    GlassDivider()
+                    ExpenseRow(
+                        iconRes = DsR.drawable.transaction,
+                        title = formatDate(onDateEndAt),
+                        subtitle = "",
+                        trailingLabel = "Pick",
+                        onTrailingClick = {
+                            context.showExpenseDatePicker(onDateEndAt) { updated -> onDateEndAt = updated }
+                        },
+                    )
+                }
+                GlassDivider()
+                RepeatOptionRow("After", selectedEndOption == RepeatEndOption.AFTER_MONTHS) {
+                    selectedEndOption = RepeatEndOption.AFTER_MONTHS
+                }
+                if (selectedEndOption == RepeatEndOption.AFTER_MONTHS) {
+                    GlassDivider()
+                    Surface(
+                        shape = RoundedCornerShape(Dimens.radius16),
+                        color = ExpensePillBg,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = Dimens.spacing12, vertical = Dimens.spacing10),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text("Every", color = ExpenseSecondaryText, style = AppTheme.typography.bodySmall)
+                            Spacer(modifier = Modifier.width(Dimens.spacing12))
+                            Text(
+                                text = afterMonths.toString(),
+                                color = ExpenseAccent,
+                                style = AppTheme.typography.titleSmall,
+                                modifier = Modifier
+                                    .background(ExpenseRowCard, RoundedCornerShape(Dimens.radius8))
+                                    .padding(horizontal = Dimens.spacing12, vertical = Dimens.spacing4)
+                                    .clickable { afterMonths = (afterMonths % 12) + 1 },
+                            )
+                            Spacer(modifier = Modifier.width(Dimens.spacing8))
+                            Text("month(s)", color = ExpensePrimaryText, style = AppTheme.typography.bodySmall)
+                        }
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(Dimens.spacing20))
+            CoralButton(
+                enabled = true,
+                onClick = onDone,
+            )
+            Spacer(modifier = Modifier.height(Dimens.spacing12))
+            Spacer(modifier = Modifier.navigationBarsPadding())
+        }
+    }
+}
+
+@Composable
+private fun RepeatOptionRow(
+    title: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = Dimens.spacing8),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = title,
+            style = AppTheme.typography.titleSmall,
+            color = ExpensePrimaryText,
+            modifier = Modifier.weight(1f),
+        )
+        Surface(
+            modifier = Modifier.size(Dimens.icon24),
+            shape = CircleShape,
+            color = Color.Transparent,
+            border = androidx.compose.foundation.BorderStroke(
+                Dimens.borderNormal,
+                if (selected) ExpenseAccent else ExpenseSecondaryText,
+            ),
+        ) {
+            if (selected) {
+                Box(
+                    modifier = Modifier
+                        .padding(Dimens.spacing4)
+                        .background(ExpenseAccent, CircleShape),
+                )
+            }
         }
     }
 }
