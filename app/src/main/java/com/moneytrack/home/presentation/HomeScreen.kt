@@ -322,9 +322,11 @@ private fun HomeContent(
                 uiState.transactions.forEach { transaction ->
                     TransactionCard(
                         icon = ImageVector.vectorResource(id = transaction.icon),
+                        category = transaction.category,
                         title = transaction.title,
                         subtitle = transaction.subtitle,
                         amount = transaction.amount,
+                        date = transaction.date,
                         time = transaction.time,
                         type = transaction.type,
                     )

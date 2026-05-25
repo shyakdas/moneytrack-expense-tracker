@@ -17,12 +17,14 @@ internal fun TransactionRecord.toHomeTransaction(
     val isExpense = type == TransactionRecordType.EXPENSE
     return HomeTransaction(
         icon = category.toTransactionIconRes(),
+        category = category,
         title = title,
         subtitle = note?.trim()?.takeIf(String::isNotEmpty),
         amount = currencyFormatter.format(
             value = if (isExpense) -amount else amount,
             currencyCode = selectedCurrencyCode,
         ),
+        date = formatTransactionDate(occurredAtEpochMillis),
         time = formatTransactionTime(occurredAtEpochMillis),
         type = if (isExpense) {
             TransactionType.EXPENSE
@@ -35,4 +37,8 @@ internal fun TransactionRecord.toHomeTransaction(
 private fun formatTransactionTime(epochMillis: Long): String =
     SimpleDateFormat(TIME_PATTERN, Locale.getDefault()).format(epochMillis)
 
+private fun formatTransactionDate(epochMillis: Long): String =
+    SimpleDateFormat(DATE_PATTERN, Locale.getDefault()).format(epochMillis)
+
 private const val TIME_PATTERN = "hh:mm a"
+private const val DATE_PATTERN = "dd MMM yyyy"

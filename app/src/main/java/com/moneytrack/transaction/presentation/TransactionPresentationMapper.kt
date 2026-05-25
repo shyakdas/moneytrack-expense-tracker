@@ -50,9 +50,11 @@ fun TransactionRecord.toTransactionItemUiState(
     return TransactionItemUiState(
         id = id,
         iconRes = category.toTransactionIconRes(),
+        category = category,
         title = title,
         subtitle = note?.trim()?.takeIf(String::isNotEmpty),
         amount = currencyFormatter.format(value = signedAmount, currencyCode = currencyCode),
+        date = sectionDateFormatter().format(occurredAtEpochMillis),
         time = transactionTimeFormatter().format(occurredAtEpochMillis),
         type = if (isExpense) {
             ui.components.card.transaction.TransactionType.EXPENSE
