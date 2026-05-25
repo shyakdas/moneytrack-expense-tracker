@@ -18,7 +18,6 @@ import com.moneytrack.testutil.MainDispatcherRule
 import com.moneytrack.transaction.domain.model.TransactionRecord
 import com.moneytrack.transaction.domain.model.TransactionRecordType
 import com.moneytrack.transaction.domain.repository.TransactionRepository
-import com.moneytrack.transaction.domain.usecase.ObserveRecentTransactionsUseCase
 import com.moneytrack.transaction.domain.usecase.ObserveTransactionsUseCase
 import java.util.Calendar
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -131,6 +130,85 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun selectedMonth_defaultsToCurrentMonth() = runTest {
+        val viewModel = createViewModel(
+            budgetRepository = FakeBudgetRepository(),
+            transactionRepository = FakeTransactionRepository(),
+        )
+        val collectJob = launch { viewModel.uiState.collect { } }
+        advanceUntilIdle()
+
+        val expectedMonth = currentHomeMonthOption()
+        val state = viewModel.uiState.value
+        assertEquals(expectedMonth.monthIndex, state.selectedMonth.monthIndex)
+        assertEquals(expectedMonth.year, state.selectedMonth.year)
+        assertEquals(expectedMonth.label, state.selectedMonth.label)
+        collectJob.cancel()
+    }
+
+    @Test
+    fun selectingMonth_filtersSummaryAndRecentTransactions() = runTest {
+        val budgetRepository = FakeBudgetRepository()
+        val transactionRepository = FakeTransactionRepository()
+        val viewModel = createViewModel(
+            budgetRepository = budgetRepository,
+            transactionRepository = transactionRepository,
+            countryProvider = FakeCountryProvider(
+                countryCode = "IN",
+                currencySymbol = "₹",
+            ),
+        )
+        val collectJob = launch { viewModel.uiState.collect { } }
+        val selectedMonth = HomeMonthOption(
+            monthIndex = Calendar.MARCH,
+            year = 2026,
+            label = "March",
+            shortLabel = "Mar",
+        )
+
+        budgetRepository.emitBudget(
+            Budget(
+                amount = 10000.0,
+                description = null,
+                updatedAtEpochMillis = 0L,
+            ),
+        )
+        transactionRepository.emitTransactions(
+            listOf(
+                expenseTransaction(
+                    amount = 1200.0,
+                    occurredAtEpochMillis = timeInYear(year = 2026, month = Calendar.MARCH, dayOfMonth = 8),
+                    title = "March expense",
+                ),
+                expenseTransaction(
+                    amount = 700.0,
+                    occurredAtEpochMillis = timeInYear(year = 2026, month = Calendar.MAY, dayOfMonth = 8),
+                    title = "May expense",
+                ),
+            ),
+        )
+        viewModel.onMonthSelected(selectedMonth)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertEquals("March", state.selectedMonth.label)
+        assertEquals("₹1,200", state.expensesText)
+        assertEquals("₹8,800", state.accountBalanceText)
+        assertEquals(listOf("March expense"), state.transactions.map { transaction -> transaction.title })
+        collectJob.cancel()
+    }
+
+    @Test
+    fun homeMonthOptions_buildsAllMonthsForYear() {
+        val months = homeMonthOptions(year = 2026)
+
+        assertEquals(12, months.size)
+        assertEquals("January", months.first().label)
+        assertEquals("December", months.last().label)
+        assertEquals(2026, months.first().year)
+    }
+
+    @Test
     fun recentTransactions_areLimitedMappedAndKeepEmptySubtitleHidden() = runTest {
         val transactionRepository = FakeTransactionRepository()
         val viewModel = createViewModel(
@@ -147,19 +225,19 @@ class HomeViewModelTest {
             expenseTransaction(
                 amount = index.toDouble(),
                 occurredAtEpochMillis = currentMonthTime(dayOfMonth = 1, hour = index % 24),
-                note = if (index == 1) "Groceries" else "",
+                note = if (index == 23) "Groceries" else "",
                 title = "Expense $index",
             )
         }
-        transactionRepository.emitRecentTransactions(records.take(20))
+        transactionRepository.emitTransactions(records)
         advanceUntilIdle()
 
         val transactions = viewModel.uiState.value.transactions
         assertEquals(20, transactions.size)
-        assertEquals("Expense 1", transactions.first().title)
-        assertEquals("Groceries", transactions.first().subtitle)
-        assertNull(transactions[1].subtitle)
-        assertEquals("-$1", transactions.first().amount)
+        val groceryTransaction = transactions.first { transaction -> transaction.title == "Expense 23" }
+        assertEquals("Groceries", groceryTransaction.subtitle)
+        assertTrue(transactions.any { transaction -> transaction.subtitle == null })
+        assertEquals("-$23", groceryTransaction.amount)
         collectJob.cancel()
     }
 
@@ -280,7 +358,6 @@ class HomeViewModelTest {
         return HomeViewModel(
             observeBudgetUseCase = ObserveBudgetUseCase(budgetRepository),
             observeTransactionsUseCase = ObserveTransactionsUseCase(transactionRepository),
-            observeRecentTransactionsUseCase = ObserveRecentTransactionsUseCase(transactionRepository),
             observeAppCurrencyCodeUseCase = ObserveAppCurrencyCodeUseCase(appCurrencyManager),
             upsertBudgetUseCase = UpsertBudgetUseCase(budgetRepository),
             currencyFormatter = currencyFormatter,
@@ -314,12 +391,10 @@ class HomeViewModelTest {
 
     private class FakeTransactionRepository : TransactionRepository {
         private val transactionsFlow = MutableStateFlow<List<TransactionRecord>>(emptyList())
-        private val recentTransactionsFlow = MutableStateFlow<List<TransactionRecord>>(emptyList())
-
         override fun observeTransactions(): Flow<List<TransactionRecord>> = transactionsFlow.asStateFlow()
 
         override fun observeRecentTransactions(limit: Int): Flow<List<TransactionRecord>> =
-            recentTransactionsFlow.asStateFlow()
+            transactionsFlow.asStateFlow()
 
         override suspend fun getTransactionsFrom(fromEpochMillis: Long): List<TransactionRecord> =
             transactionsFlow.value.filter { it.occurredAtEpochMillis >= fromEpochMillis }
@@ -328,9 +403,6 @@ class HomeViewModelTest {
             transactionsFlow.value = transactions
         }
 
-        fun emitRecentTransactions(transactions: List<TransactionRecord>) {
-            recentTransactionsFlow.value = transactions
-        }
     }
 
     private class FakeCountryProvider(
@@ -391,6 +463,20 @@ private fun timeInCurrentYear(
     month: Int,
     dayOfMonth: Int,
 ): Long = Calendar.getInstance().apply {
+    set(Calendar.MONTH, month)
+    set(Calendar.DAY_OF_MONTH, dayOfMonth)
+    set(Calendar.HOUR_OF_DAY, 10)
+    set(Calendar.MINUTE, 0)
+    set(Calendar.SECOND, 0)
+    set(Calendar.MILLISECOND, 0)
+}.timeInMillis
+
+private fun timeInYear(
+    year: Int,
+    month: Int,
+    dayOfMonth: Int,
+): Long = Calendar.getInstance().apply {
+    set(Calendar.YEAR, year)
     set(Calendar.MONTH, month)
     set(Calendar.DAY_OF_MONTH, dayOfMonth)
     set(Calendar.HOUR_OF_DAY, 10)

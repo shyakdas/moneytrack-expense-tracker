@@ -12,12 +12,8 @@ import com.moneytrack.transaction.domain.model.TransactionRecord
 import com.moneytrack.transaction.domain.model.TransactionRecordType
 import com.moneytrack.settings.domain.usecase.ObserveAppCurrencyCodeUseCase
 import com.moneytrack.transaction.domain.usecase.ObserveTransactionsUseCase
-import com.moneytrack.transaction.domain.usecase.ObserveRecentTransactionsUseCase
-import com.moneytrack.transaction.presentation.toTransactionIconRes
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Locale
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -33,7 +29,6 @@ import kotlinx.coroutines.launch
 class HomeViewModel @Inject constructor(
     observeBudgetUseCase: ObserveBudgetUseCase,
     observeTransactionsUseCase: ObserveTransactionsUseCase,
-    observeRecentTransactionsUseCase: ObserveRecentTransactionsUseCase,
     observeAppCurrencyCodeUseCase: ObserveAppCurrencyCodeUseCase,
     private val upsertBudgetUseCase: UpsertBudgetUseCase,
     private val currencyFormatter: CurrencyFormatter,
@@ -44,25 +39,22 @@ class HomeViewModel @Inject constructor(
     private val _isBudgetLoaded = MutableStateFlow(false)
     val isBudgetLoaded: StateFlow<Boolean> = _isBudgetLoaded.asStateFlow()
     private val _transactions = MutableStateFlow<List<TransactionRecord>>(emptyList())
-    private val _recentTransactions = MutableStateFlow<List<TransactionRecord>>(emptyList())
-    private val _monthlyExpenses = MutableStateFlow(0.0)
     private val _selectedBottomRoute = MutableStateFlow(DEFAULT_BOTTOM_ROUTE)
     private val _selectedRange = MutableStateFlow(DEFAULT_TIME_RANGE)
+    private val _selectedMonth = MutableStateFlow(currentHomeMonthOption())
     private val _selectedCurrencyCode = MutableStateFlow(currencyFormatter.currentCurrencyCode())
 
     private val homeSummaryInputs = combine(
         _budget,
         _transactions,
-        _recentTransactions,
-        _monthlyExpenses,
         _selectedBottomRoute,
-    ) { budgetState, transactions, recentTransactions, monthlyExpenses, selectedBottomRoute ->
+        _selectedMonth,
+    ) { budgetState, transactions, selectedBottomRoute, selectedMonth ->
         HomeSummaryInputs(
             budget = budgetState,
             transactions = transactions,
-            recentTransactions = recentTransactions,
-            monthlyExpenses = monthlyExpenses,
             selectedBottomRoute = selectedBottomRoute,
+            selectedMonth = selectedMonth,
         )
     }
 
@@ -73,11 +65,19 @@ class HomeViewModel @Inject constructor(
     ) { inputs, selectedRange, selectedCurrencyCode ->
         val budgetState = inputs.budget
         val transactions = inputs.transactions
-        val recentTransactions = inputs.recentTransactions
-        val monthlyExpenses = inputs.monthlyExpenses
+        val selectedMonth = inputs.selectedMonth
+        val selectedMonthTransactions = transactions
+            .filterByMonth(selectedMonth)
+            .sortedByDescending { transaction -> transaction.occurredAtEpochMillis }
+        val monthlyExpenses = selectedMonthTransactions
+            .filter { transaction -> transaction.type == TransactionRecordType.EXPENSE }
+            .sumOf { transaction -> transaction.amount }
         val selectedBottomRoute = inputs.selectedBottomRoute
         val accountBalance = (budgetState?.amount ?: 0.0) - monthlyExpenses
-        val spendFrequencyPoints = transactions.toSpendFrequencyPoints(selectedRange)
+        val spendFrequencyPoints = transactions.toSpendFrequencyPoints(
+            selectedRange = selectedRange,
+            selectedMonth = selectedMonth,
+        )
         HomeUiState(
             accountBalanceText = formatCurrency(accountBalance, selectedCurrencyCode),
             hasBudget = budgetState != null,
@@ -89,14 +89,18 @@ class HomeViewModel @Inject constructor(
             expensesText = formatCurrency(monthlyExpenses, selectedCurrencyCode),
             spendFrequencyPoints = spendFrequencyPoints,
             hasSpendFrequencyData = spendFrequencyPoints.any { point -> point > 0f },
-            transactions = recentTransactions.map { transaction ->
-                transaction.toHomeTransaction(
-                    selectedCurrencyCode = selectedCurrencyCode,
-                    currencyFormatter = currencyFormatter,
-                )
-            },
+            transactions = selectedMonthTransactions
+                .take(HOME_RECENT_TRANSACTION_LIMIT)
+                .map { transaction ->
+                    transaction.toHomeTransaction(
+                        selectedCurrencyCode = selectedCurrencyCode,
+                        currencyFormatter = currencyFormatter,
+                    )
+                },
             selectedBottomRoute = selectedBottomRoute,
             selectedRange = selectedRange,
+            selectedMonth = selectedMonth,
+            monthOptions = homeMonthOptions(selectedMonth.year),
         )
     }.stateIn(
         scope = viewModelScope,
@@ -113,6 +117,8 @@ class HomeViewModel @Inject constructor(
             transactions = emptyList(),
             selectedBottomRoute = DEFAULT_BOTTOM_ROUTE,
             selectedRange = DEFAULT_TIME_RANGE,
+            selectedMonth = currentHomeMonthOption(),
+            monthOptions = homeMonthOptions(),
         ),
     )
 
@@ -127,17 +133,6 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             observeTransactionsUseCase().collect { transactions ->
                 _transactions.update { transactions }
-                val monthlyExpenses = transactions
-                    .filterCurrentMonth()
-                    .filter { transaction -> transaction.type == TransactionRecordType.EXPENSE }
-                    .sumOf { transaction -> transaction.amount }
-                _monthlyExpenses.update { monthlyExpenses }
-            }
-        }
-
-        viewModelScope.launch {
-            observeRecentTransactionsUseCase(HOME_RECENT_TRANSACTION_LIMIT).collect { transactions ->
-                _recentTransactions.update { transactions }
             }
         }
 
@@ -168,6 +163,10 @@ class HomeViewModel @Inject constructor(
         _selectedRange.update { range }
     }
 
+    fun onMonthSelected(month: HomeMonthOption) {
+        _selectedMonth.update { month }
+    }
+
     fun formatCurrency(value: Double): String {
         return formatCurrency(value, _selectedCurrencyCode.value)
     }
@@ -185,47 +184,24 @@ class HomeViewModel @Inject constructor(
     }
 }
 
-private fun formatTransactionTime(epochMillis: Long): String =
-    SimpleDateFormat(TIME_PATTERN, Locale.getDefault()).format(epochMillis)
-
 private data class HomeSummaryInputs(
     val budget: Budget?,
     val transactions: List<TransactionRecord>,
-    val recentTransactions: List<TransactionRecord>,
-    val monthlyExpenses: Double,
     val selectedBottomRoute: String,
+    val selectedMonth: HomeMonthOption,
 )
 
-private fun TransactionRecord.toHomeTransaction(
-    selectedCurrencyCode: String,
-    currencyFormatter: CurrencyFormatter,
-): HomeTransaction {
-    val isExpense = type == TransactionRecordType.EXPENSE
-    return HomeTransaction(
-        icon = category.toTransactionIconRes(),
-        title = title,
-        subtitle = note?.trim()?.takeIf(String::isNotEmpty),
-        amount = currencyFormatter.format(
-            value = if (isExpense) -amount else amount,
-            currencyCode = selectedCurrencyCode,
-        ),
-        time = formatTransactionTime(occurredAtEpochMillis),
-        type = if (isExpense) {
-            ui.components.card.transaction.TransactionType.EXPENSE
-        } else {
-            ui.components.card.transaction.TransactionType.INCOME
-        },
-    )
-}
-
-private fun List<TransactionRecord>.toSpendFrequencyPoints(selectedRange: String): List<Float> {
+private fun List<TransactionRecord>.toSpendFrequencyPoints(
+    selectedRange: String,
+    selectedMonth: HomeMonthOption,
+): List<Float> {
     val expenseTransactions = filter { transaction ->
         transaction.type == TransactionRecordType.EXPENSE
     }
     return when (selectedRange) {
         RANGE_TODAY -> expenseTransactions.aggregateToday()
         RANGE_WEEK -> expenseTransactions.aggregateWeek()
-        RANGE_MONTH -> expenseTransactions.aggregateMonth()
+        RANGE_MONTH -> expenseTransactions.aggregateMonth(selectedMonth)
         RANGE_YEAR -> expenseTransactions.aggregateYear()
         else -> expenseTransactions.aggregateToday()
     }
@@ -262,18 +238,19 @@ private fun List<TransactionRecord>.aggregateWeek(): List<Float> {
     return buckets
 }
 
-private fun List<TransactionRecord>.aggregateMonth(): List<Float> {
-    val now = Calendar.getInstance()
-    val daysInMonth = now.getActualMaximum(Calendar.DAY_OF_MONTH)
+private fun List<TransactionRecord>.aggregateMonth(selectedMonth: HomeMonthOption): List<Float> {
+    val monthCalendar = Calendar.getInstance().apply {
+        set(Calendar.YEAR, selectedMonth.year)
+        set(Calendar.MONTH, selectedMonth.monthIndex)
+        set(Calendar.DAY_OF_MONTH, 1)
+    }
+    val daysInMonth = monthCalendar.getActualMaximum(Calendar.DAY_OF_MONTH)
     val buckets = MutableList(daysInMonth) { 0f }
     forEach { transaction ->
         val calendar = Calendar.getInstance().apply {
             timeInMillis = transaction.occurredAtEpochMillis
         }
-        if (
-            calendar.get(Calendar.YEAR) == now.get(Calendar.YEAR) &&
-            calendar.get(Calendar.MONTH) == now.get(Calendar.MONTH)
-        ) {
+        if (calendar.isSameMonthAs(selectedMonth)) {
             val bucketIndex = calendar.get(Calendar.DAY_OF_MONTH) - 1
             buckets[bucketIndex] += transaction.amount.toFloat()
         }
@@ -296,15 +273,12 @@ private fun List<TransactionRecord>.aggregateYear(): List<Float> {
     return buckets
 }
 
-private fun List<com.moneytrack.transaction.domain.model.TransactionRecord>.filterCurrentMonth():
-    List<com.moneytrack.transaction.domain.model.TransactionRecord> {
-    val now = Calendar.getInstance()
+private fun List<TransactionRecord>.filterByMonth(selectedMonth: HomeMonthOption): List<TransactionRecord> {
     return filter { transaction ->
         val calendar = Calendar.getInstance().apply {
             timeInMillis = transaction.occurredAtEpochMillis
         }
-        calendar.get(Calendar.YEAR) == now.get(Calendar.YEAR) &&
-            calendar.get(Calendar.MONTH) == now.get(Calendar.MONTH)
+        calendar.isSameMonthAs(selectedMonth)
     }
 }
 
@@ -319,7 +293,10 @@ private fun Calendar.isSameDayAs(other: Calendar): Boolean =
     get(Calendar.YEAR) == other.get(Calendar.YEAR) &&
         get(Calendar.DAY_OF_YEAR) == other.get(Calendar.DAY_OF_YEAR)
 
-private const val TIME_PATTERN = "hh:mm a"
+private fun Calendar.isSameMonthAs(month: HomeMonthOption): Boolean =
+    get(Calendar.YEAR) == month.year &&
+        get(Calendar.MONTH) == month.monthIndex
+
 private const val RANGE_TODAY = "Today"
 private const val RANGE_WEEK = "Week"
 private const val RANGE_MONTH = "Month"

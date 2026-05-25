@@ -5,6 +5,8 @@ package com.moneytrack.home
 import app.cash.paparazzi.DeviceConfig
 import app.cash.paparazzi.Paparazzi
 import com.moneytrack.home.presentation.HomeScreen
+import com.moneytrack.home.presentation.currentHomeMonthOption
+import com.moneytrack.home.presentation.homeMonthOptions
 import com.moneytrack.home.presentation.HomeTransaction
 import com.moneytrack.home.presentation.HomeUiState
 import org.junit.Rule
@@ -34,6 +36,8 @@ class HomeScreenshotTest {
                         transactions = emptyList(),
                         selectedBottomRoute = "home",
                         selectedRange = "Today",
+                        selectedMonth = currentHomeMonthOption(),
+                        monthOptions = homeMonthOptions(),
                     ),
                     onBottomRouteSelected = {},
                     onSeeAllTransactionsClick = {},
@@ -78,6 +82,8 @@ class HomeScreenshotTest {
                         ),
                         selectedBottomRoute = "home",
                         selectedRange = "Week",
+                        selectedMonth = currentHomeMonthOption(),
+                        monthOptions = homeMonthOptions(),
                     ),
                     onBottomRouteSelected = {},
                     onSeeAllTransactionsClick = {},
