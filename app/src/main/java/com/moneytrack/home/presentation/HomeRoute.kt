@@ -230,7 +230,6 @@ private fun HomeBudgetSheetHost(
                 description = description,
             )
         },
-        onSavedCompleted = onDismiss,
     )
 }
 

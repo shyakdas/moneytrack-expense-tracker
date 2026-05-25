@@ -102,7 +102,6 @@ internal fun BudgetSetupBottomSheet(
     selectedMonth: HomeMonthOption,
     formatAmount: (Double) -> String,
     onSaveBudget: (Double, String?) -> Unit,
-    onSavedCompleted: () -> Unit,
 ) {
     var budgetInput by remember(initialBudgetAmount) {
         mutableStateOf(initialBudgetAmount?.toLong()?.toString().orEmpty())
@@ -129,7 +128,7 @@ internal fun BudgetSetupBottomSheet(
             onSaveClick = {
                 parsedBudget?.let { budgetValue ->
                     onSaveBudget(budgetValue, null)
-                    onSavedCompleted()
+                    onDismiss()
                 }
             },
         )
