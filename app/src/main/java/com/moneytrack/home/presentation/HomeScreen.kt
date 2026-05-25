@@ -5,7 +5,12 @@
 package com.moneytrack.home.presentation
 
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -34,9 +39,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
 import com.moneytrack.R as AppR
 import com.moneytrack.common.ui.LottieAnimationView
 import com.moneytrack.designsystem.R
@@ -125,6 +134,13 @@ private fun HomeContent(
 
     MoneyTrackScreenBackground {
         var isMonthPickerVisible by remember { mutableStateOf(false) }
+        val monthPickerTransition = remember {
+            MutableTransitionState(false)
+        }
+        monthPickerTransition.targetState = isMonthPickerVisible
+        val monthPopupYOffset = with(LocalDensity.current) {
+            Dimens.buttonLLargeHeight.roundToPx()
+        }
 
         Column(
             modifier = Modifier
@@ -132,42 +148,72 @@ private fun HomeContent(
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState()),
         ) {
-        TopNavigation(
-            config = TopNavigationConfig.ProfileWithSelector(
-                profileImage = ColorPainter(AppTheme.colors.primaryContainer),
-                profileAvatarContent = {
-                    LottieAnimationView(
-                        rawRes = AppR.raw.lottie_profile_people,
-                        modifier = Modifier.fillMaxSize(),
-                        speed = 1.2f,
-                    )
-                },
-                selectedMonth = uiState.selectedMonth.shortLabel.ifBlank { uiState.selectedMonth.label },
-                onMonthClick = {
-                    isMonthPickerVisible = !isMonthPickerVisible
-                },
-                onActionClick = {},
-                actionIconTint = AppTheme.colors.primary,
-            ),
-            containerColor = Color.Transparent,
-        )
-        Box(
-            modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.TopCenter,
-        ) {
-            androidx.compose.animation.AnimatedVisibility(
-                visible = isMonthPickerVisible,
-                enter = expandVertically(expandFrom = Alignment.Top),
-                exit = shrinkVertically(shrinkTowards = Alignment.Top),
-            ) {
-                MonthSelectorPopup(
-                    months = uiState.monthOptions,
-                    selectedMonth = uiState.selectedMonth,
-                    onMonthSelected = { month ->
-                        onMonthSelected(month)
-                        isMonthPickerVisible = false
+        Box(modifier = Modifier.fillMaxWidth()) {
+            TopNavigation(
+                config = TopNavigationConfig.ProfileWithSelector(
+                    profileImage = ColorPainter(AppTheme.colors.primaryContainer),
+                    profileAvatarContent = {
+                        LottieAnimationView(
+                            rawRes = AppR.raw.lottie_profile_people,
+                            modifier = Modifier.fillMaxSize(),
+                            speed = 1.2f,
+                        )
                     },
-                )
+                    selectedMonth = uiState.selectedMonth.shortLabel.ifBlank { uiState.selectedMonth.label },
+                    onMonthClick = {
+                        isMonthPickerVisible = !isMonthPickerVisible
+                    },
+                    onActionClick = {},
+                    actionIconTint = AppTheme.colors.primary,
+                ),
+                containerColor = Color.Transparent,
+            )
+            if (monthPickerTransition.currentState || monthPickerTransition.targetState) {
+                Popup(
+                    alignment = Alignment.TopCenter,
+                    offset = IntOffset(x = 0, y = monthPopupYOffset),
+                    onDismissRequest = { isMonthPickerVisible = false },
+                    properties = PopupProperties(focusable = true),
+                ) {
+                    androidx.compose.animation.AnimatedVisibility(
+                        visibleState = monthPickerTransition,
+                        enter = fadeIn(
+                            animationSpec = tween(
+                                durationMillis = MONTH_POPUP_ENTER_DURATION_MS,
+                                easing = FastOutSlowInEasing,
+                            ),
+                        ) +
+                            expandVertically(
+                                animationSpec = tween(
+                                    durationMillis = MONTH_POPUP_ENTER_DURATION_MS,
+                                    easing = FastOutSlowInEasing,
+                                ),
+                                expandFrom = Alignment.Top,
+                            ),
+                        exit = fadeOut(
+                            animationSpec = tween(
+                                durationMillis = MONTH_POPUP_EXIT_DURATION_MS,
+                                easing = FastOutSlowInEasing,
+                            ),
+                        ) +
+                            shrinkVertically(
+                                animationSpec = tween(
+                                    durationMillis = MONTH_POPUP_EXIT_DURATION_MS,
+                                    easing = FastOutSlowInEasing,
+                                ),
+                                shrinkTowards = Alignment.Top,
+                            ),
+                    ) {
+                        MonthSelectorPopup(
+                            months = uiState.monthOptions,
+                            selectedMonth = uiState.selectedMonth,
+                            onMonthSelected = { month ->
+                                onMonthSelected(month)
+                                isMonthPickerVisible = false
+                            },
+                        )
+                    }
+                }
             }
         }
         Spacer(modifier = Modifier.height(Dimens.spacing12))
@@ -273,6 +319,9 @@ private fun HomeContent(
         }
     }
 }
+
+private const val MONTH_POPUP_ENTER_DURATION_MS = 260
+private const val MONTH_POPUP_EXIT_DURATION_MS = 220
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
