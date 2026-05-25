@@ -89,6 +89,7 @@ class HomeViewModel @Inject constructor(
                 formatCurrency(amount, selectedCurrencyCode)
             },
             hasExpenses = monthlyExpenses > 0.0,
+            expensesAmount = monthlyExpenses,
             expensesText = formatCurrency(monthlyExpenses, selectedCurrencyCode),
             spendFrequencyPoints = spendFrequencyPoints,
             hasSpendFrequencyData = spendFrequencyPoints.any { point -> point > 0f },
@@ -115,6 +116,7 @@ class HomeViewModel @Inject constructor(
             budgetAmount = null,
             budgetText = null,
             hasExpenses = false,
+            expensesAmount = 0.0,
             expensesText = formatCurrency(0.0),
             spendFrequencyPoints = emptyList(),
             hasSpendFrequencyData = false,

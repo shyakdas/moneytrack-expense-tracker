@@ -240,6 +240,7 @@ private fun HomeContent(
                 hasBudget = uiState.hasBudget,
                 budgetAmount = uiState.budgetAmount,
                 budgetText = uiState.budgetText,
+                expensesAmount = uiState.expensesAmount,
                 expensesText = uiState.expensesText,
                 onSetBudgetClick = onSetBudgetClick,
             )
@@ -385,6 +386,7 @@ private fun HomeScreenPreview() {
                 budgetAmount = null,
                 budgetText = null,
                 hasExpenses = false,
+                expensesAmount = 0.0,
                 expensesText = "$0",
                 spendFrequencyPoints = emptyList(),
                 hasSpendFrequencyData = false,
