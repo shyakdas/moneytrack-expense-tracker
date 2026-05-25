@@ -101,6 +101,7 @@ class HomeViewModel @Inject constructor(
             selectedRange = selectedRange,
             selectedMonth = selectedMonth,
             monthOptions = homeMonthOptions(selectedMonth.year),
+            yearOptions = homeYearOptions(),
         )
     }.stateIn(
         scope = viewModelScope,
@@ -119,6 +120,7 @@ class HomeViewModel @Inject constructor(
             selectedRange = DEFAULT_TIME_RANGE,
             selectedMonth = currentHomeMonthOption(),
             monthOptions = homeMonthOptions(),
+            yearOptions = homeYearOptions(),
         ),
     )
 
@@ -165,6 +167,12 @@ class HomeViewModel @Inject constructor(
 
     fun onMonthSelected(month: HomeMonthOption) {
         _selectedMonth.update { month }
+    }
+
+    fun onYearSelected(year: Int) {
+        _selectedMonth.update { month ->
+            month.copy(year = year)
+        }
     }
 
     fun formatCurrency(value: Double): String {

@@ -199,6 +199,59 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun selectingYear_keepsMonthAndFiltersSelectedYear() = runTest {
+        val budgetRepository = FakeBudgetRepository()
+        val transactionRepository = FakeTransactionRepository()
+        val viewModel = createViewModel(
+            budgetRepository = budgetRepository,
+            transactionRepository = transactionRepository,
+            countryProvider = FakeCountryProvider(
+                countryCode = "IN",
+                currencySymbol = "₹",
+            ),
+        )
+        val collectJob = launch { viewModel.uiState.collect { } }
+        val selectedMonth = HomeMonthOption(
+            monthIndex = Calendar.MAY,
+            year = 2026,
+            label = "May",
+            shortLabel = "May",
+        )
+
+        budgetRepository.emitBudget(
+            Budget(
+                amount = 10000.0,
+                description = null,
+                updatedAtEpochMillis = 0L,
+            ),
+        )
+        transactionRepository.emitTransactions(
+            listOf(
+                expenseTransaction(
+                    amount = 1200.0,
+                    occurredAtEpochMillis = timeInYear(year = 2026, month = Calendar.MAY, dayOfMonth = 8),
+                    title = "May 2026 expense",
+                ),
+                expenseTransaction(
+                    amount = 800.0,
+                    occurredAtEpochMillis = timeInYear(year = 2029, month = Calendar.MAY, dayOfMonth = 8),
+                    title = "May 2029 expense",
+                ),
+            ),
+        )
+        viewModel.onMonthSelected(selectedMonth)
+        viewModel.onYearSelected(2029)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertEquals(Calendar.MAY, state.selectedMonth.monthIndex)
+        assertEquals(2029, state.selectedMonth.year)
+        assertEquals("₹800", state.expensesText)
+        assertEquals(listOf("May 2029 expense"), state.transactions.map { transaction -> transaction.title })
+        collectJob.cancel()
+    }
+
+    @Test
     fun homeMonthOptions_buildsAllMonthsForYear() {
         val months = homeMonthOptions(year = 2026)
 
@@ -206,6 +259,13 @@ class HomeViewModelTest {
         assertEquals("January", months.first().label)
         assertEquals("December", months.last().label)
         assertEquals(2026, months.first().year)
+    }
+
+    @Test
+    fun homeYearOptions_buildsCurrentYearThroughNextFiveYears() {
+        val years = homeYearOptions(currentYear = 2026)
+
+        assertEquals(listOf(2026, 2027, 2028, 2029, 2030, 2031), years)
     }
 
     @Test

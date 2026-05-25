@@ -226,6 +226,34 @@ class HomeScreenUiTest {
         composeRule.onAllNodesWithText("March").assertCountEquals(0)
     }
 
+    @Test
+    fun yearSelector_selectsYearAndClosesMenu() {
+        var selectedYear: Int? = null
+        composeRule.setContent {
+            MoneyTrackTheme {
+                HomeScreen(
+                    uiState = baseState(
+                        hasExpenses = true,
+                        hasBudget = true,
+                        hasSpendFrequencyData = true,
+                    ),
+                    onBottomRouteSelected = {},
+                    onSeeAllTransactionsClick = {},
+                    onTimeRangeSelected = {},
+                    onYearSelected = { year -> selectedYear = year },
+                    onSetBudgetClick = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("2026").performClick()
+        composeRule.onNodeWithText("2031").assertIsDisplayed()
+        composeRule.onNodeWithText("2031").performClick()
+
+        assertEquals(2031, selectedYear)
+        composeRule.onAllNodesWithText("2031").assertCountEquals(0)
+    }
+
     private fun baseState(
         hasExpenses: Boolean,
         hasBudget: Boolean = false,
@@ -254,6 +282,7 @@ class HomeScreenUiTest {
                 shortLabel = "May",
             ),
             monthOptions = testMonthOptions(),
+            yearOptions = (2026..2031).toList(),
         )
     }
 

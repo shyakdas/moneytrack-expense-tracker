@@ -69,6 +69,7 @@ fun HomeScreen(
     onSeeAllTransactionsClick: () -> Unit,
     onTimeRangeSelected: (String) -> Unit,
     onMonthSelected: (HomeMonthOption) -> Unit = {},
+    onYearSelected: (Int) -> Unit = {},
     onSetBudgetClick: (Double?) -> Unit,
     onAddExpenseClick: () -> Unit = {},
 ) {
@@ -99,6 +100,7 @@ fun HomeScreen(
             onSeeAllTransactionsClick = onSeeAllTransactionsClick,
             onTimeRangeSelected = onTimeRangeSelected,
             onMonthSelected = onMonthSelected,
+            onYearSelected = onYearSelected,
             onSetBudgetClick = onSetBudgetClick,
         )
     }
@@ -112,6 +114,7 @@ private fun HomeContent(
     onSeeAllTransactionsClick: () -> Unit,
     onTimeRangeSelected: (String) -> Unit,
     onMonthSelected: (HomeMonthOption) -> Unit,
+    onYearSelected: (Int) -> Unit,
     onSetBudgetClick: (Double?) -> Unit,
 ) {
     if (!isBudgetLoaded) {
@@ -134,12 +137,24 @@ private fun HomeContent(
 
     MoneyTrackScreenBackground {
         var isMonthPickerVisible by remember { mutableStateOf(false) }
+        var isYearPickerVisible by remember { mutableStateOf(false) }
         val monthPickerTransition = remember {
             MutableTransitionState(false)
         }
         monthPickerTransition.targetState = isMonthPickerVisible
-        val monthPopupYOffset = with(LocalDensity.current) {
+        val yearPickerTransition = remember {
+            MutableTransitionState(false)
+        }
+        yearPickerTransition.targetState = isYearPickerVisible
+        val density = LocalDensity.current
+        val monthPopupYOffset = with(density) {
             Dimens.buttonLLargeHeight.roundToPx()
+        }
+        val monthPopupXOffset = with(density) {
+            -YEAR_MONTH_POPUP_X_DISTANCE.roundToPx()
+        }
+        val yearPopupXOffset = with(density) {
+            YEAR_MONTH_POPUP_X_DISTANCE.roundToPx()
         }
 
         Column(
@@ -162,6 +177,12 @@ private fun HomeContent(
                     selectedMonth = uiState.selectedMonth.shortLabel.ifBlank { uiState.selectedMonth.label },
                     onMonthClick = {
                         isMonthPickerVisible = !isMonthPickerVisible
+                        isYearPickerVisible = false
+                    },
+                    selectedYear = uiState.selectedMonth.year.toString(),
+                    onYearClick = {
+                        isYearPickerVisible = !isYearPickerVisible
+                        isMonthPickerVisible = false
                     },
                     onActionClick = {},
                     actionIconTint = AppTheme.colors.primary,
@@ -171,45 +192,36 @@ private fun HomeContent(
             if (monthPickerTransition.currentState || monthPickerTransition.targetState) {
                 Popup(
                     alignment = Alignment.TopCenter,
-                    offset = IntOffset(x = 0, y = monthPopupYOffset),
+                    offset = IntOffset(x = monthPopupXOffset, y = monthPopupYOffset),
                     onDismissRequest = { isMonthPickerVisible = false },
                     properties = PopupProperties(focusable = true),
                 ) {
-                    androidx.compose.animation.AnimatedVisibility(
-                        visibleState = monthPickerTransition,
-                        enter = fadeIn(
-                            animationSpec = tween(
-                                durationMillis = MONTH_POPUP_ENTER_DURATION_MS,
-                                easing = FastOutSlowInEasing,
-                            ),
-                        ) +
-                            expandVertically(
-                                animationSpec = tween(
-                                    durationMillis = MONTH_POPUP_ENTER_DURATION_MS,
-                                    easing = FastOutSlowInEasing,
-                                ),
-                                expandFrom = Alignment.Top,
-                            ),
-                        exit = fadeOut(
-                            animationSpec = tween(
-                                durationMillis = MONTH_POPUP_EXIT_DURATION_MS,
-                                easing = FastOutSlowInEasing,
-                            ),
-                        ) +
-                            shrinkVertically(
-                                animationSpec = tween(
-                                    durationMillis = MONTH_POPUP_EXIT_DURATION_MS,
-                                    easing = FastOutSlowInEasing,
-                                ),
-                                shrinkTowards = Alignment.Top,
-                            ),
-                    ) {
+                    AnimatedPickerVisibility(visibleState = monthPickerTransition) {
                         MonthSelectorPopup(
                             months = uiState.monthOptions,
                             selectedMonth = uiState.selectedMonth,
                             onMonthSelected = { month ->
                                 onMonthSelected(month)
                                 isMonthPickerVisible = false
+                            },
+                        )
+                    }
+                }
+            }
+            if (yearPickerTransition.currentState || yearPickerTransition.targetState) {
+                Popup(
+                    alignment = Alignment.TopCenter,
+                    offset = IntOffset(x = yearPopupXOffset, y = monthPopupYOffset),
+                    onDismissRequest = { isYearPickerVisible = false },
+                    properties = PopupProperties(focusable = true),
+                ) {
+                    AnimatedPickerVisibility(visibleState = yearPickerTransition) {
+                        YearSelectorPopup(
+                            years = uiState.yearOptions,
+                            selectedYear = uiState.selectedMonth.year,
+                            onYearSelected = { year ->
+                                onYearSelected(year)
+                                isYearPickerVisible = false
                             },
                         )
                     }
@@ -320,8 +332,47 @@ private fun HomeContent(
     }
 }
 
+@Composable
+private fun AnimatedPickerVisibility(
+    visibleState: MutableTransitionState<Boolean>,
+    content: @Composable () -> Unit,
+) {
+    androidx.compose.animation.AnimatedVisibility(
+        visibleState = visibleState,
+        enter = fadeIn(
+            animationSpec = tween(
+                durationMillis = MONTH_POPUP_ENTER_DURATION_MS,
+                easing = FastOutSlowInEasing,
+            ),
+        ) +
+            expandVertically(
+                animationSpec = tween(
+                    durationMillis = MONTH_POPUP_ENTER_DURATION_MS,
+                    easing = FastOutSlowInEasing,
+                ),
+                expandFrom = Alignment.Top,
+            ),
+        exit = fadeOut(
+            animationSpec = tween(
+                durationMillis = MONTH_POPUP_EXIT_DURATION_MS,
+                easing = FastOutSlowInEasing,
+            ),
+        ) +
+            shrinkVertically(
+                animationSpec = tween(
+                    durationMillis = MONTH_POPUP_EXIT_DURATION_MS,
+                    easing = FastOutSlowInEasing,
+                ),
+                shrinkTowards = Alignment.Top,
+            ),
+    ) {
+        content()
+    }
+}
+
 private const val MONTH_POPUP_ENTER_DURATION_MS = 260
 private const val MONTH_POPUP_EXIT_DURATION_MS = 220
+private val YEAR_MONTH_POPUP_X_DISTANCE = Dimens.spacing48
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
@@ -342,6 +393,7 @@ private fun HomeScreenPreview() {
                 selectedRange = "Today",
                 selectedMonth = currentHomeMonthOption(),
                 monthOptions = homeMonthOptions(),
+                yearOptions = homeYearOptions(),
             ),
             onBottomRouteSelected = {},
             onSeeAllTransactionsClick = {},

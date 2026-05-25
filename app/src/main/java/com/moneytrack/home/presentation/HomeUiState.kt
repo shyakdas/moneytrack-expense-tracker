@@ -27,4 +27,5 @@ data class HomeUiState(
     val selectedRange: String,
     val selectedMonth: HomeMonthOption,
     val monthOptions: List<HomeMonthOption>,
+    val yearOptions: List<Int>,
 )

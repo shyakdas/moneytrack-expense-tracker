@@ -7,6 +7,7 @@ import app.cash.paparazzi.Paparazzi
 import com.moneytrack.home.presentation.HomeScreen
 import com.moneytrack.home.presentation.currentHomeMonthOption
 import com.moneytrack.home.presentation.homeMonthOptions
+import com.moneytrack.home.presentation.homeYearOptions
 import com.moneytrack.home.presentation.HomeTransaction
 import com.moneytrack.home.presentation.HomeUiState
 import org.junit.Rule
@@ -38,6 +39,7 @@ class HomeScreenshotTest {
                         selectedRange = "Today",
                         selectedMonth = currentHomeMonthOption(),
                         monthOptions = homeMonthOptions(),
+                        yearOptions = homeYearOptions(),
                     ),
                     onBottomRouteSelected = {},
                     onSeeAllTransactionsClick = {},
@@ -84,6 +86,7 @@ class HomeScreenshotTest {
                         selectedRange = "Week",
                         selectedMonth = currentHomeMonthOption(),
                         monthOptions = homeMonthOptions(),
+                        yearOptions = homeYearOptions(),
                     ),
                     onBottomRouteSelected = {},
                     onSeeAllTransactionsClick = {},

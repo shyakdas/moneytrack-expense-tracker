@@ -35,4 +35,8 @@ internal fun homeMonthOptions(year: Int = Calendar.getInstance().get(Calendar.YE
         )
     }
 
+internal fun homeYearOptions(currentYear: Int = Calendar.getInstance().get(Calendar.YEAR)): List<Int> =
+    (currentYear..currentYear + YEAR_OPTION_OFFSET).toList()
+
 private const val MONTH_COUNT = 12
+private const val YEAR_OPTION_OFFSET = 5
