@@ -220,14 +220,16 @@ private fun HomeBudgetSheetHost(
     BudgetSetupBottomSheet(
         onDismiss = onDismiss,
         initialBudgetAmount = initialBudgetAmount,
+        selectedMonth = viewModel.uiState.value.selectedMonth,
         formatAmount = viewModel::formatCurrency,
         onSaveBudget = { budgetValue, description ->
             viewModel.saveBudget(
+                month = viewModel.uiState.value.selectedMonth.monthIndex + 1,
+                year = viewModel.uiState.value.selectedMonth.year,
                 amount = budgetValue,
                 description = description,
             )
         },
-        onSavedCompleted = onDismiss,
     )
 }
 

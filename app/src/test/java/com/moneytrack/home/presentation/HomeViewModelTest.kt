@@ -24,6 +24,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -83,7 +84,12 @@ class HomeViewModelTest {
             transactionRepository = FakeTransactionRepository(),
         )
 
-        viewModel.saveBudget(amount = 40000.0, description = "   ")
+        viewModel.saveBudget(
+            month = currentHomeMonthOption().monthIndex + 1,
+            year = currentHomeMonthOption().year,
+            amount = 40000.0,
+            description = "   ",
+        )
         advanceUntilIdle()
 
         assertEquals(40000.0, repository.lastUpsertAmount ?: 0.0, 0.0)
@@ -106,6 +112,8 @@ class HomeViewModelTest {
 
         budgetRepository.emitBudget(
             Budget(
+                month = currentHomeMonthOption().monthIndex + 1,
+                year = currentHomeMonthOption().year,
                 amount = 100000.0,
                 description = null,
                 updatedAtEpochMillis = 0L,
@@ -168,6 +176,8 @@ class HomeViewModelTest {
 
         budgetRepository.emitBudget(
             Budget(
+                month = Calendar.MARCH + 1,
+                year = 2026,
                 amount = 10000.0,
                 description = null,
                 updatedAtEpochMillis = 0L,
@@ -220,6 +230,8 @@ class HomeViewModelTest {
 
         budgetRepository.emitBudget(
             Budget(
+                month = Calendar.MAY + 1,
+                year = 2026,
                 amount = 10000.0,
                 description = null,
                 updatedAtEpochMillis = 0L,
@@ -425,27 +437,43 @@ class HomeViewModelTest {
     }
 
     private class FakeBudgetRepository : BudgetRepository {
-        private val budgetFlow = MutableStateFlow<Budget?>(null)
+        private val budgetFlow = MutableStateFlow<Map<Pair<Int, Int>, Budget>>(emptyMap())
         var lastUpsertAmount: Double? = null
         var lastUpsertDescription: String? = null
+        var lastUpsertMonth: Int? = null
+        var lastUpsertYear: Int? = null
 
-        override fun observeBudget(): Flow<Budget?> = budgetFlow.asStateFlow()
+        override fun observeBudget(month: Int, year: Int): Flow<Budget?> =
+            budgetFlow.asStateFlow().map { budgets ->
+                budgets[month to year]
+            }
 
         override suspend fun upsertBudget(
+            month: Int,
+            year: Int,
             amount: Double,
             description: String?,
         ) {
+            lastUpsertMonth = month
+            lastUpsertYear = year
             lastUpsertAmount = amount
             lastUpsertDescription = description
-            budgetFlow.value = Budget(
+            val budget = Budget(
+                month = month,
+                year = year,
                 amount = amount,
                 description = description,
                 updatedAtEpochMillis = 0L,
             )
+            budgetFlow.value = budgetFlow.value + ((month to year) to budget)
         }
 
         fun emitBudget(budget: Budget?) {
-            budgetFlow.value = budget
+            if (budget == null) {
+                budgetFlow.value = emptyMap()
+                return
+            }
+            budgetFlow.value = mapOf((budget.month to budget.year) to budget)
         }
     }
 

@@ -21,10 +21,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     observeBudgetUseCase: ObserveBudgetUseCase,
@@ -126,7 +129,12 @@ class HomeViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            observeBudgetUseCase().collect { budget ->
+            _selectedMonth.flatMapLatest { selectedMonth ->
+                observeBudgetUseCase(
+                    month = selectedMonth.monthIndex + 1,
+                    year = selectedMonth.year,
+                )
+            }.collect { budget ->
                 _budget.update { budget }
                 _isBudgetLoaded.update { true }
             }
@@ -146,11 +154,15 @@ class HomeViewModel @Inject constructor(
     }
 
     fun saveBudget(
+        month: Int,
+        year: Int,
         amount: Double,
         description: String?,
     ) {
         viewModelScope.launch {
             upsertBudgetUseCase(
+                month = month,
+                year = year,
                 amount = amount,
                 description = description?.takeIf { it.isNotBlank() },
             )
