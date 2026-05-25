@@ -19,6 +19,7 @@ data class HomeUiState(
     val budgetAmount: Double?,
     val budgetText: String?,
     val hasExpenses: Boolean,
+    val expensesAmount: Double,
     val expensesText: String,
     val spendFrequencyPoints: List<Float>,
     val hasSpendFrequencyData: Boolean,

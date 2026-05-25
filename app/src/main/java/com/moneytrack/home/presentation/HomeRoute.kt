@@ -119,6 +119,7 @@ private fun HomeRouteContent(
     HomeBudgetSheetHost(
         visible = showBudgetSheet,
         initialBudgetAmount = budgetSheetInitialAmount,
+        selectedMonth = state.uiState.selectedMonth,
         viewModel = viewModel,
         onDismiss = { showBudgetSheet = false },
     )
@@ -152,6 +153,7 @@ private fun HomeScreenWithSheets(
                 }
             },
             onSeeAllTransactionsClick = actions.onTransactionClick,
+            onExpensesClick = actions.onTransactionClick,
             onTimeRangeSelected = viewModel::onTimeRangeSelected,
             onMonthSelected = viewModel::onMonthSelected,
             onYearSelected = viewModel::onYearSelected,
@@ -212,6 +214,7 @@ private fun HomeNotificationSheetHost(
 private fun HomeBudgetSheetHost(
     visible: Boolean,
     initialBudgetAmount: Double?,
+    selectedMonth: HomeMonthOption,
     viewModel: HomeViewModel,
     onDismiss: () -> Unit,
 ) {
@@ -220,12 +223,12 @@ private fun HomeBudgetSheetHost(
     BudgetSetupBottomSheet(
         onDismiss = onDismiss,
         initialBudgetAmount = initialBudgetAmount,
-        selectedMonth = viewModel.uiState.value.selectedMonth,
+        selectedMonth = selectedMonth,
         formatAmount = viewModel::formatCurrency,
         onSaveBudget = { budgetValue, description ->
             viewModel.saveBudget(
-                month = viewModel.uiState.value.selectedMonth.monthIndex + 1,
-                year = viewModel.uiState.value.selectedMonth.year,
+                month = selectedMonth.monthIndex + 1,
+                year = selectedMonth.year,
                 amount = budgetValue,
                 description = description,
             )

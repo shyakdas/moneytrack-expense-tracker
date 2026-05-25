@@ -31,6 +31,7 @@ class HomeScreenshotTest {
                         budgetAmount = null,
                         budgetText = null,
                         hasExpenses = false,
+                        expensesAmount = 0.0,
                         expensesText = "₹0",
                         spendFrequencyPoints = emptyList(),
                         hasSpendFrequencyData = false,
@@ -43,6 +44,7 @@ class HomeScreenshotTest {
                     ),
                     onBottomRouteSelected = {},
                     onSeeAllTransactionsClick = {},
+                    onExpensesClick = {},
                     onTimeRangeSelected = {},
                     onSetBudgetClick = {},
                 )
@@ -61,6 +63,7 @@ class HomeScreenshotTest {
                         budgetAmount = 40000.0,
                         budgetText = "₹40,000",
                         hasExpenses = true,
+                        expensesAmount = 1200.0,
                         expensesText = "₹1,200",
                         spendFrequencyPoints = listOf(120f, 280f, 200f, 360f, 240f, 420f, 180f),
                         hasSpendFrequencyData = true,
@@ -90,6 +93,7 @@ class HomeScreenshotTest {
                     ),
                     onBottomRouteSelected = {},
                     onSeeAllTransactionsClick = {},
+                    onExpensesClick = {},
                     onTimeRangeSelected = {},
                     onSetBudgetClick = {},
                 )
