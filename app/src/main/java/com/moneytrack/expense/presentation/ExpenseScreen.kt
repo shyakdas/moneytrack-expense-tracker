@@ -1,6 +1,12 @@
 // Copyright (c) 2026 shyakdas
 
-@file:Suppress("LongMethod", "UnusedPrivateMember", "LongParameterList", "TooManyFunctions")
+@file:Suppress(
+    "LongMethod",
+    "UnusedPrivateMember",
+    "LongParameterList",
+    "TooManyFunctions",
+    "MagicNumber",
+)
 
 package com.moneytrack.expense.presentation
 
@@ -105,6 +111,9 @@ private const val END_OF_DAY_HOUR = 23
 private const val END_OF_DAY_MINUTE = 59
 private const val END_OF_DAY_SECOND = 59
 private const val END_OF_DAY_MILLISECOND = 999
+private const val DEFAULT_REPEAT_AFTER_MONTHS = 4
+private const val MIN_REPEAT_MONTHS = 1
+private const val MAX_REPEAT_MONTHS = 12
 private val fallbackCategoryColor = categoryColor(FALLBACK_CATEGORY_COLOR_HEX)
 private val ExpenseTopStart = Color(0xFF0B111A)
 private val ExpenseTopMiddle = Color(0xFF0A1422)
@@ -122,6 +131,7 @@ private val ExpenseContinueEnd = Color(0xFFFF6A6A)
 private val ExpenseContinueText = Color(0xFF111622)
 
 @Composable
+@Suppress("CyclomaticComplexMethod")
 fun ExpenseScreen(
     uiState: ExpenseUiState,
     onBackClick: () -> Unit,
@@ -185,7 +195,7 @@ fun ExpenseScreen(
         showAttachmentSheet = false
     }
 
-    SheetBlurHost(isSheetVisible = showCategorySheet || showAttachmentSheet || showRepeatScreen || showDescriptionSheet) {
+    SheetBlurHost(isSheetVisible = isAnySheetVisible) {
         ExpenseContent(
             amountInput = uiState.amountInput,
             amountText = uiState.amountText,
@@ -1180,7 +1190,7 @@ private fun RepeatTransactionScreen(
     var onDateEndAt by remember(initialRepeatSchedule) {
         mutableLongStateOf(initialRepeatSchedule?.endAtEpochMillis ?: initialOccurredAt)
     }
-    var afterMonths by remember { mutableStateOf(4) }
+    var afterMonths by remember { mutableStateOf(DEFAULT_REPEAT_AFTER_MONTHS) }
 
     val onDone = {
         val resolvedEndAt = when {
@@ -1189,7 +1199,7 @@ private fun RepeatTransactionScreen(
             selectedEndOption == RepeatEndOption.ON_DATE -> onDateEndAt
             else -> Calendar.getInstance().apply {
                 timeInMillis = startAt
-                add(Calendar.MONTH, afterMonths.coerceAtLeast(1))
+                add(Calendar.MONTH, afterMonths.coerceAtLeast(MIN_REPEAT_MONTHS))
             }.timeInMillis
         }
         onDoneClick(isEnabled, selectedFrequency, resolvedEndAt)
@@ -1239,8 +1249,16 @@ private fun RepeatTransactionScreen(
             GlassSectionCard {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("Repeat this transaction", style = AppTheme.typography.titleMedium, color = ExpensePrimaryText)
-                        Text("Make this a recurring expense", style = AppTheme.typography.bodySmall, color = ExpenseSecondaryText)
+                        Text(
+                            "Repeat this transaction",
+                            style = AppTheme.typography.titleMedium,
+                            color = ExpensePrimaryText,
+                        )
+                        Text(
+                            "Make this a recurring expense",
+                            style = AppTheme.typography.bodySmall,
+                            color = ExpenseSecondaryText,
+                        )
                     }
                     PrimarySwitch(checked = isEnabled, onCheckedChange = { isEnabled = it })
                 }
@@ -1319,7 +1337,9 @@ private fun RepeatTransactionScreen(
                                 modifier = Modifier
                                     .background(ExpenseRowCard, RoundedCornerShape(Dimens.radius8))
                                     .padding(horizontal = Dimens.spacing12, vertical = Dimens.spacing4)
-                                    .clickable { afterMonths = (afterMonths % 12) + 1 },
+                                    .clickable {
+                                        afterMonths = (afterMonths % MAX_REPEAT_MONTHS) + 1
+                                    },
                             )
                             Spacer(modifier = Modifier.width(Dimens.spacing8))
                             Text("month(s)", color = ExpensePrimaryText, style = AppTheme.typography.bodySmall)
@@ -1743,3 +1763,7 @@ private fun ExpenseScreenPreview() {
         )
     }
 }
+    val isAnySheetVisible = showCategorySheet ||
+        showAttachmentSheet ||
+        showRepeatScreen ||
+        showDescriptionSheet
