@@ -67,6 +67,7 @@ fun HomeScreen(
     isBudgetLoaded: Boolean = true,
     onBottomRouteSelected: (String) -> Unit,
     onSeeAllTransactionsClick: () -> Unit,
+    onExpensesClick: () -> Unit,
     onTimeRangeSelected: (String) -> Unit,
     onMonthSelected: (HomeMonthOption) -> Unit = {},
     onYearSelected: (Int) -> Unit = {},
@@ -98,6 +99,7 @@ fun HomeScreen(
             uiState = uiState,
             isBudgetLoaded = isBudgetLoaded,
             onSeeAllTransactionsClick = onSeeAllTransactionsClick,
+            onExpensesClick = onExpensesClick,
             onTimeRangeSelected = onTimeRangeSelected,
             onMonthSelected = onMonthSelected,
             onYearSelected = onYearSelected,
@@ -112,6 +114,7 @@ private fun HomeContent(
     uiState: HomeUiState,
     isBudgetLoaded: Boolean,
     onSeeAllTransactionsClick: () -> Unit,
+    onExpensesClick: () -> Unit,
     onTimeRangeSelected: (String) -> Unit,
     onMonthSelected: (HomeMonthOption) -> Unit,
     onYearSelected: (Int) -> Unit,
@@ -243,6 +246,7 @@ private fun HomeContent(
                 expensesAmount = uiState.expensesAmount,
                 expensesText = uiState.expensesText,
                 onSetBudgetClick = onSetBudgetClick,
+                onExpensesClick = onExpensesClick,
             )
             Spacer(modifier = Modifier.height(Dimens.spacing24))
 
@@ -399,6 +403,7 @@ private fun HomeScreenPreview() {
             ),
             onBottomRouteSelected = {},
             onSeeAllTransactionsClick = {},
+            onExpensesClick = {},
             onTimeRangeSelected = {},
             onSetBudgetClick = { },
             onAddExpenseClick = {},

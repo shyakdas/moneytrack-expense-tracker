@@ -1,6 +1,6 @@
 // Copyright (c) 2026 shyakdas
 
-@file:Suppress("LongParameterList")
+@file:Suppress("LongParameterList", "TooManyFunctions", "LongMethod", "MagicNumber")
 
 package com.moneytrack.home.presentation
 
@@ -80,6 +80,7 @@ internal fun BalanceSummaryCard(
     expensesAmount: Double,
     expensesText: String,
     onSetBudgetClick: (Double?) -> Unit,
+    onExpensesClick: () -> Unit,
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -102,6 +103,7 @@ internal fun BalanceSummaryCard(
                 expensesAmount = expensesAmount,
                 expensesText = expensesText,
                 onSetBudgetClick = onSetBudgetClick,
+                onExpensesClick = onExpensesClick,
             )
         }
     }
@@ -178,6 +180,7 @@ private fun BalanceStatsRow(
     expensesAmount: Double,
     expensesText: String,
     onSetBudgetClick: (Double?) -> Unit,
+    onExpensesClick: () -> Unit,
 ) {
     val expenseProgress = if ((budgetAmount ?: 0.0) <= 0.0) {
         0f
@@ -215,6 +218,7 @@ private fun BalanceStatsRow(
             contentColor = AppTheme.colors.error,
             progress = expenseProgress,
             progressLabel = "${(expenseProgress * 100).toInt()}% of budget",
+            onClick = onExpensesClick,
         )
     }
 }
