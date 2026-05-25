@@ -70,7 +70,8 @@ internal fun ProfileSelectorNavigation(
                 label = config.selectedMonth,
                 onClick = config.onMonthClick,
                 selected = false,
-                leadingIcon = ImageVector.vectorResource(id = R.drawable.arrow_down_2)
+                leadingIcon = ImageVector.vectorResource(id = R.drawable.arrow_down_2),
+                highlighted = true,
             )
             if (config.selectedYear != null && config.onYearClick != null) {
                 Spacer(modifier = Modifier.width(Dimens.spacing8))
@@ -78,7 +79,8 @@ internal fun ProfileSelectorNavigation(
                     label = config.selectedYear,
                     onClick = config.onYearClick,
                     selected = false,
-                    leadingIcon = ImageVector.vectorResource(id = R.drawable.arrow_down_2)
+                    leadingIcon = ImageVector.vectorResource(id = R.drawable.arrow_down_2),
+                    highlighted = true,
                 )
             }
 

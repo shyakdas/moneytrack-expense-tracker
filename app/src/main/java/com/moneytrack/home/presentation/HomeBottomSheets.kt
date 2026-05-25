@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.tooling.preview.Preview
 import com.moneytrack.common.ui.LottieAnimationView
 import com.moneytrack.designsystem.R
 import com.moneytrack.R as AppR
@@ -33,6 +34,7 @@ import ui.components.navigation.button.LargeButton
 import ui.components.surface.MoneyTrackBottomSheet
 import ui.theme.AppTheme
 import ui.theme.Dimens
+import ui.theme.MoneyTrackTheme
 
 @Composable
 internal fun NotificationPermissionBottomSheet(
@@ -103,35 +105,51 @@ internal fun BudgetSetupBottomSheet(
     MoneyTrackBottomSheet(
         onDismissRequest = onDismiss,
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = Dimens.spacing24)
-                .padding(bottom = Dimens.spacing24),
-            verticalArrangement = Arrangement.spacedBy(Dimens.spacing16),
-        ) {
-            when (sheetStep) {
-                BudgetSheetStep.PRIVACY -> BudgetPrivacyStep(
-                    onNextClick = { sheetStep = BudgetSheetStep.INPUT },
-                )
+        BudgetSetupBottomSheetContent(
+            state = BudgetSetupContentState(
+                sheetStep = sheetStep,
+                budgetInput = budgetInput,
+                formattedAmount = formatAmount(parsedBudget ?: 0.0),
+                canContinue = canContinue,
+            ),
+            actions = BudgetSetupContentActions(
+                onNextClick = { sheetStep = BudgetSheetStep.INPUT },
+                onBudgetInputChange = { input ->
+                    budgetInput = input.filter { char -> char.isDigit() }.take(MAX_BUDGET_INPUT_LENGTH)
+                },
+                onContinueClick = {
+                    parsedBudget?.let { budgetValue ->
+                        onSaveBudget(budgetValue, null)
+                        sheetStep = BudgetSheetStep.SUCCESS
+                    }
+                },
+            ),
+        )
+    }
+}
 
-                BudgetSheetStep.INPUT -> BudgetInputStep(
-                    budgetInput = budgetInput,
-                    formattedAmount = formatAmount(parsedBudget ?: 0.0),
-                    canContinue = canContinue,
-                    onBudgetInputChange = { input ->
-                        budgetInput = input.filter { char -> char.isDigit() }.take(MAX_BUDGET_INPUT_LENGTH)
-                    },
-                    onContinueClick = {
-                        parsedBudget?.let { budgetValue ->
-                            onSaveBudget(budgetValue, null)
-                            sheetStep = BudgetSheetStep.SUCCESS
-                        }
-                    },
-                )
-
-                BudgetSheetStep.SUCCESS -> BudgetSuccessStep()
-            }
+@Composable
+private fun BudgetSetupBottomSheetContent(
+    state: BudgetSetupContentState,
+    actions: BudgetSetupContentActions,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = Dimens.spacing24)
+            .padding(bottom = Dimens.spacing24),
+        verticalArrangement = Arrangement.spacedBy(Dimens.spacing16),
+    ) {
+        when (state.sheetStep) {
+            BudgetSheetStep.PRIVACY -> BudgetPrivacyStep(onNextClick = actions.onNextClick)
+            BudgetSheetStep.INPUT -> BudgetInputStep(
+                budgetInput = state.budgetInput,
+                formattedAmount = state.formattedAmount,
+                canContinue = state.canContinue,
+                onBudgetInputChange = actions.onBudgetInputChange,
+                onContinueClick = actions.onContinueClick,
+            )
+            BudgetSheetStep.SUCCESS -> BudgetSuccessStep()
         }
     }
 }
@@ -254,5 +272,41 @@ private enum class BudgetSheetStep {
     SUCCESS,
 }
 
+private data class BudgetSetupContentState(
+    val sheetStep: BudgetSheetStep,
+    val budgetInput: String,
+    val formattedAmount: String,
+    val canContinue: Boolean,
+)
+
+private data class BudgetSetupContentActions(
+    val onNextClick: () -> Unit,
+    val onBudgetInputChange: (String) -> Unit,
+    val onContinueClick: () -> Unit,
+)
+
 private const val MAX_BUDGET_INPUT_LENGTH = 8
 private const val BUDGET_SUCCESS_DISMISS_DELAY_MS = 1200L
+
+@Suppress("UnusedPrivateMember")
+@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
+@Composable
+private fun BudgetSetupBottomSheetPreview() {
+    MoneyTrackTheme(darkTheme = false) {
+        Surface(color = AppTheme.colors.surface) {
+            BudgetSetupBottomSheetContent(
+                state = BudgetSetupContentState(
+                    sheetStep = BudgetSheetStep.INPUT,
+                    budgetInput = "5200",
+                    formattedAmount = "$5,200",
+                    canContinue = true,
+                ),
+                actions = BudgetSetupContentActions(
+                    onNextClick = {},
+                    onBudgetInputChange = {},
+                    onContinueClick = {},
+                ),
+            )
+        }
+    }
+}
