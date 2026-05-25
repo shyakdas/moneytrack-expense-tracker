@@ -45,6 +45,7 @@ class HomeScreenshotTest {
                     onBottomRouteSelected = {},
                     onSeeAllTransactionsClick = {},
                     onExpensesClick = {},
+                    onDeleteTransaction = {},
                     onTimeRangeSelected = {},
                     onSetBudgetClick = {},
                 )
@@ -69,6 +70,7 @@ class HomeScreenshotTest {
                         hasSpendFrequencyData = true,
                         transactions = listOf(
                             HomeTransaction(
+                                id = 1L,
                                 icon = com.moneytrack.designsystem.R.drawable.shopping_bag,
                                 category = "Shopping",
                                 title = "Shopping",
@@ -79,6 +81,7 @@ class HomeScreenshotTest {
                                 type = TransactionType.EXPENSE,
                             ),
                             HomeTransaction(
+                                id = 2L,
                                 icon = com.moneytrack.designsystem.R.drawable.restaurant,
                                 category = "Food",
                                 title = "Food",
@@ -98,6 +101,7 @@ class HomeScreenshotTest {
                     onBottomRouteSelected = {},
                     onSeeAllTransactionsClick = {},
                     onExpensesClick = {},
+                    onDeleteTransaction = {},
                     onTimeRangeSelected = {},
                     onSetBudgetClick = {},
                 )

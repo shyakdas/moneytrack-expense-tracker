@@ -48,5 +48,6 @@ fun ExpenseRoute(
         onRepeatConfigured = viewModel::onRepeatConfigured,
         onRepeatRemoved = viewModel::onRepeatRemoved,
         onCategorySelected = viewModel::onCategorySelected,
+        onOccurredAtChanged = viewModel::onOccurredAtChanged,
     )
 }

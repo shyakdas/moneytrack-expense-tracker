@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -27,9 +28,17 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -75,6 +84,7 @@ fun TransactionRoute(
             }
         },
         onAddExpenseClick = onAddExpenseClick,
+        onDeleteTransaction = viewModel::deleteTransaction,
     )
 }
 
@@ -83,6 +93,7 @@ fun TransactionScreen(
     uiState: TransactionUiState,
     onBottomRouteClick: (String) -> Unit,
     onAddExpenseClick: () -> Unit,
+    onDeleteTransaction: (Long) -> Unit,
 ) {
     val bottomItems = remember {
         listOf(
@@ -108,6 +119,7 @@ fun TransactionScreen(
         TransactionContent(
             uiState = uiState,
             innerPadding = innerPadding,
+            onDeleteTransaction = onDeleteTransaction,
         )
     }
 }
@@ -116,6 +128,7 @@ fun TransactionScreen(
 private fun TransactionContent(
     uiState: TransactionUiState,
     innerPadding: PaddingValues,
+    onDeleteTransaction: (Long) -> Unit,
 ) {
     MoneyTrackScreenBackground {
         LazyColumn(
@@ -165,16 +178,22 @@ private fun TransactionContent(
                             color = AppTheme.colors.onBackground,
                         )
                         section.items.forEach { transaction ->
-                            TransactionCard(
-                                icon = ImageVector.vectorResource(id = transaction.iconRes),
-                                category = transaction.category,
-                                title = transaction.title,
-                                subtitle = transaction.subtitle,
-                                amount = transaction.amount,
-                                date = transaction.date,
-                                time = transaction.time,
-                                type = transaction.type,
-                            )
+                            key(transaction.id) {
+                                SwipeToDeleteTransactionCard(
+                                    onDelete = { onDeleteTransaction(transaction.id) },
+                                ) {
+                                    TransactionCard(
+                                        icon = ImageVector.vectorResource(id = transaction.iconRes),
+                                        category = transaction.category,
+                                        title = transaction.title,
+                                        subtitle = transaction.subtitle,
+                                        amount = transaction.amount,
+                                        date = transaction.date,
+                                        time = transaction.time,
+                                        type = transaction.type,
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -232,6 +251,50 @@ private fun EmptyTransactionState() {
     }
 }
 
+@Composable
+private fun SwipeToDeleteTransactionCard(
+    onDelete: () -> Unit,
+    content: @Composable RowScope.() -> Unit,
+) {
+    var deleteHandled by remember { mutableStateOf(false) }
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { value ->
+            value == SwipeToDismissBoxValue.EndToStart
+        },
+    )
+    LaunchedEffect(dismissState.currentValue) {
+        if (dismissState.currentValue == SwipeToDismissBoxValue.EndToStart && !deleteHandled) {
+            deleteHandled = true
+            onDelete()
+            dismissState.reset()
+            deleteHandled = false
+        }
+    }
+    SwipeToDismissBox(
+        state = dismissState,
+        enableDismissFromStartToEnd = false,
+        backgroundContent = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        AppTheme.colors.error.copy(alpha = 0.35f),
+                        shape = RoundedCornerShape(Dimens.radius16),
+                    )
+                    .padding(horizontal = Dimens.spacing16),
+                contentAlignment = Alignment.CenterEnd,
+            ) {
+                Icon(
+                    imageVector = ImageVector.vectorResource(id = DsR.drawable.trash),
+                    contentDescription = null,
+                    tint = AppTheme.colors.onPrimary,
+                )
+            }
+        },
+        content = content,
+    )
+}
+
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 private fun TransactionScreenPreview() {
@@ -286,6 +349,7 @@ private fun TransactionScreenPreview() {
             ),
             onBottomRouteClick = {},
             onAddExpenseClick = {},
+            onDeleteTransaction = {},
         )
     }
 }

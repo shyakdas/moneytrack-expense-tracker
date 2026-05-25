@@ -55,10 +55,7 @@
     <string name="home_notification_sheet_enable">Allow notifications</string>
     <string name="home_notification_sheet_not_now">Not now</string>
     <string name="expense_back_content_desc">Back</string>
-    <string name="expense_title">Expense</string>
-    <string name="expense_amount_prompt">How much?</string>
     <string name="expense_category_placeholder">Category</string>
-    <string name="expense_description_placeholder">Description</string>
     <string name="expense_add_attachment">Add attachment</string>
     <string name="expense_attachment_camera">Camera</string>
     <string name="expense_attachment_image">Image</string>
@@ -66,8 +63,6 @@
     <string name="expense_attachment_remove">Remove attachment</string>
     <string name="expense_attachment_image_fallback_name">Receipt image</string>
     <string name="expense_attachment_document_fallback_name">Receipt document</string>
-    <string name="expense_repeat_title">Repeat</string>
-    <string name="expense_repeat_subtitle">Repeat transaction</string>
     <string name="expense_repeat_frequency_label">Frequency</string>
     <string name="expense_repeat_end_after_label">End After</string>
     <string name="expense_repeat_edit">Edit</string>

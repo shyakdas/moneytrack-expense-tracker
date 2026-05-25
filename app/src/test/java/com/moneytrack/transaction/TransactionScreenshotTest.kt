@@ -26,6 +26,7 @@ class TransactionScreenshotTest {
                     uiState = TransactionUiState(sections = emptyList()),
                     onBottomRouteClick = {},
                     onAddExpenseClick = {},
+                    onDeleteTransaction = {},
                 )
             }
         }
@@ -85,6 +86,7 @@ class TransactionScreenshotTest {
                     ),
                     onBottomRouteClick = {},
                     onAddExpenseClick = {},
+                    onDeleteTransaction = {},
                 )
             }
         }

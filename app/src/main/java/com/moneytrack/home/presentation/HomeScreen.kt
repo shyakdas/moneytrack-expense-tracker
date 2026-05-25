@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,15 +29,21 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
@@ -68,6 +75,7 @@ fun HomeScreen(
     onBottomRouteSelected: (String) -> Unit,
     onSeeAllTransactionsClick: () -> Unit,
     onExpensesClick: () -> Unit,
+    onDeleteTransaction: (Long) -> Unit,
     onTimeRangeSelected: (String) -> Unit,
     onMonthSelected: (HomeMonthOption) -> Unit = {},
     onYearSelected: (Int) -> Unit = {},
@@ -100,6 +108,7 @@ fun HomeScreen(
             isBudgetLoaded = isBudgetLoaded,
             onSeeAllTransactionsClick = onSeeAllTransactionsClick,
             onExpensesClick = onExpensesClick,
+            onDeleteTransaction = onDeleteTransaction,
             onTimeRangeSelected = onTimeRangeSelected,
             onMonthSelected = onMonthSelected,
             onYearSelected = onYearSelected,
@@ -115,6 +124,7 @@ private fun HomeContent(
     isBudgetLoaded: Boolean,
     onSeeAllTransactionsClick: () -> Unit,
     onExpensesClick: () -> Unit,
+    onDeleteTransaction: (Long) -> Unit,
     onTimeRangeSelected: (String) -> Unit,
     onMonthSelected: (HomeMonthOption) -> Unit,
     onYearSelected: (Int) -> Unit,
@@ -320,16 +330,22 @@ private fun HomeContent(
                 )
             } else {
                 uiState.transactions.forEach { transaction ->
-                    TransactionCard(
-                        icon = ImageVector.vectorResource(id = transaction.icon),
-                        category = transaction.category,
-                        title = transaction.title,
-                        subtitle = transaction.subtitle,
-                        amount = transaction.amount,
-                        date = transaction.date,
-                        time = transaction.time,
-                        type = transaction.type,
-                    )
+                    key(transaction.id) {
+                        SwipeToDeleteTransactionCard(
+                            onDelete = { onDeleteTransaction(transaction.id) },
+                        ) {
+                            TransactionCard(
+                                icon = ImageVector.vectorResource(id = transaction.icon),
+                                category = transaction.category,
+                                title = transaction.title,
+                                subtitle = transaction.subtitle,
+                                amount = transaction.amount,
+                                date = transaction.date,
+                                time = transaction.time,
+                                type = transaction.type,
+                            )
+                        }
+                    }
                     Spacer(modifier = Modifier.height(Dimens.spacing12))
                 }
                 Spacer(modifier = Modifier.height(Dimens.spacing12))
@@ -381,6 +397,55 @@ private const val MONTH_POPUP_ENTER_DURATION_MS = 260
 private const val MONTH_POPUP_EXIT_DURATION_MS = 220
 private val YEAR_MONTH_POPUP_X_DISTANCE = Dimens.spacing48
 
+@Composable
+private fun SwipeToDeleteTransactionCard(
+    onDelete: () -> Unit,
+    content: @Composable RowScope.() -> Unit,
+) {
+    var deleteHandled by remember { mutableStateOf(false) }
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { value ->
+            value == SwipeToDismissBoxValue.EndToStart
+        },
+    )
+    LaunchedEffect(dismissState.currentValue) {
+        if (dismissState.currentValue == SwipeToDismissBoxValue.EndToStart && !deleteHandled) {
+            deleteHandled = true
+            onDelete()
+            dismissState.reset()
+            deleteHandled = false
+        }
+    }
+    SwipeToDismissBox(
+        state = dismissState,
+        enableDismissFromStartToEnd = false,
+        backgroundContent = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            listOf(
+                                AppTheme.colors.error.copy(alpha = 0.2f),
+                                AppTheme.colors.error.copy(alpha = 0.45f),
+                            ),
+                        ),
+                        shape = RoundedCornerShape(Dimens.radius16),
+                    )
+                    .padding(horizontal = Dimens.spacing16),
+                contentAlignment = Alignment.CenterEnd,
+            ) {
+                androidx.compose.material3.Icon(
+                    imageVector = ImageVector.vectorResource(id = R.drawable.trash),
+                    contentDescription = null,
+                    tint = AppTheme.colors.onPrimary,
+                )
+            }
+        },
+        content = content,
+    )
+}
+
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 private fun HomeScreenPreview() {
@@ -406,6 +471,7 @@ private fun HomeScreenPreview() {
             onBottomRouteSelected = {},
             onSeeAllTransactionsClick = {},
             onExpensesClick = {},
+            onDeleteTransaction = {},
             onTimeRangeSelected = {},
             onSetBudgetClick = { },
             onAddExpenseClick = {},

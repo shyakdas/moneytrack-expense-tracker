@@ -16,6 +16,7 @@ internal fun TransactionRecord.toHomeTransaction(
 ): HomeTransaction {
     val isExpense = type == TransactionRecordType.EXPENSE
     return HomeTransaction(
+        id = id,
         icon = category.toTransactionIconRes(),
         category = category,
         title = title,

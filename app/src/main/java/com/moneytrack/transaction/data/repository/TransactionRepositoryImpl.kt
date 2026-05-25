@@ -30,6 +30,10 @@ class TransactionRepositoryImpl @Inject constructor(
     override suspend fun getTransactionsFrom(fromEpochMillis: Long): List<TransactionRecord> =
         transactionDao.getTransactionsFrom(fromEpochMillis = fromEpochMillis)
             .map(TransactionEntity::toDomain)
+
+    override suspend fun deleteTransaction(id: Long) {
+        transactionDao.deleteById(id)
+    }
 }
 
 private fun TransactionEntity.toDomain(): TransactionRecord = TransactionRecord(
