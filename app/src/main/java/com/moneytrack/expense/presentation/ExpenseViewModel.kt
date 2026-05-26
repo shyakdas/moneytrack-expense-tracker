@@ -118,21 +118,24 @@ class ExpenseViewModel @Inject constructor(
             if (transaction.type != TransactionRecordType.EXPENSE) return@launch
 
             val amountInput = normalizeAmountInput(transaction.amount)
-            val categoryId = _uiState.value.categories.firstOrNull { category ->
-                category.name.equals(transaction.category, ignoreCase = true)
-            }?.id
             val repeatSchedule = transactionRepository.getRepeatScheduleForTransaction(expenseId)
             val amountValue = amountInput.toDoubleOrNull() ?: DEFAULT_AMOUNT_VALUE
+            val savedCategoryCandidates = listOf(transaction.category, transaction.title)
+                .map(String::trim)
+                .filter(String::isNotBlank)
 
             _uiState.update { state ->
+                val matchedCategory = state.categories.firstOrNull { category ->
+                    savedCategoryCandidates.any { savedName ->
+                        category.name.equals(savedName, ignoreCase = true)
+                    }
+                }
                 state.copy(
                     editingExpenseId = transaction.id,
                     isEditMode = true,
                     pendingCategoryName = transaction.category,
-                    selectedCategoryId = categoryId,
-                    selectedCategory = state.categories.firstOrNull { category ->
-                        category.id == categoryId
-                    },
+                    selectedCategoryId = matchedCategory?.id,
+                    selectedCategory = matchedCategory,
                     description = transaction.note.orEmpty(),
                     attachment = transaction.toAttachmentUiState(),
                     amountInput = amountInput,

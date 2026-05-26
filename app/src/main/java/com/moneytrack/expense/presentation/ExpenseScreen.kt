@@ -225,6 +225,7 @@ fun ExpenseScreen(
             attachment = uiState.attachment,
             repeatSchedule = uiState.repeatSchedule,
             categories = uiState.categories,
+            selectedCategoryId = uiState.selectedCategoryId,
             selectedCategory = uiState.selectedCategory,
             onBackClick = onBackClick,
             onContinueClick = onContinueClick,
@@ -302,6 +303,7 @@ internal fun ExpenseContent(
     attachment: ExpenseAttachmentUiState?,
     repeatSchedule: ExpenseRepeatUiState?,
     categories: List<ExpenseCategory>,
+    selectedCategoryId: Long?,
     selectedCategory: ExpenseCategory?,
     onBackClick: () -> Unit,
     onContinueClick: () -> Unit,
@@ -412,7 +414,7 @@ internal fun ExpenseContent(
             Spacer(modifier = Modifier.height(Dimens.spacing16))
             CategoryHorizontalPicker(
                 categories = categories,
-                selectedCategoryId = selectedCategory?.id,
+                selectedCategoryId = selectedCategoryId,
                 onCategorySelected = onCategorySelected,
             )
             Spacer(modifier = Modifier.height(Dimens.spacing20))
@@ -481,7 +483,7 @@ internal fun ExpenseContent(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .navigationBarsPadding()
-                    .padding(horizontal = Dimens.spacing24),
+                    .padding(horizontal = Dimens.spacing8),
             ) {
                 LargeButton(
                     text = "Save",
@@ -489,6 +491,7 @@ internal fun ExpenseContent(
                     enabled = isSubmitEnabled,
                 )
             }
+            Spacer(modifier = Modifier.height(Dimens.spacing8))
         }
     }
 }
@@ -499,6 +502,13 @@ private fun CategoryHorizontalPicker(
     selectedCategoryId: Long?,
     onCategorySelected: (Long) -> Unit,
 ) {
+    val orderedCategories = remember(categories, selectedCategoryId) {
+        val selected = categories.firstOrNull { it.id == selectedCategoryId } ?: return@remember categories
+        buildList(categories.size) {
+            add(selected)
+            addAll(categories.filterNot { it.id == selected.id })
+        }
+    }
     val hintTransition = rememberInfiniteTransition(label = "category_hint")
     val hintOffsetX by hintTransition.animateFloat(
         initialValue = 0f,
@@ -514,8 +524,8 @@ private fun CategoryHorizontalPicker(
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(Dimens.spacing12),
         ) {
-            items(categories.size, key = { index -> categories[index].id }) { index ->
-                val category = categories[index]
+            items(orderedCategories.size, key = { index -> orderedCategories[index].id }) { index ->
+                val category = orderedCategories[index]
                 CategoryTile(
                     category = category,
                     selected = category.id == selectedCategoryId,
@@ -524,7 +534,7 @@ private fun CategoryHorizontalPicker(
             }
         }
 
-        if (categories.size > 2) {
+        if (orderedCategories.size > 2) {
             Icon(
                 imageVector = ImageVector.vectorResource(id = DsR.drawable.arrow_right_2),
                 contentDescription = null,
