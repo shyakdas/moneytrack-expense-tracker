@@ -97,6 +97,9 @@ import com.moneytrack.expense.domain.model.RepeatFrequency
 import com.moneytrack.transaction.presentation.toTransactionIconRes
 import java.io.File
 import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.ZoneId
+import java.time.temporal.ChronoUnit
 import java.util.Calendar
 import java.util.Locale
 import ui.components.card.bottomsheet.SheetBlurHost
@@ -124,6 +127,7 @@ private const val END_OF_DAY_MILLISECOND = 999
 private const val DEFAULT_REPEAT_AFTER_MONTHS = 4
 private const val MIN_REPEAT_MONTHS = 1
 private const val MAX_REPEAT_MONTHS = 12
+private const val REPEAT_END_MATCH_TOLERANCE_DAYS = 2L
 private const val DESCRIPTION_MAX_LENGTH = 20
 private val ExpenseRowIconContainerSize = Dimens.spacing32
 private val ExpenseRowIconSize = 14.dp
@@ -270,7 +274,8 @@ fun ExpenseScreen(
             initialRepeatSchedule = uiState.repeatSchedule,
             initialOccurredAt = uiState.occurredAtEpochMillis,
             onBackClick = { showRepeatScreen = false },
-            onDoneClick = { isEnabled, frequency, endAtEpochMillis ->
+            onDoneClick = { isEnabled, frequency, endAtEpochMillis, startAtEpochMillis ->
+                onOccurredAtChanged(startAtEpochMillis)
                 if (isEnabled && frequency != null && endAtEpochMillis != null) {
                     onRepeatConfigured(frequency, endAtEpochMillis)
                 } else {
@@ -1396,20 +1401,28 @@ private fun RepeatTransactionScreen(
     initialRepeatSchedule: ExpenseRepeatUiState?,
     initialOccurredAt: Long,
     onBackClick: () -> Unit,
-    onDoneClick: (Boolean, RepeatFrequency?, Long?) -> Unit,
+    onDoneClick: (Boolean, RepeatFrequency?, Long?, Long) -> Unit,
 ) {
     val context = LocalContext.current
     var selectedFrequency by remember(initialRepeatSchedule) {
         mutableStateOf(initialRepeatSchedule?.frequency ?: RepeatFrequency.MONTHLY)
     }
     var startAt by remember(initialOccurredAt) { mutableLongStateOf(initialOccurredAt) }
-    var selectedEndOption by remember(initialRepeatSchedule) {
-        mutableStateOf(if (initialRepeatSchedule == null) RepeatEndOption.NEVER else RepeatEndOption.ON_DATE)
+    val initialRepeatEndState = remember(initialRepeatSchedule, initialOccurredAt) {
+        deriveInitialRepeatEndState(
+            initialRepeatSchedule = initialRepeatSchedule,
+            initialOccurredAt = initialOccurredAt,
+        )
     }
-    var onDateEndAt by remember(initialRepeatSchedule) {
-        mutableLongStateOf(initialRepeatSchedule?.endAtEpochMillis ?: initialOccurredAt)
+    var selectedEndOption by remember(initialRepeatSchedule, initialOccurredAt) {
+        mutableStateOf(initialRepeatEndState.option)
     }
-    var afterMonths by remember { mutableIntStateOf(DEFAULT_REPEAT_AFTER_MONTHS) }
+    var onDateEndAt by remember(initialRepeatSchedule, initialOccurredAt) {
+        mutableLongStateOf(initialRepeatEndState.endAtEpochMillis)
+    }
+    var afterMonths by remember(initialRepeatSchedule, initialOccurredAt) {
+        mutableIntStateOf(initialRepeatEndState.afterMonths)
+    }
 
     val onDone = {
         val resolvedEndAt = when {
@@ -1420,7 +1433,7 @@ private fun RepeatTransactionScreen(
                 add(Calendar.MONTH, afterMonths.coerceAtLeast(MIN_REPEAT_MONTHS))
             }.timeInMillis
         }
-        onDoneClick(true, selectedFrequency, resolvedEndAt)
+        onDoneClick(true, selectedFrequency, resolvedEndAt, startAt)
     }
 
     Column(
@@ -1823,6 +1836,65 @@ private fun RepeatFrequency.displayName(): String = when (this) {
     RepeatFrequency.WEEKLY -> "Weekly"
     RepeatFrequency.MONTHLY -> "Monthly"
     RepeatFrequency.YEARLY -> "Yearly"
+}
+
+private data class InitialRepeatEndState(
+    val option: RepeatEndOption,
+    val endAtEpochMillis: Long,
+    val afterMonths: Int,
+)
+
+private fun deriveInitialRepeatEndState(
+    initialRepeatSchedule: ExpenseRepeatUiState?,
+    initialOccurredAt: Long,
+): InitialRepeatEndState {
+    if (initialRepeatSchedule == null) {
+        return InitialRepeatEndState(
+            option = RepeatEndOption.NEVER,
+            endAtEpochMillis = initialOccurredAt,
+            afterMonths = DEFAULT_REPEAT_AFTER_MONTHS,
+        )
+    }
+    if (initialRepeatSchedule.endAtEpochMillis == Long.MAX_VALUE) {
+        return InitialRepeatEndState(
+            option = RepeatEndOption.NEVER,
+            endAtEpochMillis = initialOccurredAt,
+            afterMonths = DEFAULT_REPEAT_AFTER_MONTHS,
+        )
+    }
+
+    val inferredAfterMonths = inferAfterMonths(
+        startAtEpochMillis = initialOccurredAt,
+        endAtEpochMillis = initialRepeatSchedule.endAtEpochMillis,
+    )
+    return if (inferredAfterMonths != null) {
+        InitialRepeatEndState(
+            option = RepeatEndOption.AFTER_MONTHS,
+            endAtEpochMillis = initialRepeatSchedule.endAtEpochMillis,
+            afterMonths = inferredAfterMonths,
+        )
+    } else {
+        InitialRepeatEndState(
+            option = RepeatEndOption.ON_DATE,
+            endAtEpochMillis = initialRepeatSchedule.endAtEpochMillis,
+            afterMonths = DEFAULT_REPEAT_AFTER_MONTHS,
+        )
+    }
+}
+
+private fun inferAfterMonths(
+    startAtEpochMillis: Long,
+    endAtEpochMillis: Long,
+): Int? {
+    val zoneId = ZoneId.systemDefault()
+    val startDate = Instant.ofEpochMilli(startAtEpochMillis).atZone(zoneId).toLocalDate()
+    val endDate = Instant.ofEpochMilli(endAtEpochMillis).atZone(zoneId).toLocalDate()
+    val rawMonths = ChronoUnit.MONTHS.between(startDate.withDayOfMonth(1), endDate.withDayOfMonth(1)).toInt()
+    if (rawMonths < MIN_REPEAT_MONTHS || rawMonths > MAX_REPEAT_MONTHS) return null
+
+    val recalculatedEndDate = startDate.plusMonths(rawMonths.toLong())
+    val dayDelta = kotlin.math.abs(ChronoUnit.DAYS.between(recalculatedEndDate, endDate))
+    return if (dayDelta <= REPEAT_END_MATCH_TOLERANCE_DAYS) rawMonths else null
 }
 
 private fun formatDate(epochMillis: Long): String =

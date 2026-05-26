@@ -77,20 +77,18 @@ class TransactionRepositoryImpl @Inject constructor(
                 fromEpochMillis = occurredAtEpochMillis,
                 frequency = repeatSchedule.frequency,
             )
-            if (nextRunAtEpochMillis <= repeatSchedule.endAtEpochMillis) {
-                recurringExpenseDao.insert(
-                    RecurringExpenseEntity(
-                        amount = amount,
-                        note = note?.takeIf(String::isNotBlank),
-                        category = category,
-                        frequency = repeatSchedule.frequency.name,
-                        endAtEpochMillis = repeatSchedule.endAtEpochMillis,
-                        nextRunAtEpochMillis = nextRunAtEpochMillis,
-                        createdAtEpochMillis = System.currentTimeMillis(),
-                        sourceTransactionId = id,
-                    ),
-                )
-            }
+            recurringExpenseDao.insert(
+                RecurringExpenseEntity(
+                    amount = amount,
+                    note = note?.takeIf(String::isNotBlank),
+                    category = category,
+                    frequency = repeatSchedule.frequency.name,
+                    endAtEpochMillis = repeatSchedule.endAtEpochMillis,
+                    nextRunAtEpochMillis = nextRunAtEpochMillis,
+                    createdAtEpochMillis = System.currentTimeMillis(),
+                    sourceTransactionId = id,
+                ),
+            )
         }
     }
 

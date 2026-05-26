@@ -111,7 +111,6 @@ class ExpenseViewModel @Inject constructor(
 
     fun initializeEdit(expenseId: Long?) {
         if (expenseId == null) return
-        if (_uiState.value.editingExpenseId == expenseId) return
 
         viewModelScope.launch {
             val transaction = transactionRepository.getTransactionById(expenseId) ?: return@launch

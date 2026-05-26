@@ -81,6 +81,7 @@ private fun ExpenseSnapshotContent(
         attachment = uiState.attachment,
         repeatSchedule = uiState.repeatSchedule,
         categories = uiState.categories,
+        selectedCategoryId = uiState.selectedCategoryId,
         selectedCategory = uiState.selectedCategory,
         onBackClick = {},
         onContinueClick = {},

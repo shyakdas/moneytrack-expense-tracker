@@ -100,26 +100,22 @@ class ExpenseRepositoryImpl @Inject constructor(
             fromEpochMillis = request.occurredAtEpochMillis,
             frequency = repeatSchedule.frequency,
         )
-        return if (nextRunAtEpochMillis <= repeatSchedule.endAtEpochMillis) {
-            val recurringExpenseId = recurringExpenseDao.insert(
-                RecurringExpenseEntity(
-                    amount = request.amount,
-                    note = request.description,
-                    category = request.category,
-                    frequency = repeatSchedule.frequency.name,
-                    endAtEpochMillis = repeatSchedule.endAtEpochMillis,
-                    nextRunAtEpochMillis = nextRunAtEpochMillis,
-                    createdAtEpochMillis = createdAtEpochMillis,
-                    sourceTransactionId = sourceTransactionId,
-                ),
-            )
-            ExpenseSubmissionResult(
-                recurringExpenseId = recurringExpenseId,
+        val recurringExpenseId = recurringExpenseDao.insert(
+            RecurringExpenseEntity(
+                amount = request.amount,
+                note = request.description,
+                category = request.category,
+                frequency = repeatSchedule.frequency.name,
+                endAtEpochMillis = repeatSchedule.endAtEpochMillis,
                 nextRunAtEpochMillis = nextRunAtEpochMillis,
-            )
-        } else {
-            null
-        }
+                createdAtEpochMillis = createdAtEpochMillis,
+                sourceTransactionId = sourceTransactionId,
+            ),
+        )
+        return ExpenseSubmissionResult(
+            recurringExpenseId = recurringExpenseId,
+            nextRunAtEpochMillis = nextRunAtEpochMillis,
+        )
     }
 }
 
