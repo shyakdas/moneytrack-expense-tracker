@@ -115,6 +115,8 @@ private const val END_OF_DAY_MILLISECOND = 999
 private const val DEFAULT_REPEAT_AFTER_MONTHS = 4
 private const val MIN_REPEAT_MONTHS = 1
 private const val MAX_REPEAT_MONTHS = 12
+private val ExpenseRowIconContainerSize = Dimens.spacing32
+private val ExpenseRowIconSize = 14.dp
 private val fallbackCategoryColor = categoryColor(FALLBACK_CATEGORY_COLOR_HEX)
 private val ExpenseTopStart = Color(0xFF0B111A)
 private val ExpenseTopMiddle = Color(0xFF0A1422)
@@ -359,7 +361,7 @@ internal fun ExpenseContent(
                 Text(
                     text = "Add Expense",
                     modifier = Modifier.weight(1f),
-                    style = AppTheme.typography.titleMedium,
+                    style = AppTheme.typography.headlineSmall,
                     color = ExpensePrimaryText,
                     textAlign = TextAlign.Center,
                 )
@@ -370,7 +372,7 @@ internal fun ExpenseContent(
             Spacer(modifier = Modifier.height(Dimens.spacing24))
             Text(
                 text = "How much did you spend?",
-                style = AppTheme.typography.bodySmall,
+                style = AppTheme.typography.labelSmall,
                 color = ExpenseSecondaryText,
             )
             Spacer(modifier = Modifier.height(Dimens.spacing8))
@@ -379,7 +381,7 @@ internal fun ExpenseContent(
                 amountText = amountText,
                 onAmountChanged = onAmountChanged,
             )
-            Spacer(modifier = Modifier.height(Dimens.spacing20))
+            Spacer(modifier = Modifier.height(Dimens.spacing12))
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -389,95 +391,129 @@ internal fun ExpenseContent(
             Spacer(modifier = Modifier.height(Dimens.spacing20))
         }
 
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .imePadding()
-                .verticalScroll(rememberScrollState())
                 .padding(horizontal = Dimens.spacing16),
         ) {
-            GlassSectionCard {
-                ExpenseRow(
-                    iconRes = DsR.drawable.sort,
-                    title = "Category",
-                    subtitle = selectedCategory?.name ?: "Select category",
-                    onClick = onCategoryFieldClick,
-                )
-                GlassDivider()
-                DescriptionRow(
-                    value = description,
-                    onClick = onDescriptionClick,
-                )
-                GlassDivider()
-                ExpenseRow(
-                    iconRes = DsR.drawable.transaction,
-                    title = "Date",
-                    subtitle = dateText,
-                    trailingLabel = "Today",
-                    onTrailingClick = {
-                        context.showExpenseDatePicker(occurredAtEpochMillis) { updatedAt ->
-                            onOccurredAtChanged(updatedAt)
-                        }
-                    },
-                )
-                GlassDivider()
-                ExpenseRow(
-                    iconRes = DsR.drawable.notifiaction,
-                    title = "Time",
-                    subtitle = timeText,
-                    trailingLabel = "Now",
-                    onTrailingClick = {
-                        context.showExpenseTimePicker(occurredAtEpochMillis) { updatedAt ->
-                            onOccurredAtChanged(updatedAt)
-                        }
-                    },
-                )
-                GlassDivider()
-                ExpenseRow(
-                    iconRes = DsR.drawable.attachment,
-                    title = "Attachment (optional)",
-                    subtitle = if (attachment == null) "Upload receipt or note" else attachment.name,
-                    onClick = onAttachmentClick,
-                    showArrow = true,
-                )
-            }
-            Spacer(modifier = Modifier.height(Dimens.spacing16))
-
-            GlassSectionCard {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(onClick = onRepeatClick),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    LeadingIcon(iconRes = DsR.drawable.recurring_bill)
-                    Spacer(modifier = Modifier.width(Dimens.spacing12))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "Repeat transaction",
-                            style = AppTheme.typography.titleMedium,
-                            color = ExpensePrimaryText,
-                        )
-                        Text(
-                            text = "Make this a recurring expense",
-                            style = AppTheme.typography.bodySmall,
-                            color = ExpenseSecondaryText,
-                        )
-                    }
-                    PrimarySwitch(
-                        checked = repeatSchedule != null,
-                        onCheckedChange = onRepeatEnabledChange,
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                GlassSectionCard {
+                    ExpenseRow(
+                        iconRes = DsR.drawable.sort,
+                        title = "Category",
+                        subtitle = selectedCategory?.name ?: "Select category",
+                        onClick = onCategoryFieldClick,
+                    )
+                    GlassDivider()
+                    DescriptionRow(
+                        value = description,
+                        onClick = onDescriptionClick,
+                    )
+                    GlassDivider()
+                    ExpenseRow(
+                        iconRes = DsR.drawable.transaction,
+                        title = "Date",
+                        subtitle = dateText,
+                        trailingLabel = "Today",
+                        onTrailingClick = {
+                            context.showExpenseDatePicker(occurredAtEpochMillis) { updatedAt ->
+                                onOccurredAtChanged(updatedAt)
+                            }
+                        },
+                    )
+                    GlassDivider()
+                    ExpenseRow(
+                        iconRes = DsR.drawable.notifiaction,
+                        title = "Time",
+                        subtitle = timeText,
+                        trailingLabel = "Now",
+                        onTrailingClick = {
+                            context.showExpenseTimePicker(occurredAtEpochMillis) { updatedAt ->
+                                onOccurredAtChanged(updatedAt)
+                            }
+                        },
+                    )
+                    GlassDivider()
+                    ExpenseRow(
+                        iconRes = DsR.drawable.attachment,
+                        title = "Attachment (optional)",
+                        subtitle = if (attachment == null) "Upload receipt or note" else attachment.name,
+                        onClick = onAttachmentClick,
+                        showArrow = true,
                     )
                 }
+                Spacer(modifier = Modifier.height(Dimens.spacing16))
+
+                GlassSectionCard {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable(onClick = onRepeatClick),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        LeadingIcon(iconRes = DsR.drawable.recurring_bill)
+                        Spacer(modifier = Modifier.width(Dimens.spacing12))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Repeat transaction",
+                                style = AppTheme.typography.titleSmall,
+                                color = ExpensePrimaryText,
+                            )
+                            Text(
+                                text = "Make this a recurring expense",
+                                style = AppTheme.typography.labelSmall,
+                                color = ExpenseSecondaryText,
+                            )
+                        }
+                        PrimarySwitch(
+                            checked = repeatSchedule != null,
+                            onCheckedChange = onRepeatEnabledChange,
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(80.dp))
             }
 
-            Spacer(modifier = Modifier.height(Dimens.spacing20))
-            CoralButton(
+            FlatFooterActionButton(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
+                    .padding(bottom = Dimens.spacing12),
                 enabled = isSubmitEnabled,
                 onClick = onContinueClick,
             )
-            Spacer(modifier = Modifier.height(Dimens.spacing12))
-            Spacer(modifier = Modifier.navigationBarsPadding())
+        }
+    }
+}
+
+@Composable
+private fun FlatFooterActionButton(
+    modifier: Modifier = Modifier,
+    enabled: Boolean,
+    onClick: () -> Unit,
+) {
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(horizontal = Dimens.spacing20, vertical = Dimens.spacing10),
+        shape = RoundedCornerShape(Dimens.radius16),
+        color = if (enabled) ExpenseAccent else ExpenseSecondaryText.copy(alpha = 0.4f),
+    ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = "Save",
+                style = AppTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                color = ExpensePrimaryText,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(vertical = Dimens.spacing10),
+            )
         }
     }
 }
@@ -525,12 +561,12 @@ private fun ExpenseRow(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
-                style = AppTheme.typography.titleMedium,
+                style = AppTheme.typography.titleSmall,
                 color = ExpensePrimaryText,
             )
             Text(
                 text = subtitle,
-                style = AppTheme.typography.bodySmall,
+                style = AppTheme.typography.labelSmall,
                 color = ExpenseSecondaryText,
             )
         }
@@ -546,7 +582,7 @@ private fun ExpenseRow(
                 ) {
                     Text(
                         text = trailingLabel,
-                        style = AppTheme.typography.titleMedium,
+                        style = AppTheme.typography.titleSmall,
                         color = ExpensePrimaryText,
                     )
                     Spacer(modifier = Modifier.width(Dimens.spacing6))
@@ -554,6 +590,7 @@ private fun ExpenseRow(
                         imageVector = ImageVector.vectorResource(id = DsR.drawable.arrow_down_2),
                         contentDescription = null,
                         tint = ExpensePrimaryText,
+                        modifier = Modifier.size(Dimens.icon16),
                     )
                 }
             }
@@ -562,6 +599,7 @@ private fun ExpenseRow(
                 imageVector = ImageVector.vectorResource(id = DsR.drawable.arrow_right_2),
                 contentDescription = null,
                 tint = ExpenseSecondaryText,
+                modifier = Modifier.size(Dimens.icon16),
             )
         }
     }
@@ -571,7 +609,7 @@ private fun ExpenseRow(
 private fun LeadingIcon(iconRes: Int) {
     Box(
         modifier = Modifier
-            .size(Dimens.spacing48)
+            .size(ExpenseRowIconContainerSize)
             .background(
                 color = ExpenseIconBg,
                 shape = RoundedCornerShape(Dimens.radius16),
@@ -582,6 +620,7 @@ private fun LeadingIcon(iconRes: Int) {
             imageVector = ImageVector.vectorResource(id = iconRes),
             contentDescription = null,
             tint = ExpenseAccent,
+            modifier = Modifier.size(ExpenseRowIconSize),
         )
     }
 }
@@ -603,12 +642,12 @@ private fun DescriptionRow(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = "Description (optional)",
-                style = AppTheme.typography.titleMedium,
+                style = AppTheme.typography.titleSmall,
                 color = ExpensePrimaryText,
             )
             Text(
                 text = value.ifBlank { "Add a note" },
-                style = AppTheme.typography.bodySmall,
+                style = AppTheme.typography.labelSmall,
                 color = ExpenseSecondaryText.copy(alpha = 0.85f),
             )
         }
@@ -616,6 +655,7 @@ private fun DescriptionRow(
             imageVector = ImageVector.vectorResource(id = DsR.drawable.arrow_right_2),
             contentDescription = null,
             tint = ExpenseSecondaryText,
+            modifier = Modifier.size(Dimens.icon16),
         )
     }
 }
@@ -691,11 +731,12 @@ private fun GlassDivider() {
 
 @Composable
 private fun CoralButton(
+    modifier: Modifier = Modifier,
     enabled: Boolean,
     onClick: () -> Unit,
 ) {
     Surface(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clickable(enabled = enabled, onClick = onClick),
         shape = RoundedCornerShape(Dimens.radius16),
@@ -716,7 +757,7 @@ private fun CoralButton(
                         },
                     ),
                 )
-                .padding(horizontal = Dimens.spacing20, vertical = Dimens.spacing12),
+                .padding(horizontal = Dimens.spacing20, vertical = Dimens.spacing8),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Spacer(modifier = Modifier.weight(1f))
