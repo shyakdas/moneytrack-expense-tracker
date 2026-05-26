@@ -1435,6 +1435,12 @@ private fun RepeatTransactionScreen(
         }
         onDoneClick(true, selectedFrequency, resolvedEndAt, startAt)
     }
+    val afterEndAt = remember(startAt, afterMonths) {
+        Calendar.getInstance().apply {
+            timeInMillis = startAt
+            add(Calendar.MONTH, afterMonths.coerceAtLeast(MIN_REPEAT_MONTHS))
+        }.timeInMillis
+    }
 
     Column(
         modifier = Modifier
@@ -1529,32 +1535,11 @@ private fun RepeatTransactionScreen(
                 }
                 if (selectedEndOption == RepeatEndOption.AFTER_MONTHS) {
                     GlassDivider()
-                    Surface(
-                        shape = RoundedCornerShape(Dimens.radius16),
-                        color = ExpensePillBg,
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = Dimens.spacing12, vertical = Dimens.spacing10),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text("Every", color = ExpenseSecondaryText, style = AppTheme.typography.bodySmall)
-                            Spacer(modifier = Modifier.width(Dimens.spacing12))
-                            Text(
-                                text = afterMonths.toString(),
-                                color = ExpenseAccent,
-                                style = AppTheme.typography.titleMedium,
-                                modifier = Modifier
-                                    .background(ExpenseRowCard, RoundedCornerShape(Dimens.radius8))
-                                    .padding(horizontal = Dimens.spacing12, vertical = Dimens.spacing4)
-                                    .clickable {
-                                        afterMonths = (afterMonths % MAX_REPEAT_MONTHS) + 1
-                                    },
-                            )
-                            Spacer(modifier = Modifier.width(Dimens.spacing8))
-                            Text("month(s)", color = ExpensePrimaryText, style = AppTheme.typography.bodySmall)
-                        }
-                    }
+                    ExpenseRow(
+                        iconRes = DsR.drawable.transaction,
+                        title = formatDate(afterEndAt),
+                        subtitle = null,
+                    )
                 }
             }
             Spacer(modifier = Modifier.weight(1f))
