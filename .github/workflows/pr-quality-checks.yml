@@ -12,6 +12,8 @@ jobs:
     name: Lint & Static Analysis
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout code
@@ -37,6 +39,8 @@ jobs:
     name: Unit Tests & Coverage
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout code
@@ -81,6 +85,8 @@ jobs:
     name: Snapshot Tests (Paparazzi)
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout code
