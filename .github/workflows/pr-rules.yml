@@ -10,6 +10,8 @@ jobs:
   pr-rules:
     name: Validate PR title & description
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
 
     steps:
       - name: Check PR title (semantic)
