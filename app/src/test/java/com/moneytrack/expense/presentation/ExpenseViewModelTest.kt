@@ -244,7 +244,9 @@ class ExpenseViewModelTest {
 
     private class FakeTransactionRepository : TransactionRepository {
         override fun observeTransactions() = MutableStateFlow(emptyList<TransactionRecord>()).asStateFlow()
-        override fun observeRecentTransactions(limit: Int) = MutableStateFlow(emptyList<TransactionRecord>()).asStateFlow()
+        override fun observeRecentTransactions(
+            limit: Int,
+        ) = MutableStateFlow(emptyList<TransactionRecord>()).asStateFlow()
         override suspend fun getTransactionsFrom(fromEpochMillis: Long): List<TransactionRecord> = emptyList()
         override suspend fun getRepeatScheduleForTransaction(id: Long): RepeatSchedule? = null
         override suspend fun updateExpenseTransaction(

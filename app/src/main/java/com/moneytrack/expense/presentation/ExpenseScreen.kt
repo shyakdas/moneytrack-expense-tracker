@@ -86,6 +86,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.core.graphics.toColorInt
@@ -97,9 +98,6 @@ import com.moneytrack.expense.domain.model.RepeatFrequency
 import com.moneytrack.transaction.presentation.toTransactionIconRes
 import java.io.File
 import java.text.SimpleDateFormat
-import java.time.Instant
-import java.time.ZoneId
-import java.time.temporal.ChronoUnit
 import java.util.Calendar
 import java.util.Locale
 import ui.components.card.bottomsheet.SheetBlurHost
@@ -128,6 +126,7 @@ private const val DEFAULT_REPEAT_AFTER_MONTHS = 4
 private const val MIN_REPEAT_MONTHS = 1
 private const val MAX_REPEAT_MONTHS = 12
 private const val REPEAT_END_MATCH_TOLERANCE_DAYS = 2L
+private const val MILLIS_PER_DAY = 24L * 60L * 60L * 1000L
 private const val DESCRIPTION_MAX_LENGTH = 20
 private val ExpenseRowIconContainerSize = Dimens.spacing32
 private val ExpenseRowIconSize = 14.dp
@@ -135,7 +134,7 @@ private val ExpensePrimaryRowVerticalPadding = Dimens.spacing10
 private val ExpenseFieldBoostedVerticalPadding = Dimens.spacing20
 private val RepeatFieldBoostedPadding = Dimens.spacing16
 private val CategoryTileSize = 104.dp
-private val CategoryHintAnimationOffset = 8f
+private const val CATEGORY_HINT_ANIMATION_OFFSET = 8f
 private val fallbackCategoryColor = categoryColor(FALLBACK_CATEGORY_COLOR_HEX)
 private val ExpenseTopStart = Color(0xFF0B111A)
 private val ExpenseTopMiddle = Color(0xFF0A1422)
@@ -517,7 +516,7 @@ private fun CategoryHorizontalPicker(
     val hintTransition = rememberInfiniteTransition(label = "category_hint")
     val hintOffsetX by hintTransition.animateFloat(
         initialValue = 0f,
-        targetValue = CategoryHintAnimationOffset,
+        targetValue = CATEGORY_HINT_ANIMATION_OFFSET,
         animationSpec = infiniteRepeatable(
             animation = tween(durationMillis = 850),
             repeatMode = RepeatMode.Reverse,
@@ -546,7 +545,7 @@ private fun CategoryHorizontalPicker(
                 tint = ExpensePrimaryText.copy(alpha = 0.65f),
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
-                    .offset(x = hintOffsetX.dp)
+                    .offset { IntOffset(x = hintOffsetX.dp.roundToPx(), y = 0) }
                     .background(ExpensePillBg, CircleShape)
                     .padding(Dimens.spacing8)
                     .size(Dimens.icon16),
@@ -1833,35 +1832,31 @@ private fun deriveInitialRepeatEndState(
     initialRepeatSchedule: ExpenseRepeatUiState?,
     initialOccurredAt: Long,
 ): InitialRepeatEndState {
-    if (initialRepeatSchedule == null) {
-        return InitialRepeatEndState(
-            option = RepeatEndOption.NEVER,
-            endAtEpochMillis = initialOccurredAt,
-            afterMonths = DEFAULT_REPEAT_AFTER_MONTHS,
-        )
-    }
-    if (initialRepeatSchedule.endAtEpochMillis == Long.MAX_VALUE) {
-        return InitialRepeatEndState(
-            option = RepeatEndOption.NEVER,
-            endAtEpochMillis = initialOccurredAt,
-            afterMonths = DEFAULT_REPEAT_AFTER_MONTHS,
-        )
-    }
-
-    val inferredAfterMonths = inferAfterMonths(
-        startAtEpochMillis = initialOccurredAt,
-        endAtEpochMillis = initialRepeatSchedule.endAtEpochMillis,
+    val repeatSchedule = initialRepeatSchedule
+    val defaultState = InitialRepeatEndState(
+        option = RepeatEndOption.NEVER,
+        endAtEpochMillis = initialOccurredAt,
+        afterMonths = DEFAULT_REPEAT_AFTER_MONTHS,
     )
-    return if (inferredAfterMonths != null) {
-        InitialRepeatEndState(
+    val endAtEpochMillis = repeatSchedule?.endAtEpochMillis ?: Long.MAX_VALUE
+    val inferredAfterMonths = if (endAtEpochMillis == Long.MAX_VALUE) {
+        null
+    } else {
+        inferAfterMonths(
+            startAtEpochMillis = initialOccurredAt,
+            endAtEpochMillis = endAtEpochMillis,
+        )
+    }
+    return when {
+        repeatSchedule == null || endAtEpochMillis == Long.MAX_VALUE -> defaultState
+        inferredAfterMonths != null -> InitialRepeatEndState(
             option = RepeatEndOption.AFTER_MONTHS,
-            endAtEpochMillis = initialRepeatSchedule.endAtEpochMillis,
+            endAtEpochMillis = endAtEpochMillis,
             afterMonths = inferredAfterMonths,
         )
-    } else {
-        InitialRepeatEndState(
+        else -> InitialRepeatEndState(
             option = RepeatEndOption.ON_DATE,
-            endAtEpochMillis = initialRepeatSchedule.endAtEpochMillis,
+            endAtEpochMillis = endAtEpochMillis,
             afterMonths = DEFAULT_REPEAT_AFTER_MONTHS,
         )
     }
@@ -1871,14 +1866,17 @@ private fun inferAfterMonths(
     startAtEpochMillis: Long,
     endAtEpochMillis: Long,
 ): Int? {
-    val zoneId = ZoneId.systemDefault()
-    val startDate = Instant.ofEpochMilli(startAtEpochMillis).atZone(zoneId).toLocalDate()
-    val endDate = Instant.ofEpochMilli(endAtEpochMillis).atZone(zoneId).toLocalDate()
-    val rawMonths = ChronoUnit.MONTHS.between(startDate.withDayOfMonth(1), endDate.withDayOfMonth(1)).toInt()
+    val startCalendar = Calendar.getInstance().apply { timeInMillis = startAtEpochMillis }
+    val endCalendar = Calendar.getInstance().apply { timeInMillis = endAtEpochMillis }
+    val rawMonths = (endCalendar.get(Calendar.YEAR) - startCalendar.get(Calendar.YEAR)) * 12 +
+        (endCalendar.get(Calendar.MONTH) - startCalendar.get(Calendar.MONTH))
     if (rawMonths < MIN_REPEAT_MONTHS || rawMonths > MAX_REPEAT_MONTHS) return null
 
-    val recalculatedEndDate = startDate.plusMonths(rawMonths.toLong())
-    val dayDelta = kotlin.math.abs(ChronoUnit.DAYS.between(recalculatedEndDate, endDate))
+    val recalculatedCalendar = Calendar.getInstance().apply {
+        timeInMillis = startAtEpochMillis
+        add(Calendar.MONTH, rawMonths)
+    }
+    val dayDelta = kotlin.math.abs(recalculatedCalendar.timeInMillis - endAtEpochMillis) / MILLIS_PER_DAY
     return if (dayDelta <= REPEAT_END_MATCH_TOLERANCE_DAYS) rawMonths else null
 }
 

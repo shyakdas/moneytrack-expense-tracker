@@ -12,6 +12,7 @@ interface TransactionRepository {
     suspend fun getTransactionsFrom(fromEpochMillis: Long): List<TransactionRecord>
     suspend fun getTransactionById(id: Long): TransactionRecord? = null
     suspend fun getRepeatScheduleForTransaction(id: Long): RepeatSchedule? = null
+    @Suppress("LongParameterList")
     suspend fun updateExpenseTransaction(
         id: Long,
         amount: Double,

@@ -197,7 +197,9 @@ private fun TransactionContent(
                                         time = transaction.time,
                                         type = transaction.type,
                                         modifier = Modifier.clickable {
-                                            if (transaction.type == ui.components.card.transaction.TransactionType.EXPENSE) {
+                                            val isExpense = transaction.type ==
+                                                ui.components.card.transaction.TransactionType.EXPENSE
+                                            if (isExpense) {
                                                 onTransactionCardClick(transaction.id)
                                             }
                                         },

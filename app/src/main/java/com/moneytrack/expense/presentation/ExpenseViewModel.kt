@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @HiltViewModel
+@Suppress("TooManyFunctions")
 class ExpenseViewModel @Inject constructor(
     private val observeCategoriesUseCase: ObserveCategoriesUseCase,
     private val ensureDefaultCategoriesUseCase: EnsureDefaultCategoriesUseCase,
