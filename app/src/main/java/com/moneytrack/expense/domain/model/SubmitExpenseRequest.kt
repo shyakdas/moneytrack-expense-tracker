@@ -7,6 +7,9 @@ data class SubmitExpenseRequest(
     val description: String?,
     val category: String,
     val occurredAtEpochMillis: Long,
+    val attachmentUri: String?,
+    val attachmentName: String?,
+    val attachmentType: String?,
     val repeatSchedule: RepeatSchedule?,
 )
 

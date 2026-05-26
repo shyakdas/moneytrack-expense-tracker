@@ -24,7 +24,7 @@ class ExpenseRepositoryImpl @Inject constructor(
 
     override suspend fun submitExpense(request: SubmitExpenseRequest): ExpenseSubmissionResult {
         val now = System.currentTimeMillis()
-        transactionDao.insert(
+        val transactionId = transactionDao.insert(
             request.toTransactionEntity(
                 occurredAtEpochMillis = request.occurredAtEpochMillis,
                 createdAtEpochMillis = now,
@@ -34,6 +34,7 @@ class ExpenseRepositoryImpl @Inject constructor(
         return createRecurringExpenseResult(
             request = request,
             createdAtEpochMillis = now,
+            sourceTransactionId = transactionId,
         )
             ?: ExpenseSubmissionResult()
     }
@@ -92,31 +93,29 @@ class ExpenseRepositoryImpl @Inject constructor(
     private suspend fun createRecurringExpenseResult(
         request: SubmitExpenseRequest,
         createdAtEpochMillis: Long,
+        sourceTransactionId: Long,
     ): ExpenseSubmissionResult? {
         val repeatSchedule = request.repeatSchedule ?: return null
         val nextRunAtEpochMillis = calculateNextRunAt(
             fromEpochMillis = request.occurredAtEpochMillis,
             frequency = repeatSchedule.frequency,
         )
-        return if (nextRunAtEpochMillis <= repeatSchedule.endAtEpochMillis) {
-            val recurringExpenseId = recurringExpenseDao.insert(
-                RecurringExpenseEntity(
-                    amount = request.amount,
-                    note = request.description,
-                    category = request.category,
-                    frequency = repeatSchedule.frequency.name,
-                    endAtEpochMillis = repeatSchedule.endAtEpochMillis,
-                    nextRunAtEpochMillis = nextRunAtEpochMillis,
-                    createdAtEpochMillis = createdAtEpochMillis,
-                ),
-            )
-            ExpenseSubmissionResult(
-                recurringExpenseId = recurringExpenseId,
+        val recurringExpenseId = recurringExpenseDao.insert(
+            RecurringExpenseEntity(
+                amount = request.amount,
+                note = request.description,
+                category = request.category,
+                frequency = repeatSchedule.frequency.name,
+                endAtEpochMillis = repeatSchedule.endAtEpochMillis,
                 nextRunAtEpochMillis = nextRunAtEpochMillis,
-            )
-        } else {
-            null
-        }
+                createdAtEpochMillis = createdAtEpochMillis,
+                sourceTransactionId = sourceTransactionId,
+            ),
+        )
+        return ExpenseSubmissionResult(
+            recurringExpenseId = recurringExpenseId,
+            nextRunAtEpochMillis = nextRunAtEpochMillis,
+        )
     }
 }
 
@@ -129,6 +128,9 @@ private fun SubmitExpenseRequest.toTransactionEntity(
     amount = amount,
     type = EXPENSE_TYPE,
     category = category,
+    attachmentUri = attachmentUri,
+    attachmentName = attachmentName,
+    attachmentType = attachmentType,
     occurredAtEpochMillis = occurredAtEpochMillis,
     createdAtEpochMillis = createdAtEpochMillis,
 )

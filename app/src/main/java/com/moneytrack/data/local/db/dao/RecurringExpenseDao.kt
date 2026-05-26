@@ -20,6 +20,9 @@ interface RecurringExpenseDao {
     @Query("SELECT * FROM recurring_expenses ORDER BY next_run_at_epoch_millis ASC")
     suspend fun getAll(): List<RecurringExpenseEntity>
 
+    @Query("SELECT * FROM recurring_expenses WHERE source_transaction_id = :sourceTransactionId LIMIT 1")
+    suspend fun getBySourceTransactionId(sourceTransactionId: Long): RecurringExpenseEntity?
+
     @Query(
         "UPDATE recurring_expenses " +
             "SET next_run_at_epoch_millis = :nextRunAtEpochMillis " +
@@ -32,4 +35,7 @@ interface RecurringExpenseDao {
 
     @Query("DELETE FROM recurring_expenses WHERE id = :id")
     suspend fun deleteById(id: Long)
+
+    @Query("DELETE FROM recurring_expenses WHERE source_transaction_id = :sourceTransactionId")
+    suspend fun deleteBySourceTransactionId(sourceTransactionId: Long)
 }

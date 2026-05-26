@@ -70,6 +70,7 @@ fun TransactionRoute(
     onHomeClick: () -> Unit,
     onProfileClick: () -> Unit,
     onAddExpenseClick: () -> Unit,
+    onEditExpenseClick: (Long) -> Unit = {},
 ) {
     val viewModel: TransactionViewModel = hiltViewModel()
     val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
@@ -84,6 +85,7 @@ fun TransactionRoute(
             }
         },
         onAddExpenseClick = onAddExpenseClick,
+        onTransactionCardClick = onEditExpenseClick,
         onDeleteTransaction = viewModel::deleteTransaction,
     )
 }
@@ -93,6 +95,7 @@ fun TransactionScreen(
     uiState: TransactionUiState,
     onBottomRouteClick: (String) -> Unit,
     onAddExpenseClick: () -> Unit,
+    onTransactionCardClick: (Long) -> Unit,
     onDeleteTransaction: (Long) -> Unit,
 ) {
     val bottomItems = remember {
@@ -119,6 +122,7 @@ fun TransactionScreen(
         TransactionContent(
             uiState = uiState,
             innerPadding = innerPadding,
+            onTransactionCardClick = onTransactionCardClick,
             onDeleteTransaction = onDeleteTransaction,
         )
     }
@@ -128,6 +132,7 @@ fun TransactionScreen(
 private fun TransactionContent(
     uiState: TransactionUiState,
     innerPadding: PaddingValues,
+    onTransactionCardClick: (Long) -> Unit,
     onDeleteTransaction: (Long) -> Unit,
 ) {
     MoneyTrackScreenBackground {
@@ -191,6 +196,13 @@ private fun TransactionContent(
                                         date = transaction.date,
                                         time = transaction.time,
                                         type = transaction.type,
+                                        modifier = Modifier.clickable {
+                                            val isExpense = transaction.type ==
+                                                ui.components.card.transaction.TransactionType.EXPENSE
+                                            if (isExpense) {
+                                                onTransactionCardClick(transaction.id)
+                                            }
+                                        },
                                     )
                                 }
                             }
@@ -349,6 +361,7 @@ private fun TransactionScreenPreview() {
             ),
             onBottomRouteClick = {},
             onAddExpenseClick = {},
+            onTransactionCardClick = {},
             onDeleteTransaction = {},
         )
     }

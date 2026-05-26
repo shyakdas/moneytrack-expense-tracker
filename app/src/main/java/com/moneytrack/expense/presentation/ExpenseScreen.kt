@@ -44,6 +44,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -52,13 +53,18 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -73,11 +79,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.core.graphics.toColorInt
@@ -86,6 +95,7 @@ import com.moneytrack.R
 import com.moneytrack.designsystem.R as DsR
 import com.moneytrack.expense.domain.model.ExpenseCategory
 import com.moneytrack.expense.domain.model.RepeatFrequency
+import com.moneytrack.transaction.presentation.toTransactionIconRes
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -115,8 +125,16 @@ private const val END_OF_DAY_MILLISECOND = 999
 private const val DEFAULT_REPEAT_AFTER_MONTHS = 4
 private const val MIN_REPEAT_MONTHS = 1
 private const val MAX_REPEAT_MONTHS = 12
+private const val REPEAT_END_MATCH_TOLERANCE_DAYS = 2L
+private const val MILLIS_PER_DAY = 24L * 60L * 60L * 1000L
+private const val DESCRIPTION_MAX_LENGTH = 20
 private val ExpenseRowIconContainerSize = Dimens.spacing32
 private val ExpenseRowIconSize = 14.dp
+private val ExpensePrimaryRowVerticalPadding = Dimens.spacing10
+private val ExpenseFieldBoostedVerticalPadding = Dimens.spacing20
+private val RepeatFieldBoostedPadding = Dimens.spacing16
+private val CategoryTileSize = 104.dp
+private const val CATEGORY_HINT_ANIMATION_OFFSET = 8f
 private val fallbackCategoryColor = categoryColor(FALLBACK_CATEGORY_COLOR_HEX)
 private val ExpenseTopStart = Color(0xFF0B111A)
 private val ExpenseTopMiddle = Color(0xFF0A1422)
@@ -149,13 +167,11 @@ fun ExpenseScreen(
     onOccurredAtChanged: (Long) -> Unit,
 ) {
     val context = LocalContext.current
-    var showCategorySheet by remember { mutableStateOf(false) }
     var showAttachmentSheet by remember { mutableStateOf(false) }
     var showRepeatScreen by remember { mutableStateOf(false) }
     var showDescriptionSheet by remember { mutableStateOf(false) }
     var pendingCameraUri by remember { mutableStateOf<Uri?>(null) }
-    val isAnySheetVisible = showCategorySheet ||
-        showAttachmentSheet ||
+    val isAnySheetVisible = showAttachmentSheet ||
         showRepeatScreen ||
         showDescriptionSheet
     val imageFallbackName = stringResource(id = R.string.expense_attachment_image_fallback_name)
@@ -208,8 +224,11 @@ fun ExpenseScreen(
             amountText = uiState.amountText,
             description = uiState.description,
             isSubmitEnabled = uiState.isSubmitEnabled,
+            isEditMode = uiState.isEditMode,
             attachment = uiState.attachment,
             repeatSchedule = uiState.repeatSchedule,
+            categories = uiState.categories,
+            selectedCategoryId = uiState.selectedCategoryId,
             selectedCategory = uiState.selectedCategory,
             onBackClick = onBackClick,
             onContinueClick = onContinueClick,
@@ -226,20 +245,9 @@ fun ExpenseScreen(
                     onRepeatRemoved()
                 }
             },
-            onCategoryFieldClick = { showCategorySheet = true },
+            onCategorySelected = onCategorySelected,
             occurredAtEpochMillis = uiState.occurredAtEpochMillis,
             onOccurredAtChanged = onOccurredAtChanged,
-        )
-    }
-
-    if (showCategorySheet) {
-        CategoryPickerBottomSheet(
-            uiState = uiState,
-            onDismiss = { showCategorySheet = false },
-            onCategorySelected = { categoryId ->
-                onCategorySelected(categoryId)
-                showCategorySheet = false
-            },
         )
     }
 
@@ -265,7 +273,8 @@ fun ExpenseScreen(
             initialRepeatSchedule = uiState.repeatSchedule,
             initialOccurredAt = uiState.occurredAtEpochMillis,
             onBackClick = { showRepeatScreen = false },
-            onDoneClick = { isEnabled, frequency, endAtEpochMillis ->
+            onDoneClick = { isEnabled, frequency, endAtEpochMillis, startAtEpochMillis ->
+                onOccurredAtChanged(startAtEpochMillis)
                 if (isEnabled && frequency != null && endAtEpochMillis != null) {
                     onRepeatConfigured(frequency, endAtEpochMillis)
                 } else {
@@ -294,8 +303,11 @@ internal fun ExpenseContent(
     amountText: String,
     description: String,
     isSubmitEnabled: Boolean,
+    isEditMode: Boolean,
     attachment: ExpenseAttachmentUiState?,
     repeatSchedule: ExpenseRepeatUiState?,
+    categories: List<ExpenseCategory>,
+    selectedCategoryId: Long?,
     selectedCategory: ExpenseCategory?,
     onBackClick: () -> Unit,
     onContinueClick: () -> Unit,
@@ -306,7 +318,7 @@ internal fun ExpenseContent(
     onAttachmentRemoved: () -> Unit,
     onRepeatClick: () -> Unit,
     onRepeatEnabledChange: (Boolean) -> Unit,
-    onCategoryFieldClick: () -> Unit,
+    onCategorySelected: (Long) -> Unit,
     occurredAtEpochMillis: Long,
     onOccurredAtChanged: (Long) -> Unit,
 ) {
@@ -359,7 +371,7 @@ internal fun ExpenseContent(
                 }
 
                 Text(
-                    text = "Add Expense",
+                    text = if (isEditMode) "Edit Expense" else "Add Expense",
                     modifier = Modifier.weight(1f),
                     style = AppTheme.typography.headlineSmall,
                     color = ExpensePrimaryText,
@@ -389,6 +401,27 @@ internal fun ExpenseContent(
                     .background(ExpenseLine),
             )
             Spacer(modifier = Modifier.height(Dimens.spacing20))
+            DateTimeInlineRow(
+                dateText = dateText,
+                timeText = timeText,
+                onDateClick = {
+                    context.showExpenseDatePicker(occurredAtEpochMillis) { updatedAt ->
+                        onOccurredAtChanged(updatedAt)
+                    }
+                },
+                onTimeClick = {
+                    context.showExpenseTimePicker(occurredAtEpochMillis) { updatedAt ->
+                        onOccurredAtChanged(updatedAt)
+                    }
+                },
+            )
+            Spacer(modifier = Modifier.height(Dimens.spacing16))
+            CategoryHorizontalPicker(
+                categories = categories,
+                selectedCategoryId = selectedCategoryId,
+                onCategorySelected = onCategorySelected,
+            )
+            Spacer(modifier = Modifier.height(Dimens.spacing20))
         }
 
         Box(
@@ -400,49 +433,19 @@ internal fun ExpenseContent(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState()),
+                .verticalScroll(rememberScrollState()),
             ) {
                 GlassSectionCard {
-                    ExpenseRow(
-                        iconRes = DsR.drawable.sort,
-                        title = "Category",
-                        subtitle = selectedCategory?.name ?: "Select category",
-                        onClick = onCategoryFieldClick,
-                    )
-                    GlassDivider()
                     DescriptionRow(
                         value = description,
                         onClick = onDescriptionClick,
                     )
                     GlassDivider()
                     ExpenseRow(
-                        iconRes = DsR.drawable.transaction,
-                        title = "Date",
-                        subtitle = dateText,
-                        trailingLabel = "Today",
-                        onTrailingClick = {
-                            context.showExpenseDatePicker(occurredAtEpochMillis) { updatedAt ->
-                                onOccurredAtChanged(updatedAt)
-                            }
-                        },
-                    )
-                    GlassDivider()
-                    ExpenseRow(
-                        iconRes = DsR.drawable.notifiaction,
-                        title = "Time",
-                        subtitle = timeText,
-                        trailingLabel = "Now",
-                        onTrailingClick = {
-                            context.showExpenseTimePicker(occurredAtEpochMillis) { updatedAt ->
-                                onOccurredAtChanged(updatedAt)
-                            }
-                        },
-                    )
-                    GlassDivider()
-                    ExpenseRow(
                         iconRes = DsR.drawable.attachment,
                         title = "Attachment (optional)",
                         subtitle = if (attachment == null) "Upload receipt or note" else attachment.name,
+                        rowVerticalPadding = ExpenseFieldBoostedVerticalPadding,
                         onClick = onAttachmentClick,
                         showArrow = true,
                     )
@@ -453,7 +456,8 @@ internal fun ExpenseContent(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable(onClick = onRepeatClick),
+                            .clickable(onClick = onRepeatClick)
+                            .padding(vertical = RepeatFieldBoostedPadding),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         LeadingIcon(iconRes = DsR.drawable.recurring_bill)
@@ -479,40 +483,127 @@ internal fun ExpenseContent(
                 Spacer(modifier = Modifier.height(80.dp))
             }
 
-            FlatFooterActionButton(
+            Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .navigationBarsPadding()
-                    .padding(bottom = Dimens.spacing12),
-                enabled = isSubmitEnabled,
-                onClick = onContinueClick,
+                    .padding(horizontal = Dimens.spacing8),
+            ) {
+                LargeButton(
+                    text = "Save",
+                    onClick = onContinueClick,
+                    enabled = isSubmitEnabled,
+                )
+            }
+            Spacer(modifier = Modifier.height(Dimens.spacing8))
+        }
+    }
+}
+
+@Composable
+private fun CategoryHorizontalPicker(
+    categories: List<ExpenseCategory>,
+    selectedCategoryId: Long?,
+    onCategorySelected: (Long) -> Unit,
+) {
+    val orderedCategories = remember(categories, selectedCategoryId) {
+        val selected = categories.firstOrNull { it.id == selectedCategoryId } ?: return@remember categories
+        buildList(categories.size) {
+            add(selected)
+            addAll(categories.filterNot { it.id == selected.id })
+        }
+    }
+    val hintTransition = rememberInfiniteTransition(label = "category_hint")
+    val hintOffsetX by hintTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = CATEGORY_HINT_ANIMATION_OFFSET,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 850),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "category_hint_offset",
+    )
+
+    Box(modifier = Modifier.fillMaxWidth()) {
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(Dimens.spacing12),
+        ) {
+            items(orderedCategories.size, key = { index -> orderedCategories[index].id }) { index ->
+                val category = orderedCategories[index]
+                CategoryTile(
+                    category = category,
+                    selected = category.id == selectedCategoryId,
+                    onClick = { onCategorySelected(category.id) },
+                )
+            }
+        }
+
+        if (orderedCategories.size > 2) {
+            Icon(
+                imageVector = ImageVector.vectorResource(id = DsR.drawable.arrow_right_2),
+                contentDescription = null,
+                tint = ExpensePrimaryText.copy(alpha = 0.65f),
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .offset { IntOffset(x = hintOffsetX.dp.roundToPx(), y = 0) }
+                    .background(ExpensePillBg, CircleShape)
+                    .padding(Dimens.spacing8)
+                    .size(Dimens.icon16),
             )
         }
     }
 }
 
 @Composable
-private fun FlatFooterActionButton(
-    modifier: Modifier = Modifier,
-    enabled: Boolean,
+private fun CategoryTile(
+    category: ExpenseCategory,
+    selected: Boolean,
     onClick: () -> Unit,
 ) {
+    val accent = categoryColor(category.colorHex)
+    val containerColor = if (selected) {
+        accent
+    } else {
+        accent.copy(alpha = 0.18f)
+    }
+
     Surface(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(enabled = enabled, onClick = onClick)
-            .padding(horizontal = Dimens.spacing20, vertical = Dimens.spacing10),
+        modifier = Modifier
+            .size(CategoryTileSize)
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(Dimens.radius16),
-        color = if (enabled) ExpenseAccent else ExpenseSecondaryText.copy(alpha = 0.4f),
+        color = containerColor,
+        border = androidx.compose.foundation.BorderStroke(
+            width = Dimens.borderNormal,
+            color = if (selected) accent else ExpenseRowBorder,
+        ),
     ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(Dimens.spacing12),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = if (selected) ExpensePrimaryText.copy(alpha = 0.9f) else ExpensePillBg,
+            ) {
+                Icon(
+                    imageVector = ImageVector.vectorResource(id = category.name.toTransactionIconRes()),
+                    contentDescription = null,
+                    tint = if (selected) accent else ExpensePrimaryText.copy(alpha = 0.85f),
+                    modifier = Modifier
+                        .padding(Dimens.spacing10)
+                        .size(Dimens.icon20),
+                )
+            }
+            Spacer(modifier = Modifier.height(Dimens.spacing8))
             Text(
-                text = "Save",
-                style = AppTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                color = ExpensePrimaryText,
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .padding(vertical = Dimens.spacing10),
+                text = category.name,
+                style = AppTheme.typography.titleSmall,
+                color = if (selected) ExpensePrimaryText else ExpensePrimaryText.copy(alpha = 0.9f),
+                maxLines = 1,
             )
         }
     }
@@ -543,7 +634,8 @@ private fun GlassSectionCard(content: @Composable ColumnScope.() -> Unit) {
 private fun ExpenseRow(
     iconRes: Int,
     title: String,
-    subtitle: String,
+    subtitle: String?,
+    rowVerticalPadding: androidx.compose.ui.unit.Dp = ExpensePrimaryRowVerticalPadding,
     trailingLabel: String? = null,
     showArrow: Boolean = false,
     onClick: (() -> Unit)? = null,
@@ -553,7 +645,7 @@ private fun ExpenseRow(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(enabled = onClick != null) { onClick?.invoke() }
-            .padding(vertical = Dimens.spacing8),
+            .padding(vertical = rowVerticalPadding),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         LeadingIcon(iconRes = iconRes)
@@ -564,11 +656,13 @@ private fun ExpenseRow(
                 style = AppTheme.typography.titleSmall,
                 color = ExpensePrimaryText,
             )
-            Text(
-                text = subtitle,
-                style = AppTheme.typography.labelSmall,
-                color = ExpenseSecondaryText,
-            )
+            if (!subtitle.isNullOrBlank()) {
+                Text(
+                    text = subtitle,
+                    style = AppTheme.typography.labelSmall,
+                    color = ExpenseSecondaryText,
+                )
+            }
         }
         if (trailingLabel != null) {
             Surface(
@@ -634,7 +728,7 @@ private fun DescriptionRow(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(vertical = Dimens.spacing8),
+            .padding(vertical = ExpenseFieldBoostedVerticalPadding),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         LeadingIcon(iconRes = DsR.drawable.edit)
@@ -666,19 +760,23 @@ private fun DescriptionBottomSheet(
     onDismiss: () -> Unit,
     onSave: (String) -> Unit,
 ) {
-    var draft by remember(initialDescription) { mutableStateOf(initialDescription) }
+    var draft by remember(initialDescription) {
+        mutableStateOf(initialDescription.take(DESCRIPTION_MAX_LENGTH))
+    }
     MoneyTrackBottomSheet(onDismissRequest = onDismiss) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = Dimens.spacing16)
                 .padding(bottom = Dimens.spacing24),
-            verticalArrangement = Arrangement.spacedBy(Dimens.spacing12),
+            verticalArrangement = Arrangement.spacedBy(Dimens.spacing16),
         ) {
             Text(
                 text = "Description",
                 style = AppTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = AppTheme.colors.onSurface,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
             )
             Surface(
                 modifier = Modifier
@@ -693,10 +791,10 @@ private fun DescriptionBottomSheet(
             ) {
                 BasicTextField(
                     value = draft,
-                    onValueChange = { draft = it },
+                    onValueChange = { draft = it.take(DESCRIPTION_MAX_LENGTH) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(Dimens.spacing12),
+                        .padding(Dimens.spacing16),
                     textStyle = AppTheme.typography.bodyMedium.copy(color = AppTheme.colors.onSurface),
                     cursorBrush = SolidColor(AppTheme.colors.primary),
                     decorationBox = { inner ->
@@ -733,6 +831,8 @@ private fun GlassDivider() {
 private fun CoralButton(
     modifier: Modifier = Modifier,
     enabled: Boolean,
+    text: String = stringResource(id = R.string.expense_continue),
+    showArrow: Boolean = true,
     onClick: () -> Unit,
 ) {
     Surface(
@@ -762,16 +862,20 @@ private fun CoralButton(
         ) {
             Spacer(modifier = Modifier.weight(1f))
             Text(
-                text = stringResource(id = R.string.expense_continue),
+                text = text,
                 style = AppTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = ExpenseContinueText,
             )
             Spacer(modifier = Modifier.weight(1f))
-            Icon(
-                imageVector = ImageVector.vectorResource(id = DsR.drawable.arrow_right_2),
-                contentDescription = null,
-                tint = ExpenseContinueText,
-            )
+            if (showArrow) {
+                Icon(
+                    imageVector = ImageVector.vectorResource(id = DsR.drawable.arrow_right_2),
+                    contentDescription = null,
+                    tint = ExpenseContinueText,
+                )
+            } else {
+                Spacer(modifier = Modifier.size(Dimens.icon20))
+            }
         }
     }
 }
@@ -805,13 +909,87 @@ private fun AmountInputField(
             cursorBrush = SolidColor(AppTheme.colors.onPrimary),
             decorationBox = {
                 Text(
-                    text = amountText,
+                    text = amountTextWithAccentSymbol(amountText),
                     style = AppTheme.typography.displayMedium,
                     color = ExpensePrimaryText,
                 )
             },
         )
     }
+}
+
+@Composable
+private fun DateTimeInlineRow(
+    dateText: String,
+    timeText: String,
+    onDateClick: () -> Unit,
+    onTimeClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(Dimens.spacing12),
+    ) {
+        SmallInfoChip(
+            iconRes = DsR.drawable.transaction,
+            text = dateText,
+            onClick = onDateClick,
+            modifier = Modifier.weight(1f),
+        )
+        SmallInfoChip(
+            iconRes = DsR.drawable.notifiaction,
+            text = timeText,
+            onClick = onTimeClick,
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+@Composable
+private fun SmallInfoChip(
+    iconRes: Int,
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier.clickable(onClick = onClick),
+        shape = RoundedCornerShape(Dimens.radius16),
+        color = ExpensePillBg,
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Dimens.spacing12, vertical = Dimens.spacing10),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Dimens.spacing10),
+        ) {
+            Icon(
+                imageVector = ImageVector.vectorResource(id = iconRes),
+                contentDescription = null,
+                tint = ExpensePrimaryText.copy(alpha = 0.9f),
+                modifier = Modifier.size(Dimens.icon16),
+            )
+            Text(
+                text = text,
+                style = AppTheme.typography.titleSmall,
+                color = ExpensePrimaryText,
+                maxLines = 1,
+            )
+        }
+    }
+}
+
+private fun amountTextWithAccentSymbol(amountText: String) = buildAnnotatedString {
+    val symbolEndIndex = amountText.indexOfFirst { it.isDigit() || it == '-' || it == '.' }
+    if (symbolEndIndex <= 0) {
+        append(amountText)
+        return@buildAnnotatedString
+    }
+
+    pushStyle(SpanStyle(color = ExpenseAccent))
+    append(amountText.substring(0, symbolEndIndex))
+    pop()
+    append(amountText.substring(symbolEndIndex))
 }
 
 @Composable
@@ -1222,25 +1400,31 @@ private fun RepeatTransactionScreen(
     initialRepeatSchedule: ExpenseRepeatUiState?,
     initialOccurredAt: Long,
     onBackClick: () -> Unit,
-    onDoneClick: (Boolean, RepeatFrequency?, Long?) -> Unit,
+    onDoneClick: (Boolean, RepeatFrequency?, Long?, Long) -> Unit,
 ) {
     val context = LocalContext.current
-    var isEnabled by remember(initialRepeatSchedule) { mutableStateOf(initialRepeatSchedule != null) }
     var selectedFrequency by remember(initialRepeatSchedule) {
         mutableStateOf(initialRepeatSchedule?.frequency ?: RepeatFrequency.MONTHLY)
     }
     var startAt by remember(initialOccurredAt) { mutableLongStateOf(initialOccurredAt) }
-    var selectedEndOption by remember(initialRepeatSchedule) {
-        mutableStateOf(if (initialRepeatSchedule == null) RepeatEndOption.NEVER else RepeatEndOption.ON_DATE)
+    val initialRepeatEndState = remember(initialRepeatSchedule, initialOccurredAt) {
+        deriveInitialRepeatEndState(
+            initialRepeatSchedule = initialRepeatSchedule,
+            initialOccurredAt = initialOccurredAt,
+        )
     }
-    var onDateEndAt by remember(initialRepeatSchedule) {
-        mutableLongStateOf(initialRepeatSchedule?.endAtEpochMillis ?: initialOccurredAt)
+    var selectedEndOption by remember(initialRepeatSchedule, initialOccurredAt) {
+        mutableStateOf(initialRepeatEndState.option)
     }
-    var afterMonths by remember { mutableIntStateOf(DEFAULT_REPEAT_AFTER_MONTHS) }
+    var onDateEndAt by remember(initialRepeatSchedule, initialOccurredAt) {
+        mutableLongStateOf(initialRepeatEndState.endAtEpochMillis)
+    }
+    var afterMonths by remember(initialRepeatSchedule, initialOccurredAt) {
+        mutableIntStateOf(initialRepeatEndState.afterMonths)
+    }
 
     val onDone = {
         val resolvedEndAt = when {
-            !isEnabled -> null
             selectedEndOption == RepeatEndOption.NEVER -> Long.MAX_VALUE
             selectedEndOption == RepeatEndOption.ON_DATE -> onDateEndAt
             else -> Calendar.getInstance().apply {
@@ -1248,7 +1432,13 @@ private fun RepeatTransactionScreen(
                 add(Calendar.MONTH, afterMonths.coerceAtLeast(MIN_REPEAT_MONTHS))
             }.timeInMillis
         }
-        onDoneClick(isEnabled, selectedFrequency, resolvedEndAt)
+        onDoneClick(true, selectedFrequency, resolvedEndAt, startAt)
+    }
+    val afterEndAt = remember(startAt, afterMonths) {
+        Calendar.getInstance().apply {
+            timeInMillis = startAt
+            add(Calendar.MONTH, afterMonths.coerceAtLeast(MIN_REPEAT_MONTHS))
+        }.timeInMillis
     }
 
     Column(
@@ -1292,26 +1482,7 @@ private fun RepeatTransactionScreen(
                 Spacer(modifier = Modifier.width(Dimens.spacing48))
             }
             Spacer(modifier = Modifier.height(Dimens.spacing20))
-            GlassSectionCard {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            "Repeat this transaction",
-                            style = AppTheme.typography.titleMedium,
-                            color = ExpensePrimaryText,
-                        )
-                        Text(
-                            "Make this a recurring expense",
-                            style = AppTheme.typography.bodySmall,
-                            color = ExpenseSecondaryText,
-                        )
-                    }
-                    PrimarySwitch(checked = isEnabled, onCheckedChange = { isEnabled = it })
-                }
-            }
             Spacer(modifier = Modifier.height(Dimens.spacing16))
-            Text("FREQUENCY", style = AppTheme.typography.bodySmall, color = ExpenseSecondaryText)
-            Spacer(modifier = Modifier.height(Dimens.spacing8))
             GlassSectionCard {
                 RepeatFrequency.entries.forEachIndexed { index, frequency ->
                     RepeatOptionRow(
@@ -1323,13 +1494,12 @@ private fun RepeatTransactionScreen(
                 }
             }
             Spacer(modifier = Modifier.height(Dimens.spacing12))
-            Text("START DATE", style = AppTheme.typography.bodySmall, color = ExpenseSecondaryText)
             Spacer(modifier = Modifier.height(Dimens.spacing8))
             GlassSectionCard {
                 ExpenseRow(
                     iconRes = DsR.drawable.transaction,
                     title = formatDate(startAt),
-                    subtitle = "",
+                    subtitle = null,
                     trailingLabel = "Today",
                     onTrailingClick = {
                         context.showExpenseDatePicker(startAt) { updated -> startAt = updated }
@@ -1337,7 +1507,6 @@ private fun RepeatTransactionScreen(
                 )
             }
             Spacer(modifier = Modifier.height(Dimens.spacing12))
-            Text("ENDS", style = AppTheme.typography.bodySmall, color = ExpenseSecondaryText)
             Spacer(modifier = Modifier.height(Dimens.spacing8))
             GlassSectionCard {
                 RepeatOptionRow("Never", selectedEndOption == RepeatEndOption.NEVER) {
@@ -1352,7 +1521,7 @@ private fun RepeatTransactionScreen(
                     ExpenseRow(
                         iconRes = DsR.drawable.transaction,
                         title = formatDate(onDateEndAt),
-                        subtitle = "",
+                        subtitle = null,
                         trailingLabel = "Pick",
                         onTrailingClick = {
                             context.showExpenseDatePicker(onDateEndAt) { updated -> onDateEndAt = updated }
@@ -1365,40 +1534,20 @@ private fun RepeatTransactionScreen(
                 }
                 if (selectedEndOption == RepeatEndOption.AFTER_MONTHS) {
                     GlassDivider()
-                    Surface(
-                        shape = RoundedCornerShape(Dimens.radius16),
-                        color = ExpensePillBg,
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = Dimens.spacing12, vertical = Dimens.spacing10),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text("Every", color = ExpenseSecondaryText, style = AppTheme.typography.bodySmall)
-                            Spacer(modifier = Modifier.width(Dimens.spacing12))
-                            Text(
-                                text = afterMonths.toString(),
-                                color = ExpenseAccent,
-                                style = AppTheme.typography.titleMedium,
-                                modifier = Modifier
-                                    .background(ExpenseRowCard, RoundedCornerShape(Dimens.radius8))
-                                    .padding(horizontal = Dimens.spacing12, vertical = Dimens.spacing4)
-                                    .clickable {
-                                        afterMonths = (afterMonths % MAX_REPEAT_MONTHS) + 1
-                                    },
-                            )
-                            Spacer(modifier = Modifier.width(Dimens.spacing8))
-                            Text("month(s)", color = ExpensePrimaryText, style = AppTheme.typography.bodySmall)
-                        }
-                    }
+                    ExpenseRow(
+                        iconRes = DsR.drawable.transaction,
+                        title = formatDate(afterEndAt),
+                        subtitle = null,
+                    )
                 }
             }
-            Spacer(modifier = Modifier.height(Dimens.spacing20))
-            CoralButton(
-                enabled = true,
+            Spacer(modifier = Modifier.weight(1f))
+            LargeButton(
+                text = stringResource(id = R.string.expense_continue),
                 onClick = onDone,
+                enabled = true,
             )
-            Spacer(modifier = Modifier.height(Dimens.spacing12))
+            Spacer(modifier = Modifier.height(Dimens.spacing8))
             Spacer(modifier = Modifier.navigationBarsPadding())
         }
     }
@@ -1419,7 +1568,7 @@ private fun RepeatOptionRow(
     ) {
         Text(
             text = title,
-            style = AppTheme.typography.titleMedium,
+            style = AppTheme.typography.titleSmall,
             color = ExpensePrimaryText,
             modifier = Modifier.weight(1f),
         )
@@ -1671,6 +1820,64 @@ private fun RepeatFrequency.displayName(): String = when (this) {
     RepeatFrequency.WEEKLY -> "Weekly"
     RepeatFrequency.MONTHLY -> "Monthly"
     RepeatFrequency.YEARLY -> "Yearly"
+}
+
+private data class InitialRepeatEndState(
+    val option: RepeatEndOption,
+    val endAtEpochMillis: Long,
+    val afterMonths: Int,
+)
+
+private fun deriveInitialRepeatEndState(
+    initialRepeatSchedule: ExpenseRepeatUiState?,
+    initialOccurredAt: Long,
+): InitialRepeatEndState {
+    val repeatSchedule = initialRepeatSchedule
+    val defaultState = InitialRepeatEndState(
+        option = RepeatEndOption.NEVER,
+        endAtEpochMillis = initialOccurredAt,
+        afterMonths = DEFAULT_REPEAT_AFTER_MONTHS,
+    )
+    val endAtEpochMillis = repeatSchedule?.endAtEpochMillis ?: Long.MAX_VALUE
+    val inferredAfterMonths = if (endAtEpochMillis == Long.MAX_VALUE) {
+        null
+    } else {
+        inferAfterMonths(
+            startAtEpochMillis = initialOccurredAt,
+            endAtEpochMillis = endAtEpochMillis,
+        )
+    }
+    return when {
+        repeatSchedule == null || endAtEpochMillis == Long.MAX_VALUE -> defaultState
+        inferredAfterMonths != null -> InitialRepeatEndState(
+            option = RepeatEndOption.AFTER_MONTHS,
+            endAtEpochMillis = endAtEpochMillis,
+            afterMonths = inferredAfterMonths,
+        )
+        else -> InitialRepeatEndState(
+            option = RepeatEndOption.ON_DATE,
+            endAtEpochMillis = endAtEpochMillis,
+            afterMonths = DEFAULT_REPEAT_AFTER_MONTHS,
+        )
+    }
+}
+
+private fun inferAfterMonths(
+    startAtEpochMillis: Long,
+    endAtEpochMillis: Long,
+): Int? {
+    val startCalendar = Calendar.getInstance().apply { timeInMillis = startAtEpochMillis }
+    val endCalendar = Calendar.getInstance().apply { timeInMillis = endAtEpochMillis }
+    val rawMonths = (endCalendar.get(Calendar.YEAR) - startCalendar.get(Calendar.YEAR)) * 12 +
+        (endCalendar.get(Calendar.MONTH) - startCalendar.get(Calendar.MONTH))
+    if (rawMonths < MIN_REPEAT_MONTHS || rawMonths > MAX_REPEAT_MONTHS) return null
+
+    val recalculatedCalendar = Calendar.getInstance().apply {
+        timeInMillis = startAtEpochMillis
+        add(Calendar.MONTH, rawMonths)
+    }
+    val dayDelta = kotlin.math.abs(recalculatedCalendar.timeInMillis - endAtEpochMillis) / MILLIS_PER_DAY
+    return if (dayDelta <= REPEAT_END_MATCH_TOLERANCE_DAYS) rawMonths else null
 }
 
 private fun formatDate(epochMillis: Long): String =

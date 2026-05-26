@@ -17,10 +17,12 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.moneytrack.expense.presentation.ExpenseRoute
 import com.moneytrack.home.presentation.HomeRoute
 import com.moneytrack.onboarding.presentation.OnboardingRoute
@@ -119,14 +121,26 @@ fun AppNavHost(
                         launchSingleTop = true
                     }
                 },
+                onEditExpenseClick = { expenseId ->
+                    navController.navigateToExpenseEditor(expenseId)
+                },
             )
         }
 
-        composable(AppDestination.Expense.route) {
+        composable(
+            route = EXPENSE_ROUTE_WITH_OPTIONAL_ID,
+            arguments = listOf(
+                navArgument(EXPENSE_ID_ARG) {
+                    type = NavType.LongType
+                    defaultValue = NO_EXPENSE_ID
+                },
+            ),
+        ) { entry ->
             ExpenseRoute(
                 onBackClick = {
                     navController.popBackStack()
                 },
+                expenseId = entry.editExpenseIdOrNull(),
             )
         }
 
@@ -142,6 +156,9 @@ fun AppNavHost(
                     navController.navigate(AppDestination.Expense.route) {
                         launchSingleTop = true
                     }
+                },
+                onEditExpenseClick = { expenseId ->
+                    navController.navigateToExpenseEditor(expenseId)
                 },
             )
         }
@@ -269,6 +286,21 @@ fun AppNavHost(
         }
     }
 }
+
+private fun NavBackStackEntry.editExpenseIdOrNull(): Long? {
+    val id = arguments?.getLong(EXPENSE_ID_ARG, NO_EXPENSE_ID) ?: NO_EXPENSE_ID
+    return id.takeIf { it != NO_EXPENSE_ID }
+}
+
+private fun NavHostController.navigateToExpenseEditor(expenseId: Long) {
+    navigate("${AppDestination.Expense.route}?$EXPENSE_ID_ARG=$expenseId") {
+        launchSingleTop = true
+    }
+}
+
+private const val EXPENSE_ID_ARG = "expenseId"
+private const val NO_EXPENSE_ID = -1L
+private val EXPENSE_ROUTE_WITH_OPTIONAL_ID = "${AppDestination.Expense.route}?$EXPENSE_ID_ARG={$EXPENSE_ID_ARG}"
 
 private val topLevelRoutes = setOf(
     AppDestination.Home.route,

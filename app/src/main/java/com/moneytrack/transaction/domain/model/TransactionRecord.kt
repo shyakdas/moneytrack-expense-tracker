@@ -9,6 +9,9 @@ data class TransactionRecord(
     val amount: Double,
     val type: TransactionRecordType,
     val category: String,
+    val attachmentUri: String?,
+    val attachmentName: String?,
+    val attachmentType: String?,
     val occurredAtEpochMillis: Long,
 )
 

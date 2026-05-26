@@ -21,6 +21,12 @@ data class TransactionEntity(
     val type: String,
     @ColumnInfo(name = "category")
     val category: String,
+    @ColumnInfo(name = "attachment_uri")
+    val attachmentUri: String? = null,
+    @ColumnInfo(name = "attachment_name")
+    val attachmentName: String? = null,
+    @ColumnInfo(name = "attachment_type")
+    val attachmentType: String? = null,
     @ColumnInfo(name = "occurred_at_epoch_millis")
     val occurredAtEpochMillis: Long,
     @ColumnInfo(name = "created_at_epoch_millis")

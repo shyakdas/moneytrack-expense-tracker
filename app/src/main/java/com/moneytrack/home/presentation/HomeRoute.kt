@@ -32,6 +32,7 @@ fun HomeRoute(
     onTransactionClick: () -> Unit,
     onProfileClick: () -> Unit,
     onAddExpenseClick: () -> Unit,
+    onEditExpenseClick: (Long) -> Unit = {},
 ) {
     val viewModel: HomeViewModel = hiltViewModel()
     val notificationPermissionViewModel: NotificationPermissionViewModel = hiltViewModel()
@@ -50,6 +51,7 @@ fun HomeRoute(
             onTransactionClick = onTransactionClick,
             onProfileClick = onProfileClick,
             onAddExpenseClick = onAddExpenseClick,
+            onEditExpenseClick = onEditExpenseClick,
         ),
     )
 }
@@ -154,6 +156,7 @@ private fun HomeScreenWithSheets(
             },
             onSeeAllTransactionsClick = actions.onTransactionClick,
             onExpensesClick = actions.onTransactionClick,
+            onTransactionCardClick = actions.onEditExpenseClick,
             onTimeRangeSelected = viewModel::onTimeRangeSelected,
             onMonthSelected = viewModel::onMonthSelected,
             onYearSelected = viewModel::onYearSelected,
@@ -256,6 +259,7 @@ private data class HomeRouteActions(
     val onTransactionClick: () -> Unit,
     val onProfileClick: () -> Unit,
     val onAddExpenseClick: () -> Unit,
+    val onEditExpenseClick: (Long) -> Unit,
 )
 
 private data class HomePromptState(

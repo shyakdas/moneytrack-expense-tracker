@@ -12,6 +12,7 @@ import com.moneytrack.data.local.db.entity.TransactionEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
+@Suppress("TooManyFunctions")
 interface TransactionDao {
 
     @Query("SELECT * FROM transactions ORDER BY occurred_at_epoch_millis DESC")
@@ -48,6 +49,31 @@ interface TransactionDao {
 
     @Query("DELETE FROM transactions WHERE id = :id")
     suspend fun deleteById(id: Long)
+
+    @Suppress("LongParameterList")
+    @Query(
+        "UPDATE transactions SET " +
+            "title = :title, " +
+            "note = :note, " +
+            "amount = :amount, " +
+            "category = :category, " +
+            "attachment_uri = :attachmentUri, " +
+            "attachment_name = :attachmentName, " +
+            "attachment_type = :attachmentType, " +
+            "occurred_at_epoch_millis = :occurredAtEpochMillis " +
+            "WHERE id = :id",
+    )
+    suspend fun updateExpenseById(
+        id: Long,
+        title: String,
+        note: String?,
+        amount: Double,
+        category: String,
+        attachmentUri: String?,
+        attachmentName: String?,
+        attachmentType: String?,
+        occurredAtEpochMillis: Long,
+    )
 
     @Query("DELETE FROM transactions")
     suspend fun clearAll()

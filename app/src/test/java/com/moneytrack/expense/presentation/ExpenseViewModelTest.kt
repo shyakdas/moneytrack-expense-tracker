@@ -6,6 +6,7 @@ import com.moneytrack.expense.domain.model.ExpenseCategory
 import com.moneytrack.expense.domain.model.ExpenseSubmissionResult
 import com.moneytrack.expense.domain.model.RecurringExpenseSchedule
 import com.moneytrack.expense.domain.model.RepeatFrequency
+import com.moneytrack.expense.domain.model.RepeatSchedule
 import com.moneytrack.expense.domain.model.SubmitExpenseRequest
 import com.moneytrack.expense.domain.repository.CategoryRepository
 import com.moneytrack.expense.domain.repository.ExpenseRepository
@@ -21,6 +22,8 @@ import com.moneytrack.settings.domain.usecase.ObserveAppCurrencyCodeUseCase
 import com.moneytrack.settings.domain.usecase.ObserveSelectedCurrencyCodeUseCase
 import com.moneytrack.settings.domain.usecase.SaveSelectedCurrencyCodeUseCase
 import com.moneytrack.testutil.MainDispatcherRule
+import com.moneytrack.transaction.domain.model.TransactionRecord
+import com.moneytrack.transaction.domain.repository.TransactionRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
@@ -194,6 +197,7 @@ class ExpenseViewModelTest {
                 appCurrencyManager = appCurrencyManager,
                 currencyCatalog = currencyCatalog,
             ),
+            transactionRepository = FakeTransactionRepository(),
         )
     }
 
@@ -236,6 +240,26 @@ class ExpenseViewModelTest {
         override fun getCountryCode(): String = "US"
 
         override fun getCurrencySymbol(): String = "$"
+    }
+
+    private class FakeTransactionRepository : TransactionRepository {
+        override fun observeTransactions() = MutableStateFlow(emptyList<TransactionRecord>()).asStateFlow()
+        override fun observeRecentTransactions(
+            limit: Int,
+        ) = MutableStateFlow(emptyList<TransactionRecord>()).asStateFlow()
+        override suspend fun getTransactionsFrom(fromEpochMillis: Long): List<TransactionRecord> = emptyList()
+        override suspend fun getRepeatScheduleForTransaction(id: Long): RepeatSchedule? = null
+        override suspend fun updateExpenseTransaction(
+            id: Long,
+            amount: Double,
+            note: String?,
+            category: String,
+            attachmentUri: String?,
+            attachmentName: String?,
+            attachmentType: String?,
+            occurredAtEpochMillis: Long,
+            repeatSchedule: RepeatSchedule?,
+        ) = Unit
     }
 
     private class FakeCurrencyPreferenceRepository : CurrencyPreferenceRepository {

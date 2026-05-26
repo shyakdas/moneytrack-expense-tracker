@@ -14,6 +14,8 @@ import com.moneytrack.expense.domain.usecase.ObserveCategoriesUseCase
 import com.moneytrack.expense.domain.usecase.SubmitExpenseUseCase
 import com.moneytrack.locale.CurrencyFormatter
 import com.moneytrack.settings.domain.usecase.ObserveAppCurrencyCodeUseCase
+import com.moneytrack.transaction.domain.model.TransactionRecordType
+import com.moneytrack.transaction.domain.repository.TransactionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.Calendar
 import javax.inject.Inject
@@ -26,12 +28,14 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @HiltViewModel
+@Suppress("TooManyFunctions")
 class ExpenseViewModel @Inject constructor(
     private val observeCategoriesUseCase: ObserveCategoriesUseCase,
     private val ensureDefaultCategoriesUseCase: EnsureDefaultCategoriesUseCase,
     private val submitExpenseUseCase: SubmitExpenseUseCase,
     observeAppCurrencyCodeUseCase: ObserveAppCurrencyCodeUseCase,
     private val currencyFormatter: CurrencyFormatter,
+    private val transactionRepository: TransactionRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
@@ -53,17 +57,26 @@ class ExpenseViewModel @Inject constructor(
         viewModelScope.launch {
             observeCategoriesUseCase().collect { categories ->
                 _uiState.update { state ->
+                    val pendingCategoryId = if (state.selectedCategoryId == null && state.pendingCategoryName != null) {
+                        categories.firstOrNull { category ->
+                            category.name.equals(state.pendingCategoryName, ignoreCase = true)
+                        }?.id
+                    } else {
+                        null
+                    }
                     val selectedCategoryId = when {
                         state.selectedCategoryId == null -> null
                         categories.any { it.id == state.selectedCategoryId } -> state.selectedCategoryId
                         else -> null
                     }
+                    val resolvedCategoryId = pendingCategoryId ?: selectedCategoryId
                     state.copy(
                         categories = categories,
-                        selectedCategoryId = selectedCategoryId,
+                        selectedCategoryId = resolvedCategoryId,
                         selectedCategory = categories.firstOrNull { category ->
-                            category.id == selectedCategoryId
+                            category.id == resolvedCategoryId
                         },
+                        pendingCategoryName = if (resolvedCategoryId != null) null else state.pendingCategoryName,
                     )
                 }
             }
@@ -92,7 +105,49 @@ class ExpenseViewModel @Inject constructor(
                 selectedCategory = state.categories.firstOrNull { category ->
                     category.id == categoryId
                 },
+                pendingCategoryName = null,
             )
+        }
+    }
+
+    fun initializeEdit(expenseId: Long?) {
+        if (expenseId == null) return
+
+        viewModelScope.launch {
+            val transaction = transactionRepository.getTransactionById(expenseId) ?: return@launch
+            if (transaction.type != TransactionRecordType.EXPENSE) return@launch
+
+            val amountInput = normalizeAmountInput(transaction.amount)
+            val repeatSchedule = transactionRepository.getRepeatScheduleForTransaction(expenseId)
+            val amountValue = amountInput.toDoubleOrNull() ?: DEFAULT_AMOUNT_VALUE
+            val savedCategoryCandidates = listOf(transaction.category, transaction.title)
+                .map(String::trim)
+                .filter(String::isNotBlank)
+
+            _uiState.update { state ->
+                val matchedCategory = state.categories.firstOrNull { category ->
+                    savedCategoryCandidates.any { savedName ->
+                        category.name.equals(savedName, ignoreCase = true)
+                    }
+                }
+                state.copy(
+                    editingExpenseId = transaction.id,
+                    isEditMode = true,
+                    pendingCategoryName = transaction.category,
+                    selectedCategoryId = matchedCategory?.id,
+                    selectedCategory = matchedCategory,
+                    description = transaction.note.orEmpty(),
+                    attachment = transaction.toAttachmentUiState(),
+                    amountInput = amountInput,
+                    amountText = currencyFormatter.format(
+                        value = amountValue,
+                        currencyCode = selectedCurrencyCode.value,
+                    ),
+                    isSubmitEnabled = amountValue > DEFAULT_AMOUNT_VALUE,
+                    occurredAtEpochMillis = transaction.occurredAtEpochMillis,
+                    repeatSchedule = repeatSchedule?.toUi(),
+                )
+            }
         }
     }
 
@@ -160,11 +215,39 @@ class ExpenseViewModel @Inject constructor(
     }
 
     fun submitExpense() {
+        val editExpenseId = _uiState.value.editingExpenseId
+        if (editExpenseId != null) {
+            submitExpenseEdit(editExpenseId)
+            return
+        }
+
         val request = _uiState.value.toSubmitExpenseRequest() ?: return
 
         viewModelScope.launch {
             val result = submitExpenseUseCase(request)
             _events.send(ExpenseEvent.Saved(result))
+        }
+    }
+
+    private fun submitExpenseEdit(expenseId: Long) {
+        val state = _uiState.value
+        val amount = state.amountInput.toDoubleOrNull() ?: return
+        if (amount <= DEFAULT_AMOUNT_VALUE) return
+        val categoryName = state.selectedCategory?.name ?: DEFAULT_EXPENSE_CATEGORY
+
+        viewModelScope.launch {
+            transactionRepository.updateExpenseTransaction(
+                id = expenseId,
+                amount = amount,
+                note = state.description,
+                category = categoryName,
+                attachmentUri = state.attachment?.uriString,
+                attachmentName = state.attachment?.name,
+                attachmentType = state.attachment?.type?.name,
+                occurredAtEpochMillis = state.occurredAtEpochMillis,
+                repeatSchedule = state.repeatSchedule?.toDomain(),
+            )
+            _events.send(ExpenseEvent.Saved(ExpenseSubmissionResult()))
         }
     }
 
@@ -186,11 +269,24 @@ data class ExpenseUiState(
     val attachment: ExpenseAttachmentUiState? = null,
     val repeatSchedule: ExpenseRepeatUiState? = null,
     val occurredAtEpochMillis: Long = Calendar.getInstance().timeInMillis,
+    val isEditMode: Boolean = false,
+    val editingExpenseId: Long? = null,
+    val pendingCategoryName: String? = null,
 )
 
 private const val DEFAULT_AMOUNT_VALUE = 0.0
 private const val MAX_AMOUNT_LENGTH = 9
 private const val DEFAULT_EXPENSE_CATEGORY = "Expense"
+private const val DEFAULT_ATTACHMENT_NAME = "Attachment"
+
+private fun normalizeAmountInput(value: Double): String {
+    val normalized = if (value % 1.0 == 0.0) {
+        value.toLong().toString()
+    } else {
+        value.toString().replace(".", "")
+    }
+    return normalized.take(MAX_AMOUNT_LENGTH)
+}
 
 data class ExpenseAttachmentUiState(
     val uriString: String,
@@ -219,6 +315,11 @@ private fun ExpenseRepeatUiState.toDomain(): RepeatSchedule = RepeatSchedule(
     endAtEpochMillis = endAtEpochMillis,
 )
 
+private fun RepeatSchedule.toUi(): ExpenseRepeatUiState = ExpenseRepeatUiState(
+    frequency = frequency,
+    endAtEpochMillis = endAtEpochMillis,
+)
+
 private fun ExpenseUiState.toSubmitExpenseRequest(): SubmitExpenseRequest? {
     val amount = amountInput.toDoubleOrNull()
     val categoryName = selectedCategory?.name ?: DEFAULT_EXPENSE_CATEGORY
@@ -228,9 +329,26 @@ private fun ExpenseUiState.toSubmitExpenseRequest(): SubmitExpenseRequest? {
             description = description,
             category = categoryName,
             occurredAtEpochMillis = occurredAtEpochMillis,
+            attachmentUri = attachment?.uriString,
+            attachmentName = attachment?.name,
+            attachmentType = attachment?.type?.name,
             repeatSchedule = repeatSchedule?.toDomain(),
         )
     } else {
         null
     }
+}
+
+private fun com.moneytrack.transaction.domain.model.TransactionRecord.toAttachmentUiState():
+    ExpenseAttachmentUiState? {
+    val uri = attachmentUri ?: return null
+    val type = attachmentType?.let { raw ->
+        runCatching { ExpenseAttachmentType.valueOf(raw) }.getOrNull()
+    } ?: ExpenseAttachmentType.IMAGE
+    val name = attachmentName ?: DEFAULT_ATTACHMENT_NAME
+    return ExpenseAttachmentUiState(
+        uriString = uri,
+        name = name,
+        type = type,
+    )
 }
