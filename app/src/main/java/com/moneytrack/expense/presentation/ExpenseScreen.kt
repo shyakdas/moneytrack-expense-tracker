@@ -73,8 +73,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -117,6 +119,7 @@ private const val MIN_REPEAT_MONTHS = 1
 private const val MAX_REPEAT_MONTHS = 12
 private val ExpenseRowIconContainerSize = Dimens.spacing32
 private val ExpenseRowIconSize = 14.dp
+private val ExpensePrimaryRowVerticalPadding = Dimens.spacing10
 private val fallbackCategoryColor = categoryColor(FALLBACK_CATEGORY_COLOR_HEX)
 private val ExpenseTopStart = Color(0xFF0B111A)
 private val ExpenseTopMiddle = Color(0xFF0A1422)
@@ -389,6 +392,21 @@ internal fun ExpenseContent(
                     .background(ExpenseLine),
             )
             Spacer(modifier = Modifier.height(Dimens.spacing20))
+            DateTimeInlineRow(
+                dateText = dateText,
+                timeText = timeText,
+                onDateClick = {
+                    context.showExpenseDatePicker(occurredAtEpochMillis) { updatedAt ->
+                        onOccurredAtChanged(updatedAt)
+                    }
+                },
+                onTimeClick = {
+                    context.showExpenseTimePicker(occurredAtEpochMillis) { updatedAt ->
+                        onOccurredAtChanged(updatedAt)
+                    }
+                },
+            )
+            Spacer(modifier = Modifier.height(Dimens.spacing20))
         }
 
         Box(
@@ -410,40 +428,16 @@ internal fun ExpenseContent(
                         onClick = onCategoryFieldClick,
                     )
                     GlassDivider()
-                    DescriptionRow(
-                        value = description,
-                        onClick = onDescriptionClick,
-                    )
-                    GlassDivider()
-                    ExpenseRow(
-                        iconRes = DsR.drawable.transaction,
-                        title = "Date",
-                        subtitle = dateText,
-                        trailingLabel = "Today",
-                        onTrailingClick = {
-                            context.showExpenseDatePicker(occurredAtEpochMillis) { updatedAt ->
-                                onOccurredAtChanged(updatedAt)
-                            }
-                        },
-                    )
-                    GlassDivider()
-                    ExpenseRow(
-                        iconRes = DsR.drawable.notifiaction,
-                        title = "Time",
-                        subtitle = timeText,
-                        trailingLabel = "Now",
-                        onTrailingClick = {
-                            context.showExpenseTimePicker(occurredAtEpochMillis) { updatedAt ->
-                                onOccurredAtChanged(updatedAt)
-                            }
-                        },
-                    )
-                    GlassDivider()
-                    ExpenseRow(
-                        iconRes = DsR.drawable.attachment,
-                        title = "Attachment (optional)",
-                        subtitle = if (attachment == null) "Upload receipt or note" else attachment.name,
-                        onClick = onAttachmentClick,
+                DescriptionRow(
+                    value = description,
+                    onClick = onDescriptionClick,
+                )
+                GlassDivider()
+                ExpenseRow(
+                    iconRes = DsR.drawable.attachment,
+                    title = "Attachment (optional)",
+                    subtitle = if (attachment == null) "Upload receipt or note" else attachment.name,
+                    onClick = onAttachmentClick,
                         showArrow = true,
                     )
                 }
@@ -479,41 +473,18 @@ internal fun ExpenseContent(
                 Spacer(modifier = Modifier.height(80.dp))
             }
 
-            FlatFooterActionButton(
+            Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .navigationBarsPadding()
-                    .padding(bottom = Dimens.spacing12),
-                enabled = isSubmitEnabled,
-                onClick = onContinueClick,
-            )
-        }
-    }
-}
-
-@Composable
-private fun FlatFooterActionButton(
-    modifier: Modifier = Modifier,
-    enabled: Boolean,
-    onClick: () -> Unit,
-) {
-    Surface(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(enabled = enabled, onClick = onClick)
-            .padding(horizontal = Dimens.spacing20, vertical = Dimens.spacing10),
-        shape = RoundedCornerShape(Dimens.radius16),
-        color = if (enabled) ExpenseAccent else ExpenseSecondaryText.copy(alpha = 0.4f),
-    ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            Text(
-                text = "Save",
-                style = AppTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                color = ExpensePrimaryText,
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .padding(vertical = Dimens.spacing10),
-            )
+                    .padding(horizontal = Dimens.spacing20, vertical = Dimens.spacing12),
+            ) {
+                LargeButton(
+                    text = "Save",
+                    onClick = onContinueClick,
+                    enabled = isSubmitEnabled,
+                )
+            }
         }
     }
 }
@@ -553,7 +524,7 @@ private fun ExpenseRow(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(enabled = onClick != null) { onClick?.invoke() }
-            .padding(vertical = Dimens.spacing8),
+            .padding(vertical = ExpensePrimaryRowVerticalPadding),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         LeadingIcon(iconRes = iconRes)
@@ -634,7 +605,7 @@ private fun DescriptionRow(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(vertical = Dimens.spacing8),
+            .padding(vertical = ExpensePrimaryRowVerticalPadding),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         LeadingIcon(iconRes = DsR.drawable.edit)
@@ -805,13 +776,87 @@ private fun AmountInputField(
             cursorBrush = SolidColor(AppTheme.colors.onPrimary),
             decorationBox = {
                 Text(
-                    text = amountText,
+                    text = amountTextWithAccentSymbol(amountText),
                     style = AppTheme.typography.displayMedium,
                     color = ExpensePrimaryText,
                 )
             },
         )
     }
+}
+
+@Composable
+private fun DateTimeInlineRow(
+    dateText: String,
+    timeText: String,
+    onDateClick: () -> Unit,
+    onTimeClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(Dimens.spacing12),
+    ) {
+        SmallInfoChip(
+            iconRes = DsR.drawable.transaction,
+            text = dateText,
+            onClick = onDateClick,
+            modifier = Modifier.weight(1f),
+        )
+        SmallInfoChip(
+            iconRes = DsR.drawable.notifiaction,
+            text = timeText,
+            onClick = onTimeClick,
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+@Composable
+private fun SmallInfoChip(
+    iconRes: Int,
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier.clickable(onClick = onClick),
+        shape = RoundedCornerShape(Dimens.radius16),
+        color = ExpensePillBg,
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Dimens.spacing12, vertical = Dimens.spacing10),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Dimens.spacing10),
+        ) {
+            Icon(
+                imageVector = ImageVector.vectorResource(id = iconRes),
+                contentDescription = null,
+                tint = ExpensePrimaryText.copy(alpha = 0.9f),
+                modifier = Modifier.size(Dimens.icon16),
+            )
+            Text(
+                text = text,
+                style = AppTheme.typography.titleSmall,
+                color = ExpensePrimaryText,
+                maxLines = 1,
+            )
+        }
+    }
+}
+
+private fun amountTextWithAccentSymbol(amountText: String) = buildAnnotatedString {
+    val symbolEndIndex = amountText.indexOfFirst { it.isDigit() || it == '-' || it == '.' }
+    if (symbolEndIndex <= 0) {
+        append(amountText)
+        return@buildAnnotatedString
+    }
+
+    pushStyle(SpanStyle(color = ExpenseAccent))
+    append(amountText.substring(0, symbolEndIndex))
+    pop()
+    append(amountText.substring(symbolEndIndex))
 }
 
 @Composable
