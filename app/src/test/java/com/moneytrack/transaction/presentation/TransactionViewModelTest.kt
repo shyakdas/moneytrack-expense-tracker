@@ -272,6 +272,9 @@ private fun expenseTransaction(
     amount = amount,
     type = TransactionRecordType.EXPENSE,
     category = title,
+    attachmentUri = null,
+    attachmentName = null,
+    attachmentType = null,
     occurredAtEpochMillis = occurredAtEpochMillis,
 )
 
@@ -288,6 +291,9 @@ private fun incomeTransaction(
     amount = amount,
     type = TransactionRecordType.INCOME,
     category = title,
+    attachmentUri = null,
+    attachmentName = null,
+    attachmentType = null,
     occurredAtEpochMillis = occurredAtEpochMillis,
 )
 

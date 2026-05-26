@@ -25,4 +25,6 @@ data class RecurringExpenseEntity(
     val nextRunAtEpochMillis: Long,
     @ColumnInfo(name = "created_at_epoch_millis")
     val createdAtEpochMillis: Long,
+    @ColumnInfo(name = "source_transaction_id")
+    val sourceTransactionId: Long? = null,
 )

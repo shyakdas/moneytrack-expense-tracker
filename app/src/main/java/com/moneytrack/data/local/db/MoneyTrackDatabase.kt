@@ -23,7 +23,7 @@ import com.moneytrack.data.local.db.entity.TransactionEntity
         CurrencyPreferenceEntity::class,
         RecurringExpenseEntity::class,
     ],
-    version = 6,
+    version = 8,
     exportSchema = true,
 )
 abstract class MoneyTrackDatabase : RoomDatabase() {

@@ -481,7 +481,7 @@ internal fun ExpenseContent(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .navigationBarsPadding()
-                    .padding(horizontal = Dimens.spacing20, vertical = Dimens.spacing12),
+                    .padding(horizontal = Dimens.spacing24),
             ) {
                 LargeButton(
                     text = "Save",
@@ -620,7 +620,7 @@ private fun GlassSectionCard(content: @Composable ColumnScope.() -> Unit) {
 private fun ExpenseRow(
     iconRes: Int,
     title: String,
-    subtitle: String,
+    subtitle: String?,
     rowVerticalPadding: androidx.compose.ui.unit.Dp = ExpensePrimaryRowVerticalPadding,
     trailingLabel: String? = null,
     showArrow: Boolean = false,
@@ -642,11 +642,13 @@ private fun ExpenseRow(
                 style = AppTheme.typography.titleSmall,
                 color = ExpensePrimaryText,
             )
-            Text(
-                text = subtitle,
-                style = AppTheme.typography.labelSmall,
-                color = ExpenseSecondaryText,
-            )
+            if (!subtitle.isNullOrBlank()) {
+                Text(
+                    text = subtitle,
+                    style = AppTheme.typography.labelSmall,
+                    color = ExpenseSecondaryText,
+                )
+            }
         }
         if (trailingLabel != null) {
             Surface(
@@ -815,6 +817,8 @@ private fun GlassDivider() {
 private fun CoralButton(
     modifier: Modifier = Modifier,
     enabled: Boolean,
+    text: String = stringResource(id = R.string.expense_continue),
+    showArrow: Boolean = true,
     onClick: () -> Unit,
 ) {
     Surface(
@@ -844,16 +848,20 @@ private fun CoralButton(
         ) {
             Spacer(modifier = Modifier.weight(1f))
             Text(
-                text = stringResource(id = R.string.expense_continue),
+                text = text,
                 style = AppTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = ExpenseContinueText,
             )
             Spacer(modifier = Modifier.weight(1f))
-            Icon(
-                imageVector = ImageVector.vectorResource(id = DsR.drawable.arrow_right_2),
-                contentDescription = null,
-                tint = ExpenseContinueText,
-            )
+            if (showArrow) {
+                Icon(
+                    imageVector = ImageVector.vectorResource(id = DsR.drawable.arrow_right_2),
+                    contentDescription = null,
+                    tint = ExpenseContinueText,
+                )
+            } else {
+                Spacer(modifier = Modifier.size(Dimens.icon20))
+            }
         }
     }
 }
@@ -1381,7 +1389,6 @@ private fun RepeatTransactionScreen(
     onDoneClick: (Boolean, RepeatFrequency?, Long?) -> Unit,
 ) {
     val context = LocalContext.current
-    var isEnabled by remember(initialRepeatSchedule) { mutableStateOf(initialRepeatSchedule != null) }
     var selectedFrequency by remember(initialRepeatSchedule) {
         mutableStateOf(initialRepeatSchedule?.frequency ?: RepeatFrequency.MONTHLY)
     }
@@ -1396,7 +1403,6 @@ private fun RepeatTransactionScreen(
 
     val onDone = {
         val resolvedEndAt = when {
-            !isEnabled -> null
             selectedEndOption == RepeatEndOption.NEVER -> Long.MAX_VALUE
             selectedEndOption == RepeatEndOption.ON_DATE -> onDateEndAt
             else -> Calendar.getInstance().apply {
@@ -1404,7 +1410,7 @@ private fun RepeatTransactionScreen(
                 add(Calendar.MONTH, afterMonths.coerceAtLeast(MIN_REPEAT_MONTHS))
             }.timeInMillis
         }
-        onDoneClick(isEnabled, selectedFrequency, resolvedEndAt)
+        onDoneClick(true, selectedFrequency, resolvedEndAt)
     }
 
     Column(
@@ -1448,26 +1454,7 @@ private fun RepeatTransactionScreen(
                 Spacer(modifier = Modifier.width(Dimens.spacing48))
             }
             Spacer(modifier = Modifier.height(Dimens.spacing20))
-            GlassSectionCard {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            "Repeat this transaction",
-                            style = AppTheme.typography.titleMedium,
-                            color = ExpensePrimaryText,
-                        )
-                        Text(
-                            "Make this a recurring expense",
-                            style = AppTheme.typography.bodySmall,
-                            color = ExpenseSecondaryText,
-                        )
-                    }
-                    PrimarySwitch(checked = isEnabled, onCheckedChange = { isEnabled = it })
-                }
-            }
             Spacer(modifier = Modifier.height(Dimens.spacing16))
-            Text("FREQUENCY", style = AppTheme.typography.bodySmall, color = ExpenseSecondaryText)
-            Spacer(modifier = Modifier.height(Dimens.spacing8))
             GlassSectionCard {
                 RepeatFrequency.entries.forEachIndexed { index, frequency ->
                     RepeatOptionRow(
@@ -1479,13 +1466,12 @@ private fun RepeatTransactionScreen(
                 }
             }
             Spacer(modifier = Modifier.height(Dimens.spacing12))
-            Text("START DATE", style = AppTheme.typography.bodySmall, color = ExpenseSecondaryText)
             Spacer(modifier = Modifier.height(Dimens.spacing8))
             GlassSectionCard {
                 ExpenseRow(
                     iconRes = DsR.drawable.transaction,
                     title = formatDate(startAt),
-                    subtitle = "",
+                    subtitle = null,
                     trailingLabel = "Today",
                     onTrailingClick = {
                         context.showExpenseDatePicker(startAt) { updated -> startAt = updated }
@@ -1493,7 +1479,6 @@ private fun RepeatTransactionScreen(
                 )
             }
             Spacer(modifier = Modifier.height(Dimens.spacing12))
-            Text("ENDS", style = AppTheme.typography.bodySmall, color = ExpenseSecondaryText)
             Spacer(modifier = Modifier.height(Dimens.spacing8))
             GlassSectionCard {
                 RepeatOptionRow("Never", selectedEndOption == RepeatEndOption.NEVER) {
@@ -1508,7 +1493,7 @@ private fun RepeatTransactionScreen(
                     ExpenseRow(
                         iconRes = DsR.drawable.transaction,
                         title = formatDate(onDateEndAt),
-                        subtitle = "",
+                        subtitle = null,
                         trailingLabel = "Pick",
                         onTrailingClick = {
                             context.showExpenseDatePicker(onDateEndAt) { updated -> onDateEndAt = updated }
@@ -1549,12 +1534,13 @@ private fun RepeatTransactionScreen(
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(Dimens.spacing20))
-            CoralButton(
-                enabled = true,
+            Spacer(modifier = Modifier.weight(1f))
+            LargeButton(
+                text = stringResource(id = R.string.expense_continue),
                 onClick = onDone,
+                enabled = true,
             )
-            Spacer(modifier = Modifier.height(Dimens.spacing12))
+            Spacer(modifier = Modifier.height(Dimens.spacing8))
             Spacer(modifier = Modifier.navigationBarsPadding())
         }
     }
@@ -1575,7 +1561,7 @@ private fun RepeatOptionRow(
     ) {
         Text(
             text = title,
-            style = AppTheme.typography.titleMedium,
+            style = AppTheme.typography.titleSmall,
             color = ExpensePrimaryText,
             modifier = Modifier.weight(1f),
         )

@@ -55,6 +55,9 @@ interface TransactionDao {
             "note = :note, " +
             "amount = :amount, " +
             "category = :category, " +
+            "attachment_uri = :attachmentUri, " +
+            "attachment_name = :attachmentName, " +
+            "attachment_type = :attachmentType, " +
             "occurred_at_epoch_millis = :occurredAtEpochMillis " +
             "WHERE id = :id",
     )
@@ -64,6 +67,9 @@ interface TransactionDao {
         note: String?,
         amount: Double,
         category: String,
+        attachmentUri: String?,
+        attachmentName: String?,
+        attachmentType: String?,
         occurredAtEpochMillis: Long,
     )
 

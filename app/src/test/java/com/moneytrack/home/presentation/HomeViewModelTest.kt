@@ -526,6 +526,9 @@ private fun expenseTransaction(
     amount = amount,
     type = TransactionRecordType.EXPENSE,
     category = "Food",
+    attachmentUri = null,
+    attachmentName = null,
+    attachmentType = null,
     occurredAtEpochMillis = occurredAtEpochMillis,
 )
 

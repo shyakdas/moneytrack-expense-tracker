@@ -121,6 +121,7 @@ class ExpenseViewModel @Inject constructor(
             val categoryId = _uiState.value.categories.firstOrNull { category ->
                 category.name.equals(transaction.category, ignoreCase = true)
             }?.id
+            val repeatSchedule = transactionRepository.getRepeatScheduleForTransaction(expenseId)
             val amountValue = amountInput.toDoubleOrNull() ?: DEFAULT_AMOUNT_VALUE
 
             _uiState.update { state ->
@@ -133,6 +134,7 @@ class ExpenseViewModel @Inject constructor(
                         category.id == categoryId
                     },
                     description = transaction.note.orEmpty(),
+                    attachment = transaction.toAttachmentUiState(),
                     amountInput = amountInput,
                     amountText = currencyFormatter.format(
                         value = amountValue,
@@ -140,6 +142,7 @@ class ExpenseViewModel @Inject constructor(
                     ),
                     isSubmitEnabled = amountValue > DEFAULT_AMOUNT_VALUE,
                     occurredAtEpochMillis = transaction.occurredAtEpochMillis,
+                    repeatSchedule = repeatSchedule?.toUi(),
                 )
             }
         }
@@ -235,7 +238,11 @@ class ExpenseViewModel @Inject constructor(
                 amount = amount,
                 note = state.description,
                 category = categoryName,
+                attachmentUri = state.attachment?.uriString,
+                attachmentName = state.attachment?.name,
+                attachmentType = state.attachment?.type?.name,
                 occurredAtEpochMillis = state.occurredAtEpochMillis,
+                repeatSchedule = state.repeatSchedule?.toDomain(),
             )
             _events.send(ExpenseEvent.Saved(ExpenseSubmissionResult()))
         }
@@ -267,6 +274,7 @@ data class ExpenseUiState(
 private const val DEFAULT_AMOUNT_VALUE = 0.0
 private const val MAX_AMOUNT_LENGTH = 9
 private const val DEFAULT_EXPENSE_CATEGORY = "Expense"
+private const val DEFAULT_ATTACHMENT_NAME = "Attachment"
 
 private fun normalizeAmountInput(value: Double): String {
     val normalized = if (value % 1.0 == 0.0) {
@@ -304,6 +312,11 @@ private fun ExpenseRepeatUiState.toDomain(): RepeatSchedule = RepeatSchedule(
     endAtEpochMillis = endAtEpochMillis,
 )
 
+private fun RepeatSchedule.toUi(): ExpenseRepeatUiState = ExpenseRepeatUiState(
+    frequency = frequency,
+    endAtEpochMillis = endAtEpochMillis,
+)
+
 private fun ExpenseUiState.toSubmitExpenseRequest(): SubmitExpenseRequest? {
     val amount = amountInput.toDoubleOrNull()
     val categoryName = selectedCategory?.name ?: DEFAULT_EXPENSE_CATEGORY
@@ -313,9 +326,26 @@ private fun ExpenseUiState.toSubmitExpenseRequest(): SubmitExpenseRequest? {
             description = description,
             category = categoryName,
             occurredAtEpochMillis = occurredAtEpochMillis,
+            attachmentUri = attachment?.uriString,
+            attachmentName = attachment?.name,
+            attachmentType = attachment?.type?.name,
             repeatSchedule = repeatSchedule?.toDomain(),
         )
     } else {
         null
     }
+}
+
+private fun com.moneytrack.transaction.domain.model.TransactionRecord.toAttachmentUiState():
+    ExpenseAttachmentUiState? {
+    val uri = attachmentUri ?: return null
+    val type = attachmentType?.let { raw ->
+        runCatching { ExpenseAttachmentType.valueOf(raw) }.getOrNull()
+    } ?: ExpenseAttachmentType.IMAGE
+    val name = attachmentName ?: DEFAULT_ATTACHMENT_NAME
+    return ExpenseAttachmentUiState(
+        uriString = uri,
+        name = name,
+        type = type,
+    )
 }

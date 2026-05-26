@@ -24,7 +24,7 @@ class ExpenseRepositoryImpl @Inject constructor(
 
     override suspend fun submitExpense(request: SubmitExpenseRequest): ExpenseSubmissionResult {
         val now = System.currentTimeMillis()
-        transactionDao.insert(
+        val transactionId = transactionDao.insert(
             request.toTransactionEntity(
                 occurredAtEpochMillis = request.occurredAtEpochMillis,
                 createdAtEpochMillis = now,
@@ -34,6 +34,7 @@ class ExpenseRepositoryImpl @Inject constructor(
         return createRecurringExpenseResult(
             request = request,
             createdAtEpochMillis = now,
+            sourceTransactionId = transactionId,
         )
             ?: ExpenseSubmissionResult()
     }
@@ -92,6 +93,7 @@ class ExpenseRepositoryImpl @Inject constructor(
     private suspend fun createRecurringExpenseResult(
         request: SubmitExpenseRequest,
         createdAtEpochMillis: Long,
+        sourceTransactionId: Long,
     ): ExpenseSubmissionResult? {
         val repeatSchedule = request.repeatSchedule ?: return null
         val nextRunAtEpochMillis = calculateNextRunAt(
@@ -108,6 +110,7 @@ class ExpenseRepositoryImpl @Inject constructor(
                     endAtEpochMillis = repeatSchedule.endAtEpochMillis,
                     nextRunAtEpochMillis = nextRunAtEpochMillis,
                     createdAtEpochMillis = createdAtEpochMillis,
+                    sourceTransactionId = sourceTransactionId,
                 ),
             )
             ExpenseSubmissionResult(
@@ -129,6 +132,9 @@ private fun SubmitExpenseRequest.toTransactionEntity(
     amount = amount,
     type = EXPENSE_TYPE,
     category = category,
+    attachmentUri = attachmentUri,
+    attachmentName = attachmentName,
+    attachmentType = attachmentType,
     occurredAtEpochMillis = occurredAtEpochMillis,
     createdAtEpochMillis = createdAtEpochMillis,
 )

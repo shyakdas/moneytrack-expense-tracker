@@ -6,6 +6,7 @@ import com.moneytrack.expense.domain.model.ExpenseCategory
 import com.moneytrack.expense.domain.model.ExpenseSubmissionResult
 import com.moneytrack.expense.domain.model.RecurringExpenseSchedule
 import com.moneytrack.expense.domain.model.RepeatFrequency
+import com.moneytrack.expense.domain.model.RepeatSchedule
 import com.moneytrack.expense.domain.model.SubmitExpenseRequest
 import com.moneytrack.expense.domain.repository.CategoryRepository
 import com.moneytrack.expense.domain.repository.ExpenseRepository
@@ -245,6 +246,18 @@ class ExpenseViewModelTest {
         override fun observeTransactions() = MutableStateFlow(emptyList<TransactionRecord>()).asStateFlow()
         override fun observeRecentTransactions(limit: Int) = MutableStateFlow(emptyList<TransactionRecord>()).asStateFlow()
         override suspend fun getTransactionsFrom(fromEpochMillis: Long): List<TransactionRecord> = emptyList()
+        override suspend fun getRepeatScheduleForTransaction(id: Long): RepeatSchedule? = null
+        override suspend fun updateExpenseTransaction(
+            id: Long,
+            amount: Double,
+            note: String?,
+            category: String,
+            attachmentUri: String?,
+            attachmentName: String?,
+            attachmentType: String?,
+            occurredAtEpochMillis: Long,
+            repeatSchedule: RepeatSchedule?,
+        ) = Unit
     }
 
     private class FakeCurrencyPreferenceRepository : CurrencyPreferenceRepository {
