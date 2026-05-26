@@ -5,15 +5,21 @@
 package com.moneytrack.transaction.presentation
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,6 +42,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -43,10 +50,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.moneytrack.R
@@ -54,17 +67,18 @@ import com.moneytrack.designsystem.R as DsR
 import ui.components.card.transaction.TransactionCard
 import ui.components.navigation.bottomNav.BottomNavItem
 import ui.components.navigation.bottomNav.PrimaryBottomNavigation
-import ui.components.navigation.topNav.TopNavigation
-import ui.components.navigation.topNav.TopNavigationConfig
+import ui.components.navigation.common.SelectorChip
 import ui.components.surface.MoneyTrackScreenBackground
 import ui.theme.AppTheme
 import ui.theme.Dimens
 import ui.theme.MoneyTrackTheme
+import kotlin.math.roundToInt
 
 private const val ROUTE_HOME = "home"
 private const val ROUTE_TRANSACTION = "transaction"
 private const val ROUTE_PROFILE = "profile"
-
+private const val MONTH_POPUP_ENTER_DURATION_MS = 260
+private const val MONTH_POPUP_EXIT_DURATION_MS = 220
 @Composable
 fun TransactionRoute(
     onHomeClick: () -> Unit,
@@ -87,6 +101,8 @@ fun TransactionRoute(
         onAddExpenseClick = onAddExpenseClick,
         onTransactionCardClick = onEditExpenseClick,
         onDeleteTransaction = viewModel::deleteTransaction,
+        onMonthSelected = viewModel::onMonthSelected,
+        onYearSelected = viewModel::onYearSelected,
     )
 }
 
@@ -97,6 +113,8 @@ fun TransactionScreen(
     onAddExpenseClick: () -> Unit,
     onTransactionCardClick: (Long) -> Unit,
     onDeleteTransaction: (Long) -> Unit,
+    onMonthSelected: (TransactionMonthOption) -> Unit,
+    onYearSelected: (Int) -> Unit,
 ) {
     val bottomItems = remember {
         listOf(
@@ -124,6 +142,8 @@ fun TransactionScreen(
             innerPadding = innerPadding,
             onTransactionCardClick = onTransactionCardClick,
             onDeleteTransaction = onDeleteTransaction,
+            onMonthSelected = onMonthSelected,
+            onYearSelected = onYearSelected,
         )
     }
 }
@@ -134,8 +154,26 @@ private fun TransactionContent(
     innerPadding: PaddingValues,
     onTransactionCardClick: (Long) -> Unit,
     onDeleteTransaction: (Long) -> Unit,
+    onMonthSelected: (TransactionMonthOption) -> Unit,
+    onYearSelected: (Int) -> Unit,
 ) {
     MoneyTrackScreenBackground {
+        var isMonthPickerVisible by remember { mutableStateOf(false) }
+        var isYearPickerVisible by remember { mutableStateOf(false) }
+        var monthAnchorX by remember { mutableIntStateOf(0) }
+        var yearAnchorX by remember { mutableIntStateOf(0) }
+        var popupAnchorY by remember { mutableIntStateOf(0) }
+        val monthPickerTransition = remember { MutableTransitionState(false) }
+        monthPickerTransition.targetState = isMonthPickerVisible
+        val yearPickerTransition = remember { MutableTransitionState(false) }
+        yearPickerTransition.targetState = isYearPickerVisible
+        val density = LocalDensity.current
+        val monthPopupYOffset = if (popupAnchorY == 0) {
+            with(density) { Dimens.buttonLLargeHeight.roundToPx() }
+        } else {
+            popupAnchorY
+        }
+
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -145,20 +183,67 @@ private fun TransactionContent(
             verticalArrangement = Arrangement.spacedBy(Dimens.spacing16),
         ) {
             item {
-                TopNavigation(
-                    config = TopNavigationConfig.DropdownWithFilter(
-                        label = uiState.monthLabel,
-                        showBadge = false,
-                        badgeCount = 0,
-                        onDropdownClick = {},
-                        onFilterClick = {},
-                    ),
-                    containerColor = Color.Transparent,
-                )
-            }
-
-            item {
-                FinancialReportBanner()
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    TransactionMonthYearHeader(
+                        selectedMonth = uiState.selectedMonth.shortLabel.ifBlank { uiState.selectedMonth.label },
+                        selectedYear = uiState.selectedMonth.year.toString(),
+                        onMonthAnchorChanged = { monthX, anchorY ->
+                            monthAnchorX = monthX
+                            popupAnchorY = anchorY
+                        },
+                        onYearAnchorChanged = { yearX, anchorY ->
+                            yearAnchorX = yearX
+                            popupAnchorY = anchorY
+                        },
+                        onMonthClick = {
+                            isMonthPickerVisible = !isMonthPickerVisible
+                            isYearPickerVisible = false
+                        },
+                        onYearClick = {
+                            isYearPickerVisible = !isYearPickerVisible
+                            isMonthPickerVisible = false
+                        },
+                        onSortClick = {},
+                    )
+                    if (monthPickerTransition.currentState || monthPickerTransition.targetState) {
+                        Popup(
+                            alignment = Alignment.TopStart,
+                            offset = IntOffset(x = monthAnchorX, y = monthPopupYOffset),
+                            onDismissRequest = { isMonthPickerVisible = false },
+                            properties = PopupProperties(focusable = true),
+                        ) {
+                            AnimatedPickerVisibility(visibleState = monthPickerTransition) {
+                                TransactionMonthSelectorPopup(
+                                    months = uiState.monthOptions,
+                                    selectedMonth = uiState.selectedMonth,
+                                    onMonthSelected = { month ->
+                                        onMonthSelected(month)
+                                        isMonthPickerVisible = false
+                                    },
+                                )
+                            }
+                        }
+                    }
+                    if (yearPickerTransition.currentState || yearPickerTransition.targetState) {
+                        Popup(
+                            alignment = Alignment.TopStart,
+                            offset = IntOffset(x = yearAnchorX, y = monthPopupYOffset),
+                            onDismissRequest = { isYearPickerVisible = false },
+                            properties = PopupProperties(focusable = true),
+                        ) {
+                            AnimatedPickerVisibility(visibleState = yearPickerTransition) {
+                                TransactionYearSelectorPopup(
+                                    years = uiState.yearOptions,
+                                    selectedYear = uiState.selectedMonth.year,
+                                    onYearSelected = { year ->
+                                        onYearSelected(year)
+                                        isYearPickerVisible = false
+                                    },
+                                )
+                            }
+                        }
+                    }
+                }
             }
 
             if (uiState.sections.isEmpty()) {
@@ -215,6 +300,75 @@ private fun TransactionContent(
 }
 
 @Composable
+private fun TransactionMonthYearHeader(
+    selectedMonth: String,
+    selectedYear: String,
+    onMonthAnchorChanged: (Int, Int) -> Unit,
+    onYearAnchorChanged: (Int, Int) -> Unit,
+    onMonthClick: () -> Unit,
+    onYearClick: () -> Unit,
+    onSortClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = Dimens.spacing8),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(Dimens.spacing8)) {
+            SelectorChip(
+                label = selectedMonth,
+                selected = false,
+                modifier = Modifier.onGloballyPositioned { coordinates ->
+                    val parentCoordinates = coordinates.parentLayoutCoordinates ?: return@onGloballyPositioned
+                    val position = parentCoordinates.localPositionOf(coordinates, Offset.Zero)
+                    onMonthAnchorChanged(
+                        position.x.roundToInt(),
+                        (position.y + coordinates.size.height).roundToInt(),
+                    )
+                },
+                onClick = onMonthClick,
+                leadingIcon = ImageVector.vectorResource(id = DsR.drawable.arrow_down_2),
+                highlighted = true,
+            )
+            SelectorChip(
+                label = selectedYear,
+                selected = false,
+                modifier = Modifier.onGloballyPositioned { coordinates ->
+                    val parentCoordinates = coordinates.parentLayoutCoordinates ?: return@onGloballyPositioned
+                    val position = parentCoordinates.localPositionOf(coordinates, Offset.Zero)
+                    onYearAnchorChanged(
+                        position.x.roundToInt(),
+                        (position.y + coordinates.size.height).roundToInt(),
+                    )
+                },
+                onClick = onYearClick,
+                leadingIcon = ImageVector.vectorResource(id = DsR.drawable.arrow_down_2),
+                highlighted = true,
+            )
+        }
+        Surface(
+            modifier = Modifier
+                .size(Dimens.iconButtonSize)
+                .clickable(onClick = onSortClick),
+            shape = RoundedCornerShape(Dimens.radius16),
+            color = AppTheme.colors.surface,
+            tonalElevation = Dimens.elevation2,
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = ImageVector.vectorResource(id = DsR.drawable.sort),
+                    contentDescription = null,
+                    tint = AppTheme.colors.onSurface,
+                    modifier = Modifier.size(Dimens.icon20),
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun FinancialReportBanner() {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -260,6 +414,42 @@ private fun EmptyTransactionState() {
             style = AppTheme.typography.bodyMedium,
             color = AppTheme.colors.onSurfaceVariant,
         )
+    }
+}
+
+@Composable
+private fun AnimatedPickerVisibility(
+    visibleState: MutableTransitionState<Boolean>,
+    content: @Composable () -> Unit,
+) {
+    AnimatedVisibility(
+        visibleState = visibleState,
+        enter = fadeIn(
+            animationSpec = tween(
+                durationMillis = MONTH_POPUP_ENTER_DURATION_MS,
+                easing = FastOutSlowInEasing,
+            ),
+        ) + expandVertically(
+            animationSpec = tween(
+                durationMillis = MONTH_POPUP_ENTER_DURATION_MS,
+                easing = FastOutSlowInEasing,
+            ),
+            expandFrom = Alignment.Top,
+        ),
+        exit = fadeOut(
+            animationSpec = tween(
+                durationMillis = MONTH_POPUP_EXIT_DURATION_MS,
+                easing = FastOutSlowInEasing,
+            ),
+        ) + shrinkVertically(
+            animationSpec = tween(
+                durationMillis = MONTH_POPUP_EXIT_DURATION_MS,
+                easing = FastOutSlowInEasing,
+            ),
+            shrinkTowards = Alignment.Top,
+        ),
+    ) {
+        content()
     }
 }
 
@@ -363,6 +553,8 @@ private fun TransactionScreenPreview() {
             onAddExpenseClick = {},
             onTransactionCardClick = {},
             onDeleteTransaction = {},
+            onMonthSelected = {},
+            onYearSelected = {},
         )
     }
 }

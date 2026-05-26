@@ -41,6 +41,15 @@ fun List<TransactionRecord>.filterCurrentMonth(): List<TransactionRecord> {
     }
 }
 
+fun List<TransactionRecord>.filterByMonth(selectedMonth: TransactionMonthOption): List<TransactionRecord> =
+    filter { transaction ->
+        val calendar = Calendar.getInstance().apply {
+            timeInMillis = transaction.occurredAtEpochMillis
+        }
+        calendar.get(Calendar.YEAR) == selectedMonth.year &&
+            calendar.get(Calendar.MONTH) == selectedMonth.monthIndex
+    }
+
 fun TransactionRecord.toTransactionItemUiState(
     currencyFormatter: CurrencyFormatter,
     currencyCode: String,

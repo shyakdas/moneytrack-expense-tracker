@@ -27,6 +27,7 @@ class TransactionViewModel @Inject constructor(
 
     private val _transactions = MutableStateFlow<List<TransactionRecord>>(emptyList())
     private val _selectedCurrencyCode = MutableStateFlow(currencyFormatter.currentCurrencyCode())
+    private val _selectedMonth = MutableStateFlow(currentTransactionMonthOption())
     private val _uiState = MutableStateFlow(TransactionUiState())
     val uiState: StateFlow<TransactionUiState> = _uiState.asStateFlow()
 
@@ -48,15 +49,34 @@ class TransactionViewModel @Inject constructor(
 
     private fun updateUiState() {
         _uiState.update { state ->
+            val selectedMonth = _selectedMonth.value
             state.copy(
                 sections = _transactions.value
-                    .filterCurrentMonth()
+                    .filterByMonth(selectedMonth)
                     .toTransactionSections(
                         currencyFormatter = currencyFormatter,
                         currencyCode = _selectedCurrencyCode.value,
                     ),
+                selectedMonth = selectedMonth,
+                monthOptions = transactionMonthOptions(selectedMonth.year),
+                yearOptions = transactionYearOptions(),
             )
         }
+    }
+
+    fun onMonthSelected(month: TransactionMonthOption) {
+        _selectedMonth.update { month }
+        updateUiState()
+    }
+
+    fun onYearSelected(year: Int) {
+        _selectedMonth.update { month ->
+            val updatedOptions = transactionMonthOptions(year)
+            updatedOptions.firstOrNull { option ->
+                option.monthIndex == month.monthIndex
+            } ?: updatedOptions.firstOrNull() ?: month
+        }
+        updateUiState()
     }
 
     fun deleteTransaction(transactionId: Long) {
@@ -68,7 +88,9 @@ class TransactionViewModel @Inject constructor(
 
 data class TransactionUiState(
     val sections: List<TransactionSectionUiState> = emptyList(),
-    val monthLabel: String = DEFAULT_MONTH_FILTER_LABEL,
+    val selectedMonth: TransactionMonthOption = currentTransactionMonthOption(),
+    val monthOptions: List<TransactionMonthOption> = transactionMonthOptions(currentTransactionMonthOption().year),
+    val yearOptions: List<Int> = transactionYearOptions(),
 )
 
 data class TransactionSectionUiState(
@@ -87,5 +109,3 @@ data class TransactionItemUiState(
     val time: String,
     val type: ui.components.card.transaction.TransactionType,
 )
-
-private const val DEFAULT_MONTH_FILTER_LABEL = "Month"
