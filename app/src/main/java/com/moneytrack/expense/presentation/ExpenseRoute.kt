@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.collectLatest
 @Composable
 fun ExpenseRoute(
     onBackClick: () -> Unit,
+    expenseId: Long? = null,
 ) {
     val viewModel: ExpenseViewModel = hiltViewModel()
     val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
@@ -35,6 +36,10 @@ fun ExpenseRoute(
                 }
             }
         }
+    }
+
+    LaunchedEffect(expenseId, viewModel) {
+        viewModel.initializeEdit(expenseId)
     }
 
     ExpenseScreen(

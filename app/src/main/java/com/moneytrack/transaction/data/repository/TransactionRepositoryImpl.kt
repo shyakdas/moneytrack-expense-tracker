@@ -31,6 +31,26 @@ class TransactionRepositoryImpl @Inject constructor(
         transactionDao.getTransactionsFrom(fromEpochMillis = fromEpochMillis)
             .map(TransactionEntity::toDomain)
 
+    override suspend fun getTransactionById(id: Long): TransactionRecord? =
+        transactionDao.getById(id)?.toDomain()
+
+    override suspend fun updateExpenseTransaction(
+        id: Long,
+        amount: Double,
+        note: String?,
+        category: String,
+        occurredAtEpochMillis: Long,
+    ) {
+        transactionDao.updateExpenseById(
+            id = id,
+            title = category,
+            note = note?.takeIf(String::isNotBlank),
+            amount = amount,
+            category = category,
+            occurredAtEpochMillis = occurredAtEpochMillis,
+        )
+    }
+
     override suspend fun deleteTransaction(id: Long) {
         transactionDao.deleteById(id)
     }

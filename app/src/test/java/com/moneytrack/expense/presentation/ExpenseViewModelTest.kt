@@ -21,6 +21,8 @@ import com.moneytrack.settings.domain.usecase.ObserveAppCurrencyCodeUseCase
 import com.moneytrack.settings.domain.usecase.ObserveSelectedCurrencyCodeUseCase
 import com.moneytrack.settings.domain.usecase.SaveSelectedCurrencyCodeUseCase
 import com.moneytrack.testutil.MainDispatcherRule
+import com.moneytrack.transaction.domain.model.TransactionRecord
+import com.moneytrack.transaction.domain.repository.TransactionRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
@@ -194,6 +196,7 @@ class ExpenseViewModelTest {
                 appCurrencyManager = appCurrencyManager,
                 currencyCatalog = currencyCatalog,
             ),
+            transactionRepository = FakeTransactionRepository(),
         )
     }
 
@@ -236,6 +239,12 @@ class ExpenseViewModelTest {
         override fun getCountryCode(): String = "US"
 
         override fun getCurrencySymbol(): String = "$"
+    }
+
+    private class FakeTransactionRepository : TransactionRepository {
+        override fun observeTransactions() = MutableStateFlow(emptyList<TransactionRecord>()).asStateFlow()
+        override fun observeRecentTransactions(limit: Int) = MutableStateFlow(emptyList<TransactionRecord>()).asStateFlow()
+        override suspend fun getTransactionsFrom(fromEpochMillis: Long): List<TransactionRecord> = emptyList()
     }
 
     private class FakeCurrencyPreferenceRepository : CurrencyPreferenceRepository {

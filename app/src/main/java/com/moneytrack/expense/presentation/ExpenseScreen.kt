@@ -221,6 +221,7 @@ fun ExpenseScreen(
             amountText = uiState.amountText,
             description = uiState.description,
             isSubmitEnabled = uiState.isSubmitEnabled,
+            isEditMode = uiState.isEditMode,
             attachment = uiState.attachment,
             repeatSchedule = uiState.repeatSchedule,
             categories = uiState.categories,
@@ -297,6 +298,7 @@ internal fun ExpenseContent(
     amountText: String,
     description: String,
     isSubmitEnabled: Boolean,
+    isEditMode: Boolean,
     attachment: ExpenseAttachmentUiState?,
     repeatSchedule: ExpenseRepeatUiState?,
     categories: List<ExpenseCategory>,
@@ -363,7 +365,7 @@ internal fun ExpenseContent(
                 }
 
                 Text(
-                    text = "Add Expense",
+                    text = if (isEditMode) "Edit Expense" else "Add Expense",
                     modifier = Modifier.weight(1f),
                     style = AppTheme.typography.headlineSmall,
                     color = ExpensePrimaryText,

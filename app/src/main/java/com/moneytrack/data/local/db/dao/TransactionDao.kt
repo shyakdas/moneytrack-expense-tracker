@@ -49,6 +49,24 @@ interface TransactionDao {
     @Query("DELETE FROM transactions WHERE id = :id")
     suspend fun deleteById(id: Long)
 
+    @Query(
+        "UPDATE transactions SET " +
+            "title = :title, " +
+            "note = :note, " +
+            "amount = :amount, " +
+            "category = :category, " +
+            "occurred_at_epoch_millis = :occurredAtEpochMillis " +
+            "WHERE id = :id",
+    )
+    suspend fun updateExpenseById(
+        id: Long,
+        title: String,
+        note: String?,
+        amount: Double,
+        category: String,
+        occurredAtEpochMillis: Long,
+    )
+
     @Query("DELETE FROM transactions")
     suspend fun clearAll()
 }

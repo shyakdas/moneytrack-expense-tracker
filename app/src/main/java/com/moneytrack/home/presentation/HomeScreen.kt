@@ -13,6 +13,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -75,6 +76,7 @@ fun HomeScreen(
     onBottomRouteSelected: (String) -> Unit,
     onSeeAllTransactionsClick: () -> Unit,
     onExpensesClick: () -> Unit,
+    onTransactionCardClick: (Long) -> Unit,
     onDeleteTransaction: (Long) -> Unit,
     onTimeRangeSelected: (String) -> Unit,
     onMonthSelected: (HomeMonthOption) -> Unit = {},
@@ -108,6 +110,7 @@ fun HomeScreen(
             isBudgetLoaded = isBudgetLoaded,
             onSeeAllTransactionsClick = onSeeAllTransactionsClick,
             onExpensesClick = onExpensesClick,
+            onTransactionCardClick = onTransactionCardClick,
             onDeleteTransaction = onDeleteTransaction,
             onTimeRangeSelected = onTimeRangeSelected,
             onMonthSelected = onMonthSelected,
@@ -124,6 +127,7 @@ private fun HomeContent(
     isBudgetLoaded: Boolean,
     onSeeAllTransactionsClick: () -> Unit,
     onExpensesClick: () -> Unit,
+    onTransactionCardClick: (Long) -> Unit,
     onDeleteTransaction: (Long) -> Unit,
     onTimeRangeSelected: (String) -> Unit,
     onMonthSelected: (HomeMonthOption) -> Unit,
@@ -334,17 +338,22 @@ private fun HomeContent(
                         SwipeToDeleteTransactionCard(
                             onDelete = { onDeleteTransaction(transaction.id) },
                         ) {
-                            TransactionCard(
-                                icon = ImageVector.vectorResource(id = transaction.icon),
-                                category = transaction.category,
-                                title = transaction.title,
-                                subtitle = transaction.subtitle,
-                                amount = transaction.amount,
-                                date = transaction.date,
-                                time = transaction.time,
-                                type = transaction.type,
-                            )
-                        }
+                        TransactionCard(
+                            icon = ImageVector.vectorResource(id = transaction.icon),
+                            category = transaction.category,
+                            title = transaction.title,
+                            subtitle = transaction.subtitle,
+                            amount = transaction.amount,
+                            date = transaction.date,
+                            time = transaction.time,
+                            type = transaction.type,
+                            modifier = Modifier.clickable {
+                                if (transaction.type == ui.components.card.transaction.TransactionType.EXPENSE) {
+                                    onTransactionCardClick(transaction.id)
+                                }
+                            },
+                        )
+                    }
                     }
                     Spacer(modifier = Modifier.height(Dimens.spacing12))
                 }
@@ -471,6 +480,7 @@ private fun HomeScreenPreview() {
             onBottomRouteSelected = {},
             onSeeAllTransactionsClick = {},
             onExpensesClick = {},
+            onTransactionCardClick = {},
             onDeleteTransaction = {},
             onTimeRangeSelected = {},
             onSetBudgetClick = { },
