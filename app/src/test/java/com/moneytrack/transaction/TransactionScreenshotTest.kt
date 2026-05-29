@@ -28,6 +28,10 @@ class TransactionScreenshotTest {
                     onAddExpenseClick = {},
                     onTransactionCardClick = {},
                     onDeleteTransaction = {},
+                    onMonthSelected = {},
+                    onYearSelected = {},
+                    onSortOptionSelected = {},
+                    onCategorySelected = {},
                 )
             }
         }
@@ -89,6 +93,10 @@ class TransactionScreenshotTest {
                     onAddExpenseClick = {},
                     onTransactionCardClick = {},
                     onDeleteTransaction = {},
+                    onMonthSelected = {},
+                    onYearSelected = {},
+                    onSortOptionSelected = {},
+                    onCategorySelected = {},
                 )
             }
         }

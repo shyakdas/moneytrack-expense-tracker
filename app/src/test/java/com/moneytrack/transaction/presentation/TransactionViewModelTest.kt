@@ -2,6 +2,9 @@
 
 package com.moneytrack.transaction.presentation
 
+import com.moneytrack.expense.domain.model.ExpenseCategory
+import com.moneytrack.expense.domain.repository.CategoryRepository
+import com.moneytrack.expense.domain.usecase.ObserveCategoriesUseCase
 import com.moneytrack.locale.AppCurrencyManager
 import com.moneytrack.locale.CountryProvider
 import com.moneytrack.locale.CurrencyCatalog
@@ -187,10 +190,10 @@ class TransactionViewModelTest {
     }
 
     @Test
-    fun monthLabel_defaultsToMonth() {
+    fun selectedMonth_defaultsToCurrentMonth() {
         val viewModel = createViewModel(FakeTransactionRepository())
 
-        assertEquals("Month", viewModel.uiState.value.monthLabel)
+        assertTrue(viewModel.uiState.value.selectedMonth.label.isNotBlank())
         assertTrue(viewModel.uiState.value.sections.isEmpty())
     }
 
@@ -216,6 +219,7 @@ class TransactionViewModelTest {
         return TransactionViewModel(
             observeTransactionsUseCase = ObserveTransactionsUseCase(repository),
             observeAppCurrencyCodeUseCase = ObserveAppCurrencyCodeUseCase(appCurrencyManager),
+            observeCategoriesUseCase = ObserveCategoriesUseCase(FakeCategoryRepository()),
             deleteTransactionUseCase = DeleteTransactionUseCase(repository),
             currencyFormatter = CurrencyFormatter(
                 appCurrencyManager = appCurrencyManager,
@@ -256,6 +260,20 @@ class TransactionViewModelTest {
         override suspend fun saveSelectedCurrencyCode(currencyCode: String) {
             selectedCurrencyCode.value = currencyCode
         }
+    }
+
+    private class FakeCategoryRepository : CategoryRepository {
+        override fun observeCategories(): Flow<List<ExpenseCategory>> = MutableStateFlow(emptyList())
+
+        override suspend fun ensureDefaultCategories() = Unit
+
+        override suspend fun addCategory(name: String) = Unit
+
+        override suspend fun moveCategoryUp(categoryId: Long) = Unit
+
+        override suspend fun moveCategoryDown(categoryId: Long) = Unit
+
+        override suspend fun reorderCategories(categoryIds: List<Long>) = Unit
     }
 }
 
