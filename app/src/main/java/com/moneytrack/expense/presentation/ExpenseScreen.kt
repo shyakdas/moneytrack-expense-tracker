@@ -1436,13 +1436,10 @@ private fun RepeatTransactionScreen(
         }.timeInMillis
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Brush.horizontalGradient(listOf(ExpenseTopStart, ExpenseTopMiddle, ExpenseTopEnd))),
-    ) {
+    MoneyTrackScreenBackground {
         Column(
             modifier = Modifier
+                .fillMaxSize()
                 .statusBarsPadding()
                 .padding(horizontal = Dimens.spacing16),
         ) {
