@@ -29,6 +29,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,6 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import android.widget.Toast
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.moneytrack.R
@@ -52,6 +54,7 @@ import ui.theme.MoneyTrackTheme
 
 private enum class SettingsAction {
     CURRENCY,
+    LANGUAGE,
     THEME,
     SECURITY,
     NOTIFICATION,
@@ -108,6 +111,7 @@ fun SettingsScreen(
     uiState: SettingsUiState,
     actions: SettingsScreenActions,
 ) {
+    val context = LocalContext.current
     val sections = settingsSections(uiState = uiState)
     Scaffold(
         containerColor = AppTheme.colors.background,
@@ -129,6 +133,14 @@ fun SettingsScreen(
                         onItemClick = { item ->
                             when (item.action) {
                                 SettingsAction.CURRENCY -> actions.onCurrencyClick()
+                                SettingsAction.LANGUAGE -> {
+                                    Toast
+                                        .makeText(
+                                            context,
+                                            "English is currently available. More languages are coming soon in a future release.",
+                                            Toast.LENGTH_SHORT,
+                                        ).show()
+                                }
                                 SettingsAction.THEME -> actions.onThemeClick()
                                 SettingsAction.SECURITY -> actions.onSecurityClick()
                                 SettingsAction.NOTIFICATION -> actions.onNotificationClick()
@@ -163,7 +175,7 @@ private fun settingsSections(uiState: SettingsUiState): List<SettingsSectionUiMo
                 title = stringResource(id = R.string.settings_language),
                 subtitle = "Choose your preferred language",
                 value = uiState.language,
-                action = SettingsAction.NONE,
+                action = SettingsAction.LANGUAGE,
                 iconRes = DsR.drawable.search,
             ),
             SettingsItemUiModel(

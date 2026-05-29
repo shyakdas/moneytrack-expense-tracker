@@ -285,32 +285,30 @@ private fun ProfileHeader(
     name: String,
     onEditClick: () -> Unit,
 ) {
-    MoneyTrackCard(
-        contentPadding = PaddingValues(Dimens.spacing18),
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = Dimens.spacing4, vertical = Dimens.spacing4),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
+        ProfileAvatar()
+        Spacer(modifier = Modifier.width(Dimens.spacing16))
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.Center,
         ) {
-            ProfileAvatar()
-            Spacer(modifier = Modifier.width(Dimens.spacing16))
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.Center,
-            ) {
-                Text(
-                    text = name,
-                    style = AppTheme.typography.titleLarge,
-                    color = AppTheme.colors.onBackground,
-                )
-                Text(
-                    text = "Personal finance workspace",
-                    style = AppTheme.typography.bodySmall,
-                    color = AppTheme.colors.onSurfaceVariant,
-                )
-            }
-            ProfileEditButton(onClick = onEditClick)
+            Text(
+                text = name,
+                style = AppTheme.typography.titleLarge,
+                color = AppTheme.colors.onBackground,
+            )
+            Text(
+                text = "Personal finance workspace",
+                style = AppTheme.typography.bodySmall,
+                color = AppTheme.colors.onSurfaceVariant,
+            )
         }
+        ProfileEditButton(onClick = onEditClick)
     }
 }
 

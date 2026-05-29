@@ -3,22 +3,29 @@
 package com.moneytrack.settings.presentation
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
@@ -30,8 +37,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.moneytrack.R
 import com.moneytrack.designsystem.R as DsR
 import com.moneytrack.settings.domain.model.AppThemeMode
-import ui.components.navigation.topNav.TopNavigation
-import ui.components.navigation.topNav.TopNavigationConfig
 import ui.components.surface.MoneyTrackScreenBackground
 import ui.theme.AppTheme
 import ui.theme.Dimens
@@ -40,6 +45,8 @@ import ui.theme.MoneyTrackTheme
 private data class ThemeOptionUiModel(
     val themeMode: AppThemeMode,
     val title: String,
+    val subtitle: String,
+    val iconRes: Int,
 )
 
 @Composable
@@ -69,14 +76,20 @@ fun ThemeScreen(
         ThemeOptionUiModel(
             themeMode = AppThemeMode.DARK,
             title = stringResource(id = R.string.settings_theme_dark),
+            subtitle = "Use a dark color palette for low light environments.",
+            iconRes = DsR.drawable.show,
         ),
         ThemeOptionUiModel(
             themeMode = AppThemeMode.LIGHT,
             title = stringResource(id = R.string.settings_theme_light),
+            subtitle = "Use a light color palette for bright environments.",
+            iconRes = DsR.drawable.resource_new,
         ),
         ThemeOptionUiModel(
             themeMode = AppThemeMode.SYSTEM,
             title = stringResource(id = R.string.settings_theme_system),
+            subtitle = "Match your device appearance settings.",
+            iconRes = DsR.drawable.transaction_color,
         ),
     )
 
@@ -87,67 +100,191 @@ fun ThemeScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding),
+                    .padding(innerPadding)
+                    .padding(horizontal = Dimens.spacing16)
+                    .verticalScroll(rememberScrollState()),
             ) {
-                TopNavigation(
-                    config = TopNavigationConfig.BackWithTitle(
-                        title = stringResource(id = R.string.theme_title),
-                        onBackClick = onBackClick,
-                    ),
-                    containerColor = Color.Transparent,
-                )
-
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = Dimens.spacing16)
-                        .padding(top = Dimens.spacing12),
-                ) {
-                    items(themeOptions, key = { it.themeMode.name }) { themeOption ->
-                        ThemeRow(
-                            themeOption = themeOption,
-                            isSelected = themeOption.themeMode == uiState.selectedThemeMode,
-                            onClick = { onThemeModeSelected(themeOption.themeMode) },
-                        )
-                    }
+                Spacer(modifier = Modifier.padding(top = Dimens.spacing8))
+                ThemeHeader(onBackClick = onBackClick)
+                Spacer(modifier = Modifier.padding(top = 22.dp))
+                themeOptions.forEach { option ->
+                    ThemeOptionCard(
+                        option = option,
+                        isSelected = option.themeMode == uiState.selectedThemeMode,
+                        onClick = { onThemeModeSelected(option.themeMode) },
+                    )
+                    Spacer(modifier = Modifier.padding(top = 14.dp))
                 }
+                ThemeInfoCard()
+                Spacer(modifier = Modifier.padding(top = Dimens.spacing20))
             }
         }
     }
 }
 
 @Composable
-private fun ThemeRow(
-    themeOption: ThemeOptionUiModel,
+private fun ThemeHeader(onBackClick: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Surface(
+            modifier = Modifier
+                .size(44.dp)
+                .clickable(onClick = onBackClick),
+            shape = CircleShape,
+            color = AppTheme.colors.surfaceVariant.copy(alpha = 0.55f),
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = ImageVector.vectorResource(id = DsR.drawable.arrow_left),
+                    contentDescription = null,
+                    tint = AppTheme.colors.onSurface,
+                    modifier = Modifier.size(14.dp),
+                )
+            }
+        }
+        Spacer(modifier = Modifier.width(Dimens.spacing12))
+        Text(
+            text = stringResource(id = R.string.theme_title),
+            style = AppTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+            color = AppTheme.colors.onBackground,
+        )
+    }
+}
+
+@Composable
+private fun ThemeOptionCard(
+    option: ThemeOptionUiModel,
     isSelected: Boolean,
     onClick: () -> Unit,
 ) {
-    androidx.compose.foundation.layout.Row(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = Dimens.spacing20, vertical = Dimens.spacing20),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
+            .border(
+                width = 1.dp,
+                color = if (isSelected) {
+                    AppTheme.colors.primary.copy(alpha = 0.5f)
+                } else {
+                    AppTheme.colors.outline.copy(alpha = 0.28f)
+                },
+                shape = RoundedCornerShape(Dimens.radius24),
+            )
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(Dimens.radius24),
+        color = AppTheme.colors.surface.copy(alpha = 0.88f),
     ) {
-        Text(
-            text = themeOption.title,
-            style = AppTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-            color = AppTheme.colors.onBackground,
-        )
+        Row(
+            modifier = Modifier
+            .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .background(
+                        color = AppTheme.colors.primary.copy(alpha = 0.14f),
+                        shape = CircleShape,
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = ImageVector.vectorResource(id = option.iconRes),
+                    contentDescription = null,
+                    tint = AppTheme.colors.primary,
+                    modifier = Modifier.size(14.dp),
+                )
+            }
+            Spacer(modifier = Modifier.width(Dimens.spacing12))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = option.title,
+                    style = AppTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
+                    color = AppTheme.colors.onBackground,
+                )
+                Text(
+                    text = option.subtitle,
+                    style = AppTheme.typography.bodySmall,
+                    color = AppTheme.colors.onSurfaceVariant,
+                )
+            }
+            if (isSelected) {
+                Box(
+                    modifier = Modifier
+                        .size(30.dp)
+                        .background(
+                            color = AppTheme.colors.primary.copy(alpha = 0.24f),
+                            shape = CircleShape,
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = ImageVector.vectorResource(id = DsR.drawable.success),
+                        contentDescription = null,
+                        tint = AppTheme.colors.primary,
+                        modifier = Modifier.size(14.dp),
+                    )
+                }
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(30.dp)
+                        .border(
+                            width = 1.dp,
+                            color = AppTheme.colors.outline.copy(alpha = 0.6f),
+                            shape = CircleShape,
+                        ),
+                )
+            }
+        }
+    }
+}
 
-        if (isSelected) {
-            Icon(
-                imageVector = ImageVector.vectorResource(id = DsR.drawable.success),
-                contentDescription = null,
-                tint = AppTheme.colors.primary,
+@Composable
+private fun ThemeInfoCard() {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(
+                width = 1.dp,
+                color = AppTheme.colors.outline.copy(alpha = 0.22f),
+                shape = RoundedCornerShape(Dimens.radius24),
+            ),
+        shape = RoundedCornerShape(Dimens.radius24),
+        color = AppTheme.colors.surface.copy(alpha = 0.88f),
+    ) {
+        Row(
+            modifier = Modifier
+            .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .background(
+                        color = AppTheme.colors.primary.copy(alpha = 0.14f),
+                        shape = CircleShape,
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = ImageVector.vectorResource(id = DsR.drawable.warning),
+                    contentDescription = null,
+                    tint = AppTheme.colors.primary,
+                    modifier = Modifier.size(14.dp),
+                )
+            }
+            Spacer(modifier = Modifier.width(Dimens.spacing12))
+            Text(
+                text = "System follows your device appearance settings.",
+                style = AppTheme.typography.bodySmall,
+                color = AppTheme.colors.onSurfaceVariant,
             )
         }
     }
-    HorizontalDivider(
-        color = AppTheme.colors.outline.copy(alpha = 0.28f),
-        thickness = 1.dp,
-    )
 }
 
 @Suppress("UnusedPrivateMember")
@@ -157,19 +294,6 @@ private fun ThemeScreenLightPreview() {
     MoneyTrackTheme(darkTheme = false) {
         ThemeScreen(
             uiState = ThemeUiState(selectedThemeMode = AppThemeMode.DARK),
-            onBackClick = {},
-            onThemeModeSelected = {},
-        )
-    }
-}
-
-@Suppress("UnusedPrivateMember")
-@Preview(showBackground = true, backgroundColor = 0xFF000000)
-@Composable
-private fun ThemeScreenDarkPreview() {
-    MoneyTrackTheme(darkTheme = true) {
-        ThemeScreen(
-            uiState = ThemeUiState(selectedThemeMode = AppThemeMode.SYSTEM),
             onBackClick = {},
             onThemeModeSelected = {},
         )
