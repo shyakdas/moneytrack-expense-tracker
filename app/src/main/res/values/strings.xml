@@ -113,7 +113,6 @@
     <string name="settings_notification_one">1 notification/day</string>
     <string name="settings_notification_three">3 notifications/day</string>
     <string name="settings_notification_five">5 notifications/day</string>
-    <string name="settings_notification_note">Note: It will help you to add expenses so that you will not forget.</string>
     <string name="settings_about">About</string>
     <string name="settings_help">Help</string>
     <string name="settings_theme_system">System</string>

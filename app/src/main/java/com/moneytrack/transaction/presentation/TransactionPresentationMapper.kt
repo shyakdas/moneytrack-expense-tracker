@@ -1,3 +1,5 @@
+@file:Suppress("TooManyFunctions")
+
 // Copyright (c) 2026 shyakdas
 
 package com.moneytrack.transaction.presentation

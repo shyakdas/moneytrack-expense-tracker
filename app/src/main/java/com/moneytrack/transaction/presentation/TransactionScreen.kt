@@ -1,6 +1,6 @@
 // Copyright (c) 2026 shyakdas
 
-@file:Suppress("LongMethod", "UnusedPrivateMember")
+@file:Suppress("LongMethod", "UnusedPrivateMember", "LongParameterList", "TooManyFunctions")
 
 package com.moneytrack.transaction.presentation
 

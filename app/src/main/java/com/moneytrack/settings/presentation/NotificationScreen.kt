@@ -162,6 +162,7 @@ private fun notificationOptions(): List<NotificationOptionUiModel> = listOf(
 )
 
 @Composable
+@Suppress("LongMethod")
 private fun NotificationOptionCard(
     notificationOption: NotificationOptionUiModel,
     isSelected: Boolean,

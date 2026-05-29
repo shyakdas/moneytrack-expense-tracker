@@ -176,6 +176,7 @@ private fun SecurityHeader(
 }
 
 @Composable
+@Suppress("LongMethod")
 private fun SecurityOptionCard(
     securityOption: SecurityOptionUiModel,
     isSelected: Boolean,

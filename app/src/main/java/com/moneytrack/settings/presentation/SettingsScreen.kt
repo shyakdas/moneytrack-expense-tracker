@@ -62,6 +62,9 @@ private enum class SettingsAction {
     NONE,
 }
 
+private const val LANGUAGE_COMING_SOON_MESSAGE =
+    "English is currently available. More languages are coming soon in a future release."
+
 private enum class SettingsSectionType {
     GENERAL,
     SECURITY_ALERTS,
@@ -137,7 +140,7 @@ fun SettingsScreen(
                                     Toast
                                         .makeText(
                                             context,
-                                            "English is currently available. More languages are coming soon in a future release.",
+                                            LANGUAGE_COMING_SOON_MESSAGE,
                                             Toast.LENGTH_SHORT,
                                         ).show()
                                 }

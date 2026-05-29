@@ -1,5 +1,7 @@
 // Copyright (c) 2026 shyakdas
 
+@file:Suppress("TooManyFunctions")
+
 package com.moneytrack.profile.presentation
 
 import androidx.compose.foundation.background

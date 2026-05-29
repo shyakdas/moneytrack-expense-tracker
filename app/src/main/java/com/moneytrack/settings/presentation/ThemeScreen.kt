@@ -154,6 +154,7 @@ private fun ThemeHeader(onBackClick: () -> Unit) {
 }
 
 @Composable
+@Suppress("LongMethod")
 private fun ThemeOptionCard(
     option: ThemeOptionUiModel,
     isSelected: Boolean,

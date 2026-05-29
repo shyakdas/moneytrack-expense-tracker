@@ -38,6 +38,7 @@ class TransactionScreenshotTest {
     }
 
     @Test
+    @Suppress("LongMethod")
     fun transaction_content_dark() {
         paparazzi.snapshot {
             MoneyTrackTheme(darkTheme = true) {
