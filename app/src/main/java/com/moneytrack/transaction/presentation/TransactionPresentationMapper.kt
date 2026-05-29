@@ -13,8 +13,7 @@ fun List<TransactionRecord>.toTransactionSections(
     currencyFormatter: CurrencyFormatter,
     currencyCode: String,
 ): List<TransactionSectionUiState> {
-    return sortedByDescending(TransactionRecord::occurredAtEpochMillis)
-        .groupBy { transaction ->
+    return groupBy { transaction ->
             sectionTitleFor(transaction.occurredAtEpochMillis)
         }
         .map { (title, items) ->
@@ -48,6 +47,20 @@ fun List<TransactionRecord>.filterByMonth(selectedMonth: TransactionMonthOption)
         }
         calendar.get(Calendar.YEAR) == selectedMonth.year &&
             calendar.get(Calendar.MONTH) == selectedMonth.monthIndex
+    }
+
+fun List<TransactionRecord>.filterByCategory(category: String): List<TransactionRecord> {
+    if (category == ALL_CATEGORIES_FILTER) return this
+    return filter { transaction ->
+        transaction.category.equals(category, ignoreCase = true)
+    }
+}
+
+fun List<TransactionRecord>.sortByOption(option: TransactionSortOption): List<TransactionRecord> =
+    when (option) {
+        TransactionSortOption.NEWEST -> sortedByDescending(TransactionRecord::occurredAtEpochMillis)
+        TransactionSortOption.HIGHEST -> sortedByDescending(TransactionRecord::amount)
+        TransactionSortOption.LOWEST -> sortedBy(TransactionRecord::amount)
     }
 
 fun TransactionRecord.toTransactionItemUiState(

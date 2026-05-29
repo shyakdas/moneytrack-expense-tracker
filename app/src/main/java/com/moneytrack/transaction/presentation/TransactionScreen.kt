@@ -14,6 +14,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,11 +28,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
@@ -58,6 +62,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -103,6 +108,8 @@ fun TransactionRoute(
         onDeleteTransaction = viewModel::deleteTransaction,
         onMonthSelected = viewModel::onMonthSelected,
         onYearSelected = viewModel::onYearSelected,
+        onSortOptionSelected = viewModel::onSortOptionSelected,
+        onCategorySelected = viewModel::onCategorySelected,
     )
 }
 
@@ -115,6 +122,8 @@ fun TransactionScreen(
     onDeleteTransaction: (Long) -> Unit,
     onMonthSelected: (TransactionMonthOption) -> Unit,
     onYearSelected: (Int) -> Unit,
+    onSortOptionSelected: (TransactionSortOption) -> Unit,
+    onCategorySelected: (String) -> Unit,
 ) {
     val bottomItems = remember {
         listOf(
@@ -144,6 +153,8 @@ fun TransactionScreen(
             onDeleteTransaction = onDeleteTransaction,
             onMonthSelected = onMonthSelected,
             onYearSelected = onYearSelected,
+            onSortOptionSelected = onSortOptionSelected,
+            onCategorySelected = onCategorySelected,
         )
     }
 }
@@ -156,13 +167,19 @@ private fun TransactionContent(
     onDeleteTransaction: (Long) -> Unit,
     onMonthSelected: (TransactionMonthOption) -> Unit,
     onYearSelected: (Int) -> Unit,
+    onSortOptionSelected: (TransactionSortOption) -> Unit,
+    onCategorySelected: (String) -> Unit,
 ) {
     MoneyTrackScreenBackground {
         var isMonthPickerVisible by remember { mutableStateOf(false) }
         var isYearPickerVisible by remember { mutableStateOf(false) }
+        var pendingSortOption by remember { mutableStateOf(uiState.selectedSortOption) }
+        var pendingCategory by remember { mutableStateOf(uiState.selectedCategory) }
         var monthAnchorX by remember { mutableIntStateOf(0) }
         var yearAnchorX by remember { mutableIntStateOf(0) }
+        var sortAnchorX by remember { mutableIntStateOf(0) }
         var popupAnchorY by remember { mutableIntStateOf(0) }
+        var isSortOverlayVisible by remember { mutableStateOf(false) }
         val monthPickerTransition = remember { MutableTransitionState(false) }
         monthPickerTransition.targetState = isMonthPickerVisible
         val yearPickerTransition = remember { MutableTransitionState(false) }
@@ -195,15 +212,29 @@ private fun TransactionContent(
                             yearAnchorX = yearX
                             popupAnchorY = anchorY
                         },
+                        onSortAnchorChanged = { sortX, anchorY ->
+                            sortAnchorX = sortX
+                            popupAnchorY = anchorY
+                        },
                         onMonthClick = {
                             isMonthPickerVisible = !isMonthPickerVisible
                             isYearPickerVisible = false
+                            isSortOverlayVisible = false
                         },
                         onYearClick = {
                             isYearPickerVisible = !isYearPickerVisible
                             isMonthPickerVisible = false
+                            isSortOverlayVisible = false
                         },
-                        onSortClick = {},
+                        onSortClick = {
+                            isSortOverlayVisible = !isSortOverlayVisible
+                            isMonthPickerVisible = false
+                            isYearPickerVisible = false
+                            if (isSortOverlayVisible) {
+                                pendingSortOption = uiState.selectedSortOption
+                                pendingCategory = uiState.selectedCategory
+                            }
+                        },
                     )
                     if (monthPickerTransition.currentState || monthPickerTransition.targetState) {
                         Popup(
@@ -241,6 +272,32 @@ private fun TransactionContent(
                                     },
                                 )
                             }
+                        }
+                    }
+                    if (isSortOverlayVisible) {
+                        Popup(
+                            alignment = Alignment.TopStart,
+                            offset = IntOffset(x = sortAnchorX - 220, y = monthPopupYOffset),
+                            onDismissRequest = { isSortOverlayVisible = false },
+                            properties = PopupProperties(focusable = true),
+                        ) {
+                            SortFilterOverlay(
+                                selectedSortOption = pendingSortOption,
+                                sortOptions = TransactionSortOption.entries,
+                                selectedCategory = pendingCategory,
+                                categoryOptions = uiState.categoryOptions,
+                                onSortOptionSelected = {
+                                    pendingSortOption = it
+                                },
+                                onCategorySelected = {
+                                    pendingCategory = it
+                                },
+                                onApplyClick = {
+                                    onSortOptionSelected(pendingSortOption)
+                                    onCategorySelected(pendingCategory)
+                                    isSortOverlayVisible = false
+                                },
+                            )
                         }
                     }
                 }
@@ -305,6 +362,7 @@ private fun TransactionMonthYearHeader(
     selectedYear: String,
     onMonthAnchorChanged: (Int, Int) -> Unit,
     onYearAnchorChanged: (Int, Int) -> Unit,
+    onSortAnchorChanged: (Int, Int) -> Unit,
     onMonthClick: () -> Unit,
     onYearClick: () -> Unit,
     onSortClick: () -> Unit,
@@ -351,6 +409,14 @@ private fun TransactionMonthYearHeader(
         Surface(
             modifier = Modifier
                 .size(Dimens.iconButtonSize)
+                .onGloballyPositioned { coordinates ->
+                    val parentCoordinates = coordinates.parentLayoutCoordinates ?: return@onGloballyPositioned
+                    val position = parentCoordinates.localPositionOf(coordinates, Offset.Zero)
+                    onSortAnchorChanged(
+                        position.x.roundToInt(),
+                        (position.y + coordinates.size.height).roundToInt(),
+                    )
+                }
                 .clickable(onClick = onSortClick),
             shape = RoundedCornerShape(Dimens.radius16),
             color = AppTheme.colors.surface,
@@ -365,6 +431,111 @@ private fun TransactionMonthYearHeader(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun SortFilterOverlay(
+    selectedSortOption: TransactionSortOption,
+    sortOptions: List<TransactionSortOption>,
+    selectedCategory: String,
+    categoryOptions: List<String>,
+    onSortOptionSelected: (TransactionSortOption) -> Unit,
+    onCategorySelected: (String) -> Unit,
+    onApplyClick: () -> Unit,
+) {
+    Surface(
+        shape = RoundedCornerShape(Dimens.radius20),
+        color = AppTheme.colors.surface,
+        tonalElevation = Dimens.elevation4,
+        modifier = Modifier
+            .widthIn(min = 250.dp, max = 320.dp)
+            .border(
+                width = Dimens.spacing1,
+                color = AppTheme.colors.outline.copy(alpha = 0.5f),
+                shape = RoundedCornerShape(Dimens.radius20),
+            ),
+    ) {
+        Column(
+            modifier = Modifier.padding(Dimens.spacing12),
+            verticalArrangement = Arrangement.spacedBy(Dimens.spacing8),
+        ) {
+            Text(
+                text = "Sort By",
+                style = AppTheme.typography.titleSmall,
+                color = AppTheme.colors.onSurface,
+            )
+            sortOptions.forEach { option ->
+                FilterOptionRow(
+                    text = option.label,
+                    selected = selectedSortOption == option,
+                    onClick = { onSortOptionSelected(option) },
+                )
+            }
+            HorizontalDivider(color = AppTheme.colors.outline.copy(alpha = 0.35f))
+            Text(
+                text = "Category",
+                style = AppTheme.typography.titleSmall,
+                color = AppTheme.colors.onSurface,
+            )
+            Column(
+                modifier = Modifier.heightIn(max = 220.dp),
+                verticalArrangement = Arrangement.spacedBy(Dimens.spacing6),
+            ) {
+                categoryOptions.forEach { category ->
+                    FilterOptionRow(
+                        text = category,
+                        selected = selectedCategory == category,
+                        onClick = { onCategorySelected(category) },
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(Dimens.spacing4))
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(onClick = onApplyClick),
+                shape = RoundedCornerShape(Dimens.radius16),
+                color = AppTheme.colors.primary,
+            ) {
+                Box(
+                    modifier = Modifier.padding(vertical = Dimens.spacing10),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "Apply",
+                        style = AppTheme.typography.titleSmall,
+                        color = AppTheme.colors.onPrimary,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FilterOptionRow(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                color = if (selected) AppTheme.colors.primaryContainer else Color.Transparent,
+                shape = RoundedCornerShape(Dimens.radius16),
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = Dimens.spacing12, vertical = Dimens.spacing10),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = text,
+            style = AppTheme.typography.bodyMedium,
+            color = if (selected) AppTheme.colors.onPrimaryContainer else AppTheme.colors.onSurface,
+        )
     }
 }
 
@@ -555,6 +726,8 @@ private fun TransactionScreenPreview() {
             onDeleteTransaction = {},
             onMonthSelected = {},
             onYearSelected = {},
+            onSortOptionSelected = {},
+            onCategorySelected = {},
         )
     }
 }
