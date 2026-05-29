@@ -1,5 +1,7 @@
 // Copyright (c) 2026 shyakdas
 
+@file:Suppress("TooManyFunctions")
+
 package com.moneytrack.profile.presentation
 
 import androidx.compose.foundation.background
@@ -22,7 +24,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -63,9 +64,11 @@ private enum class ProfileActionType {
 private data class ProfileActionItem(
     val type: ProfileActionType,
     val titleRes: Int,
+    val subtitle: String,
     val iconRes: Int,
     val iconBackground: Color,
     val iconTint: Color,
+    val isDanger: Boolean = false,
 )
 
 data class ProfileNavigationCallbacks(
@@ -193,6 +196,7 @@ private fun profileActionItems(): List<ProfileActionItem> = listOf(
     ProfileActionItem(
         type = ProfileActionType.SETTINGS,
         titleRes = R.string.profile_action_settings,
+        subtitle = "Customize your app experience",
         iconRes = DsR.drawable.settings,
         iconBackground = AppTheme.colors.primary.copy(alpha = 0.14f),
         iconTint = AppTheme.colors.primary,
@@ -200,6 +204,7 @@ private fun profileActionItems(): List<ProfileActionItem> = listOf(
     ProfileActionItem(
         type = ProfileActionType.EXPORT_DATA,
         titleRes = R.string.profile_action_export,
+        subtitle = "Download your records",
         iconRes = DsR.drawable.variant_export_data,
         iconBackground = AppTheme.colors.primary.copy(alpha = 0.14f),
         iconTint = AppTheme.colors.primary,
@@ -207,9 +212,11 @@ private fun profileActionItems(): List<ProfileActionItem> = listOf(
     ProfileActionItem(
         type = ProfileActionType.CLEAR_DATA,
         titleRes = R.string.profile_action_logout,
+        subtitle = "Delete all your data permanently",
         iconRes = DsR.drawable.logout,
         iconBackground = AppTheme.colors.error.copy(alpha = 0.14f),
         iconTint = AppTheme.colors.error,
+        isDanger = true,
     ),
 )
 
@@ -226,7 +233,6 @@ private fun ProfileContent(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .statusBarsPadding()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = Dimens.spacing16),
         ) {
@@ -235,10 +241,41 @@ private fun ProfileContent(
                 name = uiState.name,
                 onEditClick = onEditClick,
             )
-            Spacer(modifier = Modifier.height(Dimens.spacing24))
-            ProfileActionsCard(
-                actionItems = actionItems,
-                onActionClick = onActionClick,
+            Spacer(modifier = Modifier.height(Dimens.spacing20))
+            ProfileSectionHeader(
+                title = "Preferences",
+                description = "Manage app preferences",
+                tint = AppTheme.colors.primary,
+                iconRes = DsR.drawable.settings,
+            )
+            Spacer(modifier = Modifier.height(Dimens.spacing12))
+            ProfileActionCard(
+                item = actionItems.first { it.type == ProfileActionType.SETTINGS },
+                onClick = { onActionClick(ProfileActionType.SETTINGS) },
+            )
+            Spacer(modifier = Modifier.height(Dimens.spacing20))
+            ProfileSectionHeader(
+                title = "Data",
+                description = "Manage and export your data",
+                tint = AppTheme.colors.primary,
+                iconRes = DsR.drawable.variant_export_data,
+            )
+            Spacer(modifier = Modifier.height(Dimens.spacing12))
+            ProfileActionCard(
+                item = actionItems.first { it.type == ProfileActionType.EXPORT_DATA },
+                onClick = { onActionClick(ProfileActionType.EXPORT_DATA) },
+            )
+            Spacer(modifier = Modifier.height(Dimens.spacing20))
+            ProfileSectionHeader(
+                title = "Danger Zone",
+                description = "Irreversible and permanent actions",
+                tint = AppTheme.colors.error,
+                iconRes = DsR.drawable.warning,
+            )
+            Spacer(modifier = Modifier.height(Dimens.spacing12))
+            DangerZoneCard(
+                item = actionItems.first { it.type == ProfileActionType.CLEAR_DATA },
+                onClick = { onActionClick(ProfileActionType.CLEAR_DATA) },
             )
             Spacer(modifier = Modifier.height(Dimens.spacing24))
         }
@@ -250,30 +287,30 @@ private fun ProfileHeader(
     name: String,
     onEditClick: () -> Unit,
 ) {
-    MoneyTrackCard {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = Dimens.spacing4, vertical = Dimens.spacing4),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        ProfileAvatar()
+        Spacer(modifier = Modifier.width(Dimens.spacing16))
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.Center,
         ) {
-            ProfileAvatar()
-            Spacer(modifier = Modifier.width(Dimens.spacing16))
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.Center,
-            ) {
-                Text(
-                    text = name,
-                    style = AppTheme.typography.headlineSmall,
-                    color = AppTheme.colors.onBackground,
-                )
-                Text(
-                    text = "Personal finance workspace",
-                    style = AppTheme.typography.bodySmall,
-                    color = AppTheme.colors.onSurfaceVariant,
-                )
-            }
-            ProfileEditButton(onClick = onEditClick)
+            Text(
+                text = name,
+                style = AppTheme.typography.titleLarge,
+                color = AppTheme.colors.onBackground,
+            )
+            Text(
+                text = "Personal finance workspace",
+                style = AppTheme.typography.bodySmall,
+                color = AppTheme.colors.onSurfaceVariant,
+            )
         }
+        ProfileEditButton(onClick = onEditClick)
     }
 }
 
@@ -327,40 +364,94 @@ private fun EditProfileNameBottomSheet(
 }
 
 @Composable
-private fun ProfileActionsCard(
-    actionItems: List<ProfileActionItem>,
-    onActionClick: (ProfileActionType) -> Unit,
+private fun ProfileSectionHeader(
+    title: String,
+    description: String,
+    tint: Color,
+    iconRes: Int,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(Dimens.spacing4)) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Dimens.spacing8),
+        ) {
+            Icon(
+                painter = painterResource(id = iconRes),
+                contentDescription = null,
+                tint = tint,
+                modifier = Modifier.size(Dimens.icon20),
+            )
+            Text(
+                text = title,
+                style = AppTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                color = tint,
+            )
+        }
+        Text(
+            text = description,
+            style = AppTheme.typography.bodySmall,
+            color = AppTheme.colors.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+private fun ProfileActionCard(
+    item: ProfileActionItem,
+    onClick: () -> Unit,
 ) {
     MoneyTrackCard(
-        contentPadding = PaddingValues(Dimens.spacing4),
+        contentPadding = PaddingValues(Dimens.spacing18),
+        modifier = Modifier.clickable(onClick = onClick),
+    ) {
+        ProfileActionRowContent(item = item)
+    }
+}
+
+@Composable
+private fun DangerZoneCard(
+    item: ProfileActionItem,
+    onClick: () -> Unit,
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(
+                width = 1.dp,
+                color = AppTheme.colors.error.copy(alpha = 0.35f),
+                shape = RoundedCornerShape(Dimens.radius20),
+            ),
+        shape = RoundedCornerShape(Dimens.radius20),
+        color = AppTheme.colors.surface.copy(alpha = 0.92f),
     ) {
         Column {
-            actionItems.forEachIndexed { index, item ->
-                ProfileActionRow(
-                    item = item,
-                    onClick = { onActionClick(item.type) },
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(onClick = onClick)
+                    .padding(Dimens.spacing18),
+            ) {
+                ProfileActionRowContent(item = item)
+            }
+            Surface(
+                color = AppTheme.colors.error.copy(alpha = 0.08f),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(
+                    text = "This action cannot be undone.",
+                    modifier = Modifier.padding(horizontal = Dimens.spacing18, vertical = Dimens.spacing12),
+                    style = AppTheme.typography.bodySmall,
+                    color = AppTheme.colors.error,
                 )
-                if (index != actionItems.lastIndex) {
-                    HorizontalDivider(
-                        color = AppTheme.colors.outline.copy(alpha = 0.22f),
-                        thickness = 1.dp,
-                    )
-                }
             }
         }
     }
 }
 
 @Composable
-private fun ProfileActionRow(
-    item: ProfileActionItem,
-    onClick: () -> Unit,
-) {
+private fun ProfileActionRowContent(item: ProfileActionItem) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = Dimens.spacing20, vertical = Dimens.spacing20),
+        modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
@@ -370,7 +461,7 @@ private fun ProfileActionRow(
                     color = item.iconBackground,
                     shape = RoundedCornerShape(Dimens.radius20),
                 ),
-                contentAlignment = Alignment.Center,
+            contentAlignment = Alignment.Center,
         ) {
             Icon(
                 painter = painterResource(id = item.iconRes),
@@ -380,10 +471,23 @@ private fun ProfileActionRow(
             )
         }
         Spacer(modifier = Modifier.width(Dimens.spacing16))
-        Text(
-            text = stringResource(id = item.titleRes),
-            style = AppTheme.typography.titleMedium,
-            color = AppTheme.colors.onBackground,
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = stringResource(id = item.titleRes),
+                style = AppTheme.typography.titleMedium,
+                color = AppTheme.colors.onBackground,
+            )
+            Text(
+                text = item.subtitle,
+                style = AppTheme.typography.bodySmall,
+                color = AppTheme.colors.onSurfaceVariant,
+            )
+        }
+        Icon(
+            painter = painterResource(id = DsR.drawable.arrow_right_2),
+            contentDescription = null,
+            tint = AppTheme.colors.onSurfaceVariant,
+            modifier = Modifier.size(Dimens.icon20),
         )
     }
 }

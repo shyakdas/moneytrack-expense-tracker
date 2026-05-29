@@ -1,3 +1,5 @@
+@file:Suppress("TooManyFunctions")
+
 // Copyright (c) 2026 shyakdas
 
 package com.moneytrack.transaction.presentation
@@ -13,8 +15,7 @@ fun List<TransactionRecord>.toTransactionSections(
     currencyFormatter: CurrencyFormatter,
     currencyCode: String,
 ): List<TransactionSectionUiState> {
-    return sortedByDescending(TransactionRecord::occurredAtEpochMillis)
-        .groupBy { transaction ->
+    return groupBy { transaction ->
             sectionTitleFor(transaction.occurredAtEpochMillis)
         }
         .map { (title, items) ->
@@ -40,6 +41,29 @@ fun List<TransactionRecord>.filterCurrentMonth(): List<TransactionRecord> {
             calendar.get(Calendar.MONTH) == now.get(Calendar.MONTH)
     }
 }
+
+fun List<TransactionRecord>.filterByMonth(selectedMonth: TransactionMonthOption): List<TransactionRecord> =
+    filter { transaction ->
+        val calendar = Calendar.getInstance().apply {
+            timeInMillis = transaction.occurredAtEpochMillis
+        }
+        calendar.get(Calendar.YEAR) == selectedMonth.year &&
+            calendar.get(Calendar.MONTH) == selectedMonth.monthIndex
+    }
+
+fun List<TransactionRecord>.filterByCategory(category: String): List<TransactionRecord> {
+    if (category == ALL_CATEGORIES_FILTER) return this
+    return filter { transaction ->
+        transaction.category.equals(category, ignoreCase = true)
+    }
+}
+
+fun List<TransactionRecord>.sortByOption(option: TransactionSortOption): List<TransactionRecord> =
+    when (option) {
+        TransactionSortOption.NEWEST -> sortedByDescending(TransactionRecord::occurredAtEpochMillis)
+        TransactionSortOption.HIGHEST -> sortedByDescending(TransactionRecord::amount)
+        TransactionSortOption.LOWEST -> sortedBy(TransactionRecord::amount)
+    }
 
 fun TransactionRecord.toTransactionItemUiState(
     currencyFormatter: CurrencyFormatter,

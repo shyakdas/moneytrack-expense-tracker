@@ -106,6 +106,7 @@ import ui.components.form.input.InputField
 import ui.components.navigation.button.LargeButton
 import ui.components.surface.MoneyTrackBottomSheet
 import ui.components.surface.MoneyTrackCard
+import ui.components.surface.MoneyTrackScreenBackground
 import ui.theme.AppTheme
 import ui.theme.Dimens
 import ui.theme.MoneyTrackTheme
@@ -330,21 +331,13 @@ internal fun ExpenseContent(
     }
     val context = LocalContext.current
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.horizontalGradient(
-                    colors = listOf(
-                        ExpenseTopStart,
-                        ExpenseTopMiddle,
-                        ExpenseTopEnd,
-                    ),
-                ),
-            ),
-    ) {
+    MoneyTrackScreenBackground {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+        ) {
         Column(
             modifier = Modifier
+                .fillMaxWidth()
                 .statusBarsPadding()
                 .padding(horizontal = Dimens.spacing24),
         ) {
@@ -426,7 +419,8 @@ internal fun ExpenseContent(
 
         Box(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
+                .weight(1f)
                 .imePadding()
                 .padding(horizontal = Dimens.spacing16),
         ) {
@@ -496,6 +490,7 @@ internal fun ExpenseContent(
                 )
             }
             Spacer(modifier = Modifier.height(Dimens.spacing8))
+        }
         }
     }
 }
@@ -1441,13 +1436,10 @@ private fun RepeatTransactionScreen(
         }.timeInMillis
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Brush.horizontalGradient(listOf(ExpenseTopStart, ExpenseTopMiddle, ExpenseTopEnd))),
-    ) {
+    MoneyTrackScreenBackground {
         Column(
             modifier = Modifier
+                .fillMaxSize()
                 .statusBarsPadding()
                 .padding(horizontal = Dimens.spacing16),
         ) {

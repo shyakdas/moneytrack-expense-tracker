@@ -28,12 +28,17 @@ class TransactionScreenshotTest {
                     onAddExpenseClick = {},
                     onTransactionCardClick = {},
                     onDeleteTransaction = {},
+                    onMonthSelected = {},
+                    onYearSelected = {},
+                    onSortOptionSelected = {},
+                    onCategorySelected = {},
                 )
             }
         }
     }
 
     @Test
+    @Suppress("LongMethod")
     fun transaction_content_dark() {
         paparazzi.snapshot {
             MoneyTrackTheme(darkTheme = true) {
@@ -89,6 +94,10 @@ class TransactionScreenshotTest {
                     onAddExpenseClick = {},
                     onTransactionCardClick = {},
                     onDeleteTransaction = {},
+                    onMonthSelected = {},
+                    onYearSelected = {},
+                    onSortOptionSelected = {},
+                    onCategorySelected = {},
                 )
             }
         }
